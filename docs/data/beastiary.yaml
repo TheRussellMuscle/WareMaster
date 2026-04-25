@@ -1,0 +1,169 @@
+# Wares Blade Starter Beastiary
+# Source: Playkit pp. 75-78
+#
+# Bracketed values [in brackets] are stats vs Ryude.
+# Characters use the unbracketed values; Ryude combat uses the bracketed values.
+
+monsters:
+  - id: metal-chimaera-4-armed
+    name: "Metal-Chimaera (4-Armed Form)"
+    rank: A
+    type: "Fell Creature / Construct"
+    source: "Playkit p. 75"
+    base_sen: 4
+    base_agi: 6
+    base_con: 15
+    base_con_vs_ryude: 120
+    physical_durability_notes: "No penalties for Heavy Damage or Incapacitation"
+    base_wil: 10
+    base_wil_vs_ryude: 20
+    mental_durability_notes: "No penalty for Incapacitation"
+    base_cha: 0
+    cha_modifier_vs_ryude: 15
+    reaction: Attack
+    damage_value: "5D5+80"
+    damage_value_multiplier_vs_ryude: 2
+    damage_value_vs_ryude: "1D5+6"
+    damage_value_vs_ryude_multiplier: 2
+    total_absorption: 50
+    total_absorption_vs_ryude: 5
+    movement_speed: 1
+    sprint_speed: 2
+    intelligence: Low
+    primary_habitat: "Ruins, caves (wherever placed by their creator)"
+    encounter_rate: 0
+    encounter_rate_vs_ryude: 15
+    number_encountered: "Per attack"
+    description: |
+      "Metal-Chimaera" describes monsters created by combining a mechanical body with the flesh
+      of a wild beast, the result of high-level Word-caster (and alchemist) experiments. Difficult
+      and time-consuming to create — very few exist.
+
+      All share resistance to Word-casting (+5 to Dodge Rolls against Metal and Moon Gate techniques,
+      +10 against all other Gates) and cannot be put fully under their creator's control. The stats
+      represent an upright bipedal form of body height 1.5 liet (7m).
+
+      With 4 arms, it can attack twice — nearly impossible for an armed human to contend with
+      (though only at front and sides — the rear is safe). Heavy acid attacks have some effect,
+      but it takes at least 1 waterskin of acid to deal a single point of damage. Fire attacks
+      are not effective due to the reduced surface area of flesh. Its only real weakness may be
+      its immense weight.
+
+  - id: giant-mantis-shrimp
+    name: "Giant Mantis Shrimp (Ebel-kurram)"
+    rank: B
+    source: "Playkit p. 76"
+    base_sen: 4
+    base_agi: 4
+    base_con: 5
+    base_con_vs_ryude: 45
+    base_wil: null
+    base_cha: 0
+    cha_modifier_vs_ryude: 3
+    reaction: Attack
+    damage_value: "1D10"
+    damage_value_vs_ryude: "1D10"
+    total_absorption: 10
+    total_absorption_vs_ryude: 1
+    movement_speed: 1
+    sprint_speed: 3
+    intelligence: Low
+    primary_habitat: "Coasts and inland waters; only found in tropical and subtropical climates"
+    encounter_rate: 2
+    number_encountered: 1
+    description: |
+      Giant mantis shrimp grow to a length of 1 liet (4 m). Instinctively attacks anything entering
+      its territory using its powerful front legs to slam opponents in the blink of an eye. Hits as
+      hard as a giant iron hammer and can damage Ryude. Can only move backward, however — pay
+      attention to how you move and you may avoid its attacks.
+
+  - id: tusktooth
+    name: Tusktooth
+    rank: D
+    source: "Playkit p. 76"
+    base_sen: 4
+    base_agi: 5
+    base_con: 7
+    base_con_vs_ryude: 25
+    base_wil: 2
+    base_wil_vs_ryude: 15
+    base_cha: 2
+    cha_modifier_vs_ryude: 5
+    reaction: "Flee or Attack"
+    damage_value: "1D5+2"
+    damage_value_vs_ryude: 0
+    total_absorption: null
+    movement_speed: 1.5
+    sprint_speed: 3
+    intelligence: Low
+    primary_habitat: Forests
+    encounter_rate: 15
+    number_encountered: 1
+    description: |
+      A hairy carnivore about 27 littes (1.1 meters) in length, notable for the large fangs that
+      protrude from its top and bottom jaws. Tends to use these like a cavalry lance, charging at
+      opponents when possible.
+
+  - id: magu-draph
+    name: Magu-Draph
+    rank: D
+    source: "Playkit p. 77"
+    base_sen: 4
+    base_agi: 4
+    base_con: 8
+    base_con_vs_ryude: 15
+    base_wil: 3
+    base_wil_vs_ryude: 10
+    base_cha: 0
+    cha_modifier_vs_ryude: 10
+    reaction: "Ignore or Flee"
+    anti_luc: "WM's discretion"
+    damage_value: "1D5+1 or [Weapon Damage Value] +3"
+    damage_value_vs_ryude: 0
+    total_absorption: 1
+    total_absorption_vs_ryude: 0
+    movement_speed: 1
+    sprint_speed: 2
+    intelligence: High
+    primary_habitat: "Around wetlands and swamps"
+    encounter_rate: 2
+    number_encountered: "2D5"
+    description: |
+      Lizard-like humanoid walking upright on two legs. Less intelligent than humans and have not
+      mastered fire, but speak their own language and craft primitive weapons. Carnivorous but will
+      not eat human flesh. Live in tribal groups of ~30 individuals, building damp nests near swamps
+      and wetlands. Each tribe is led by its largest, strongest member, whose Ability Scores are 1
+      higher than typical.
+
+      Said to be the abominable offspring of a union between a true dragon and a human girl, born
+      in an age of myth and legend. Have little love for humans.
+
+  - id: skeleton
+    name: Skeleton
+    rank: E
+    source: "Playkit p. 78"
+    base_sen: 3
+    base_agi: 3
+    base_con: null
+    base_con_vs_ryude: 8
+    base_con_notes: "or original human's CON -2"
+    base_wil: null
+    base_cha: null
+    reaction: "Behavior depends on commands"
+    damage_value: "Depends on weapon"
+    damage_value_vs_ryude: 0
+    total_absorption: "Depends on armor"
+    total_absorption_vs_ryude: 0
+    movement_speed: 1
+    sprint_speed: 2
+    intelligence: None
+    primary_habitat: "Ruins, caves, etc. (wherever the creator puts them)"
+    encounter_rate: 10
+    encounter_rate_notes: "WM's discretion"
+    number_encountered: "1D5+2 or WM's discretion"
+    description: |
+      Dead bodies without flesh, composed only of animated bones. These cursed beings have fallen
+      under the control of another (usually a Spiritualist) after death and have no thoughts or
+      will of their own. Unless they are a Spiritualist or Gate of Earth Word-caster, anybody
+      seeing one for the first time must make a Difficulty 11 WIL Roll. Failure: 1 Mental damage
+      and unable to act for 1 Segment.

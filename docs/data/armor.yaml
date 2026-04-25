@@ -1,0 +1,104 @@
+# Wares Blade armor
+# Source: Playkit Chapter 3 (p. 19)
+#
+# slot: body | head | shield  (one of each may be equipped)
+
+armor:
+  # BODY (Partial)
+  - id: leather-vest
+    name: "Leather Vest"
+    source: "Playkit p. 19"
+    slot: body
+    armor_class: partial
+    absorption: 1
+    armor_modifier: 0
+    price_golda: 20
+  - id: hardened-leathers
+    name: "Hardened Leathers"
+    source: "Playkit p. 19"
+    slot: body
+    armor_class: partial
+    absorption: 2
+    armor_modifier: 0
+    price_golda: 40
+  - id: lamellar-armor
+    name: "Lamellar Armor"
+    source: "Playkit p. 19"
+    slot: body
+    armor_class: partial
+    absorption: 3
+    armor_modifier: -1
+    price_golda: 50
+  - id: brigandine
+    name: Brigandine
+    source: "Playkit p. 19"
+    slot: body
+    armor_class: partial
+    absorption: 4
+    armor_modifier: -2
+    price_golda: 80
+  - id: breastplate
+    name: Breastplate
+    source: "Playkit p. 19"
+    slot: body
+    armor_class: partial
+    absorption: 5
+    armor_modifier: -3
+    price_golda: 100
+
+  # BODY (Full)
+  - id: chain-mail
+    name: "Chain Mail"
+    source: "Playkit p. 19"
+    slot: body
+    armor_class: full
+    absorption: 9
+    armor_modifier: -6
+    price_golda: 200
+  - id: plate-mail
+    name: "Plate Mail"
+    source: "Playkit p. 19"
+    slot: body
+    armor_class: full
+    absorption: 10
+    armor_modifier: -7
+    price_golda: 300
+
+  # HEAD
+  - id: open-helmet
+    name: "Open Helmet"
+    source: "Playkit p. 19"
+    slot: head
+    absorption: 1
+    armor_modifier: 0
+    price_golda: 15
+  - id: full-helmet
+    name: "Full Helmet"
+    source: "Playkit p. 19"
+    slot: head
+    absorption: 2
+    armor_modifier: -1
+    price_golda: 30
+
+  # SHIELDS
+  - id: buckler
+    name: Buckler
+    source: "Playkit p. 19"
+    slot: shield
+    absorption: 2
+    armor_modifier: -1
+    price_golda: 15
+  - id: heater-shield
+    name: "Heater Shield"
+    source: "Playkit p. 19"
+    slot: shield
+    absorption: 3
+    armor_modifier: -2
+    price_golda: 25
+  - id: pavise-shield
+    name: "Pavise Shield"
+    source: "Playkit p. 19"
+    slot: shield
+    absorption: 5
+    armor_modifier: -3
+    price_golda: 40

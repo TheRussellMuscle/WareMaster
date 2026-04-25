@@ -1,0 +1,61 @@
+# Wares Blade Word-Casting Techniques: Gate of Fire
+# Source: Playkit p. 42
+
+discipline: word-casting
+gate: fire
+gate_description: "A Gate representing fire. It has complete control over flames."
+techniques:
+  - id: lesser-flamebolt
+    name: "Lesser Flamebolt"
+    romanization: AH-HAH
+    source: "Playkit p. 42"
+    gate: fire
+    level: 1
+    segments_required: 1
+    requisites: null
+    effect: "Creates a fireball"
+    range: "1 liet (4m)"
+    target: "1 Person"
+    duration: "1 Turn or until it hits the target"
+    save: "AGI 6"
+    description: |
+      Creates a sphere of flame 1 litte (4 cm) in size that travels at running speed. The sphere
+      can ignite flammable objects, and if it hits the opponent, the target must succeed on a
+      Dodge Roll or take 1D5 Physical damage. The sphere disappears upon contact. The sphere
+      may be thrown using the "Lesser Gale" technique, in which case the Dodge Roll Difficulty
+      becomes 15. Once thrown, its direction cannot be changed or controlled.
+
+  - id: heatbarrier
+    name: Heatbarrier
+    romanization: AH-SAI
+    source: "Playkit p. 42"
+    gate: fire
+    level: 1
+    segments_required: 2
+    requisites: null
+    effect: "Protects against an amount of heat that would burn something"
+    range: "0"
+    target: "Part of the caster's body"
+    duration: "1 Turn"
+    save: null
+    description: |
+      This technique protects an area equal to 5 square litte (20 cm) from heat damage.
+
+  - id: wares-flame
+    name: "Wares-Flame"
+    romanization: AH-KUH-REN
+    source: "Playkit p. 42"
+    gate: fire
+    level: 2
+    segments_required: 1
+    requisites: null
+    effect: "Creates an enchanted flame"
+    range: "0"
+    target: "1 flammable object"
+    duration: "1 Turn"
+    save: null
+    description: |
+      Produces a flame roughly the size of a torch that cannot be extinguished. The Wares-flame
+      itself does not produce heat, but the flames may set flammable objects on fire that will
+      burn as normal. Even if the flammable object itself is gone, the Wares-flame will not
+      disappear until the time limit is reached, even underwater.

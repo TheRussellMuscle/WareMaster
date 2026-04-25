@@ -1,0 +1,71 @@
+# Wares Blade Ryude Sample Units
+# Source: Playkit p. 73
+
+ryude_units:
+  - id: az-cude
+    name: Az-Cude
+    type: Footman
+    source: "Playkit p. 73"
+    attributes:
+      spe: 5
+      pow: 6
+      arm: 6
+      bal: 5
+    durability: 40
+    required_drive: 4
+    persona_rank: H
+    attunement_value: 8
+    ryude_rank: G
+    ego: null
+    equipment: ["Morning Star"]
+    description: >
+      Ranks as a high-end machine among Footman models. The operator compartment is sealed,
+      and an archer often rides in the top hatch.
+
+  - id: maltu-ragorsu
+    name: Maltu-Ragorsu
+    type: Courser
+    source: "Playkit p. 73"
+    attributes:
+      spe: 5
+      pow: 7
+      arm: 7
+      bal: 6
+    durability: 55
+    required_drive: 5
+    persona_rank: F
+    numetic_modifier: 1
+    attunement_value: 6
+    ryude_rank: F
+    ego: 1
+    equipment: ["Bastard sword", "Face guard", "Gauntlets"]
+    description: >
+      A typical Western Courser, sporting the escutcheon of its nation on its chest and a
+      knight's crest on the left shoulder. Its loincloth can also be used to staunch bleeding.
+    courser_perks:
+      - "Self-repair: 1 Durability per day (does not work at 0 Unit Durability)."
+      - "Operators are immune to Word-Casting Techniques of Level 3 or lower while inside, unless these create physical objects or projectiles."
+
+  - id: gisah-sharukann
+    name: "Gisah Sharukann"
+    type: Maledictor
+    source: "Playkit p. 73"
+    attributes:
+      spe: 9
+      pow: 5
+      arm: 6
+      bal: 5
+    durability: 40
+    required_drive: 4
+    persona_rank: E
+    attunement_value: 5
+    ryude_rank: G
+    ego: 2
+    ryude_mind_durability: 65
+    binding_modifier: 2
+    equipment: ["Bindstaff"]
+    description: >
+      A captured Eastern-made Ryude model modified with the addition of a Western-style carapace.
+    notes:
+      - "Bindstaff fires arcane projectiles without depleting Ryude-Mind Durability, dealing 1D5 damage to other Ryudes."
+      - "Designed for Word-Caster operators — Mental damage from Techniques used inside is subtracted from Ryude-Mind Durability instead of operator's own."

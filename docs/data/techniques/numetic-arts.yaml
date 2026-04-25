@@ -1,0 +1,148 @@
+# Wares Blade Numetic Arts (Monk Deeds)
+# Source: Playkit pp. 52-54
+#
+# Used by Spiritualist Monks. Each Deed has a Level; a Monk can use any Deed at or below
+# their <Numenism> Skill Level. Most Deeds can be used at higher levels for magnified effect.
+
+discipline: numetic-arts
+techniques:
+  - id: deed-of-waking
+    name: "Deed of Waking"
+    romanization: ECHU-KAN
+    source: "Playkit p. 52"
+    level: 1
+    segments_required: 1
+    requisites: "Must touch target"
+    effect: "Cures a paralyzed or Incapacitated target"
+    range: "0"
+    target: "1 person"
+    duration: Permanent
+    save: null
+    description: |
+      Removes paralysis or incapacitation caused by Techniques of the same Level or lower,
+      revives characters incapacitated by a failed CON Roll, and cures characters paralyzed
+      or incapacitated by poison if used at Level 4 or higher. However, the Deed of Waking
+      will not restore any damage suffered as a result of these effects.
+
+  - id: deed-of-sleep
+    name: "Deed of Sleep"
+    romanization: LUBOO-KAN
+    source: "Playkit p. 52"
+    level: 1
+    segments_required: 1
+    requisites: "Must touch target"
+    effect: "Target loses consciousness"
+    range: "0"
+    target: "1 person"
+    duration: Permanent
+    save: "WIL [4 + Level Used]"
+    description: |
+      Inflicts unconsciousness unless the target makes a successful save. Even with a successful
+      save, if the WIL Roll's outcome was [8 + Level Used] or less, the target will suffer a -3
+      penalty on all Action Rolls until they recover. Recovering requires a Technique such as a
+      Deed of Waking at a Level equal to or higher than that used for the Deed of Sleep, or at
+      least 3 etches (6 hours) of sleeping.
+
+  - id: deed-of-fear-courage
+    name: "Deed of Fear / Deed of Courage"
+    romanization: "HEUKU-KAN / DAKU-KAN"
+    source: "Playkit p. 52"
+    level: 1
+    segments_required: 2
+    requisites: "Must touch target"
+    effect: "Causes fear in target (Fear) / Removes fear from target (Courage)"
+    range: "0"
+    target: "1 person"
+    duration: "12T (Fear) / Permanent (Courage)"
+    save: "WIL [4 + Level Used] (Fear) / - (Courage)"
+    description: |
+      Can be used to inflict or remove fear. Targets affected by a Deed of Fear will attempt
+      to flee from the caster for the duration of its effect. If a character affected by a
+      Deed of Courage is targeted with a fear-causing effect, the Difficulty of any Action
+      Roll made to avoid it is halved for 12 Turns after the Deed is applied, rounding up.
+
+  - id: deed-of-fascination
+    name: "Deed of Fascination"
+    romanization: LENN-KAN
+    source: "Playkit p. 53"
+    level: 1
+    segments_required: 1
+    requisites: "Must touch target"
+    effect: "Charms the target"
+    range: "0"
+    target: "1 person"
+    duration: "12 Turns"
+    save: "WIL [6 + Level Used]"
+    description: |
+      Causes the target to develop a strong affection for the caster, giving the caster a +6
+      bonus on all CHA Rolls involving the target. This effect will be cancelled if the caster
+      takes any significantly hostile actions against the target.
+
+  - id: deed-of-healing
+    name: "Deed of Healing"
+    romanization: YOUK-KAN
+    source: "Playkit p. 53"
+    level: 2
+    segments_required: 2
+    requisites: "Must touch target"
+    effect: "Recovers Physical damage"
+    range: "0"
+    target: "1 person"
+    duration: Permanent
+    save: null
+    description: |
+      Once cast, the Deed of Healing inflicts 3 Mental damage for each Segment it is maintained
+      and cannot be used if the caster has sustained Heavy Mental damage. The Deed restores
+      1D5 Light Physical damage every Segment and 1D5 Heavy Physical damage every 2 Segments.
+      It is superseded by later Techniques.
+
+  - id: deed-of-paralysis
+    name: "Deed of Paralysis"
+    romanization: SHEEAK-KAN
+    source: "Playkit p. 53"
+    level: 2
+    segments_required: 1
+    requisites: "Must touch target"
+    effect: "Paralyzes target"
+    range: "0"
+    target: "1 person"
+    duration: "12 Turns"
+    save: "WIL [4 + Level Used]"
+    description: |
+      Paralyzes the target unless it makes a successful WIL Roll. If the target chooses not
+      to resist, the Deed is automatically successful. The target is freed from all pain while
+      the Deed is in effect.
+
+  - id: deed-of-sharpness
+    name: "Deed of Sharpness"
+    romanization: KHIYAN-KAN
+    source: "Playkit p. 54"
+    level: 2
+    segments_required: 1
+    requisites: "Must touch target"
+    effect: "Temporarily harden a soft object"
+    range: "0"
+    target: "One soft object the size of a dagger"
+    duration: "See description"
+    save: null
+    description: |
+      Temporarily turns any soft object into a bladed or blunt weapon. Maintaining the effect
+      inflicts 2 Mental damage per Segment, and the item reverts if you fail a WIL Roll.
+      This Deed is superseded by later Techniques.
+
+  - id: deed-of-smithing
+    name: "Deed of Smithing"
+    romanization: SHEEAK-KAN
+    source: "Playkit p. 54"
+    level: 2
+    segments_required: 1
+    requisites: "Must touch target"
+    effect: "Transforms metal"
+    range: "0"
+    target: "One metal object up to 0.5 litte (20cm) cubed in size"
+    duration: Permanent
+    save: null
+    description: |
+      Allows metal objects to be cut or deformed as the caster chooses. Complex shapes require
+      an AGI Roll with a Difficulty chosen by the WM (8 for basic shapes, 15 for keys, etc.).
+      Has no effect on objects with arcane protection. This Deed is superseded by later Techniques.

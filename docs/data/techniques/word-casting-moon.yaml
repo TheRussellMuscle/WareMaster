@@ -1,0 +1,62 @@
+# Wares Blade Word-Casting Techniques: Gate of the Moon
+# Source: Playkit pp. 44-45
+
+discipline: word-casting
+gate: moon
+gate_description: "A Gate representing the moon. It has mastery over darkness and the mind (illusions)."
+techniques:
+  - id: darkcall-darkscatter
+    name: "Darkcall / Darkscatter"
+    romanization: "IE-AHN / IE-REHN"
+    source: "Playkit p. 44"
+    gate: moon
+    level: 1
+    segments_required: 2
+    requisites: null
+    effect: "Creates an area of darkness (Darkcall) / Dissolves a Darkcall area (Darkscatter)"
+    range: "2 liet (8 m)"
+    target: "The space up to 50 litte (2 m) from the target"
+    duration: "5 Turns (Darkcall) / Instant (Darkscatter)"
+    save: null
+    description: |
+      Darkcall creates an area of otherwise normal darkness, so even without light it will take
+      a character (16 - SEN) Segments for their eyes to adjust to the darkness. Anyone fighting
+      in darkness must roll 1D5 when determining IN/BN.
+
+      Conversely, Darkscatter instantly dissolves an area of darkness created by Darkcall.
+
+  - id: cursebolt
+    name: Cursebolt
+    romanization: IE-HAH
+    source: "Playkit p. 45"
+    gate: moon
+    level: 1
+    segments_required: 1
+    requisites: null
+    effect: "Shoots an illusory arrow of light"
+    range: "5 liet (20 m)"
+    target: "1 Person"
+    duration: "1 Turn or until it hits the target"
+    save: "WIL 12"
+    description: |
+      Deals 1D5 Physical and Mental damage unless the target successfully dodges it. Since the
+      arrow is an illusion, the physical damage will disappear after 1/2 etches (1 hour).
+      However, if used under a full moon, the physical damage does not disappear. Additionally,
+      under a full moon the damage dealt becomes 1D5+5 (physical and mental).
+
+  - id: heartrend
+    name: Heartrend
+    romanization: IE-LHEG
+    source: "Playkit p. 45"
+    gate: moon
+    level: 2
+    segments_required: 3
+    requisites: "Must be performed in an area untouched by sunlight"
+    effect: "Force a target to answer questions truthfully"
+    range: "1 liet (4 m)"
+    target: "1 person"
+    duration: "1 Turn"
+    save: "WIL 12"
+    description: |
+      The target must answer any questions truthfully for the duration of the technique;
+      the same person can only be affected by this technique once per day.

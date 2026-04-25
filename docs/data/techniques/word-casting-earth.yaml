@@ -1,0 +1,64 @@
+# Wares Blade Word-Casting Techniques: Gate of Earth
+# Source: Playkit p. 48
+
+discipline: word-casting
+gate: earth
+gate_description: >
+  A Gate symbolizing the earth, bestowing the power to manipulate soil and stone.
+  Also embodies those who rest within the earth, giving its practitioners control
+  over fell creatures and the souls of the dead.
+techniques:
+  - id: earthshape
+    name: Earthshape
+    romanization: DEE-DOGG
+    source: "Playkit p. 48"
+    gate: earth
+    level: 1
+    segments_required: 3
+    requisites: "Must touch object"
+    effect: "Allows earth and stone objects to be reshaped"
+    range: "0"
+    target: "Up to 5 cubic littes (20cm³) of stone or natural soil"
+    duration: Permanent
+    save: null
+    description: |
+      If the caster wishes to create especially complex shapes, they must make a SEN Roll with
+      a Difficulty chosen by the WM.
+
+  - id: sandball
+    name: Sandball
+    romanization: DEE-SAZ
+    source: "Playkit p. 48"
+    gate: earth
+    level: 1
+    segments_required: 1
+    requisites: "Catalyst - A handful of sand"
+    effect: "Create stone projectiles that break into powder on impact"
+    range: "As thrown object"
+    target: "1-liet (4m) radius around the site of impact"
+    duration: "Calm Air - 1 Turn / Light Wind - 5 Segments"
+    save: "CON 9"
+    description: |
+      Creates a handful of projectiles that can be thrown to create an obscuring cloud wherever
+      they land. Anyone caught in the cloud must make a successful CON Roll or start choking on
+      the dust, reducing their IN/DN Roll to [1D5] for the next 1D5 Sequences. If not thrown,
+      the projectiles disintegrate into sand after 1 Turn.
+
+  - id: soulwarden
+    name: Soulwarden
+    romanization: DEE-ZHIE
+    source: "Playkit p. 48"
+    gate: earth
+    level: 1
+    segments_required: 4
+    requisites: "Catalyst - Hairs from a deceased person"
+    effect: "Summons a spirit to serve the caster"
+    range: "1 li (4km)"
+    target: "1 soul"
+    duration: "3 etches (6 hours) or until caster is contacted via Farspeak"
+    save: "CON 9"
+    description: |
+      Summons the spirit of whomever the hair used as a catalyst belonged to. The spirit can
+      be commanded to watch over a specific target (such as an enemy or location) by the caster
+      and will use the Technique Farspeak to contact the caster if anything unusual occurs.
+      However, once the spirit does so, it will dematerialize again.

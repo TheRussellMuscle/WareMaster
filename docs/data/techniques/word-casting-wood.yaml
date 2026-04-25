@@ -1,0 +1,72 @@
+# Wares Blade Word-Casting Techniques: Gate of Wood
+# Source: Playkit pp. 43-44
+
+discipline: word-casting
+gate: wood
+gate_description: >
+  A Gate representing wood. Allows one to speak to trees and manipulate grass.
+  Also has broad control over life itself (disease, lifespan, etc.).
+techniques:
+  - id: leafblade
+    name: Leafblade
+    romanization: NO-RIGEE
+    source: "Playkit p. 43"
+    gate: wood
+    level: 1
+    segments_required: 1
+    requisites: "Must touch target"
+    effect: "Makes a plant harder (sharper) than steel"
+    range: "0"
+    target: "1 plant up to 1 litte (40 cm) in length"
+    duration: "1 Turn"
+    save: null
+    description: |
+      For the duration of this technique, the target plant hardens and can be equipped and used
+      like a bladed weapon. It then weighs as much as an equivalent amount of steel. Depending
+      on size and shape, the result may be up to as large as a short sword and do as much damage
+      as a thrusting sword (at the WM's discretion).
+
+  - id: mindbloom
+    name: Mindbloom
+    romanization: NO-SEQUIA
+    source: "Playkit p. 43"
+    gate: wood
+    level: 1
+    segments_required: 2
+    requisites: "Catalyst - herbs with anesthetic properties"
+    effect: "Intoxicate an opponent by filling the air with narcotics"
+    range: "2 liet (8 m)"
+    target: "A space up to 1 liet (4 m) away from the target"
+    duration: "1T (see description)"
+    save: "CON 10"
+    description: |
+      Anyone within the target area that inhales the gas created by this technique and fails
+      the Save Roll immediately gains +10 to Will Rolls for the duration of the technique.
+      However, they become unable to use sound judgement and must roll 4 or higher on a 1D10
+      Roll for every action they attempt. On a failure, they put themselves into a disadvantageous
+      situation (at the discretion of the WM).
+
+      A Total Failure on this roll means the intoxicated target will put themselves into a
+      deadly situation. On a 4 or higher, the target becomes lethargic and takes no action.
+      An intoxicated target that leaves the range of the technique returns to normal after
+      1 Round. The narcotic lasts for 1 Turn in calm weather but only 1D5 Segments in a light
+      breeze. There is no effect in a strong wind.
+
+  - id: mossbind
+    name: Mossbind
+    romanization: NO-EVE
+    source: "Playkit p. 44"
+    gate: wood
+    level: 2
+    segments_required: 1
+    requisites: "Catalyst - a handful of moss or algae"
+    effect: "Restrict an opponent's movement by covering them in moss"
+    range: "1 liet (4 m)"
+    target: "1 person"
+    duration: "5 Turns"
+    save: "See description"
+    description: |
+      Moss or algae binds the target, subjecting them to a -5 modifier to their IN/BN roll
+      until completely removed. The moss/algae may only be removed by succeeding on a
+      Difficulty 15 AGI Roll (repeatable each Segment) — though if attempted, no other actions
+      may be taken during that Segment.

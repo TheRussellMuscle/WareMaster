@@ -1,0 +1,32 @@
+# Wares Blade Word-Casting Techniques: Gateless
+# Source: Playkit p. 39
+#
+# Available to Word-Casters of all schools.
+
+discipline: word-casting
+gate: gateless
+techniques:
+  - id: farspeak
+    name: Farspeak
+    romanization: ROGG
+    source: "Playkit p. 39"
+    gate: gateless
+    level: 1
+    segments_required: 3
+    requisites: "Target must also have mastered Farspeak"
+    effect: "Speak to others at a distance"
+    range: "200 lis (800 km)"
+    target: "1 person"
+    duration: "1 Turn"
+    save: "WIL 8"
+    description: |
+      Allows two-way communication with another person who has mastered Farspeak in situations
+      where direct conversation is not possible. The person being contacted does not need to
+      make a Binding Roll and can refuse the communication with a successful WIL Roll.
+
+      If cast on a target already in a Farspeak conversation, the caster joins it unless the
+      target successfully blocks. Anything said in a Farspeak conversation can be heard by all
+      other participants. Participants must focus on the conversation to maintain it. Smaller
+      barriers and obstacles have no impact, but larger ones like mountains and oceans can
+      reduce its effective range.
+    notes: "Every Word-Caster begins the game with at least one Gateless Technique mastered: Farspeak."

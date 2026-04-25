@@ -1,0 +1,62 @@
+# Wares Blade Word-Casting Techniques: Gate of Wind
+# Source: Playkit p. 46
+
+discipline: word-casting
+gate: wind
+gate_description: "A Gate representing the wind. It can produce gusts of cyclonic strength."
+techniques:
+  - id: lesser-gale
+    name: "Lesser Gale"
+    romanization: VIE-HYUE
+    source: "Playkit p. 46"
+    gate: wind
+    level: 1
+    segments_required: 1
+    requisites: null
+    effect: "Projects a gust of wind that can blow away light objects (paper, leaves, etc.)"
+    range: "0"
+    target: "See description"
+    duration: Instant
+    save: null
+    description: |
+      A gust of wind blows from the caster to a chosen direction for 5 liet (20 m), and then
+      dissipates. The width of the gust is 50 litte. The wind created by this technique does
+      not have the ability to deal lethal damage. This technique can be used to launch the
+      fireball created by the Lesser Flamebolt technique.
+
+  - id: breathfield
+    name: Breathfield
+    romanization: VIE-AUZE
+    source: "Playkit p. 46"
+    gate: wind
+    level: 1
+    segments_required: 2
+    requisites: null
+    effect: "Creates an area of breathable air around the caster"
+    range: "0"
+    target: "Space within 1 liet (4 m) around the caster"
+    duration: "1 etch (2 hours)"
+    save: null
+    description: |
+      Fills the affected area with clean, breathable air even in an area filled with polluted
+      air or poisonous gas. It does so by gathering clean air — so that the air in surrounding
+      areas becomes extremely thin — and the concentration of poisonous gases becomes very high.
+
+  - id: airshield
+    name: Airshield
+    romanization: VIE-AHL
+    source: "Playkit p. 46"
+    gate: wind
+    level: 2
+    segments_required: 2
+    requisites: null
+    effect: "Creates an air barrier that cushions the impact of weapon attacks and similar damage sources"
+    range: "0"
+    target: "Caster only"
+    duration: "1 Turn"
+    save: "WIL 12"
+    description: |
+      Produces a wall of air around the caster that adds +3 to DN and reduces incoming physical
+      damage by 3. Damage caused by wind or air pressure is halved. This technique is effective
+      against all physical damage, including from techniques, but has no effect on other types
+      of damage.

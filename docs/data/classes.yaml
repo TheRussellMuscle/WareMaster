@@ -1,0 +1,268 @@
+# Wares Blade Classes
+# Source: Playkit Chapter 3 (pp. 12-13, 21-25)
+
+classes:
+  - id: warrior
+    name: Warrior
+    source: "Playkit pp. 12, 21-22"
+    description: >
+      Specializes in armed combat. Most likely to be a Ryude-Master.
+      Tend to serve in organizations capable of providing specialized training.
+    perks:
+      - id: damage-modifier
+        name: "Damage +/- 1"
+        description: "Deal +1 damage and take -1 damage."
+    skill_packages:
+      - id: all-rounder
+        name: All-Rounder
+        skills:
+          - { name: "Weapon/One Type", level: 2 }
+          - { name: "Defense", level: 2 }
+          - { name: "Riding", level: 2 }
+          - { name: "Physical Resistance", level: 1 }
+        optional_choose_one:
+          - { description: "Weapon*: +1 Level" }
+          - { description: "Athletics: Level 1, +50 Golda" }
+          - { description: "Mental Resistance: Level 1, +50 Golda" }
+          - { description: "Physical Resistance: +1 Level" }
+      - id: battler
+        name: Battler
+        skills:
+          - { name: "Weapon*", level: 2 }
+          - { name: "Defense", level: 1 }
+          - { name: "Riding", level: 2 }
+          - { name: "Physical Resistance", level: 1 }
+        optional_choose_one:
+          - { description: "Drive: Level 1" }
+          - { description: "Weapon/One Type: +1 Level, +100 Golda" }
+          - { description: "Athletics: Level 1, Throwing: Level 1, +100 Golda" }
+          - { description: "Physical Resistance: +1 Level, Mental Resistance: Level 1, +50 Golda" }
+          - { description: "Numenism: Level 1, +50 Golda" }
+    equipment_packages:
+      - id: warrior-a
+        name: "Warrior Equipment Package A"
+        items: ["Longsword", "Dagger", "Lamellar Armor", "Open Helmet", "Heater Shield"]
+        total_golda: 125
+        notes: "Standard warrior loadout. Longsword primary, dagger backup."
+      - id: warrior-b
+        name: "Warrior Equipment Package B"
+        items: ["Greatsword", "Breastplate", "Full Helmet"]
+        total_golda: 180
+        notes: "Heavy damage focus; heavier armor compensates for greatsword bulk."
+
+  - id: word-caster
+    name: Word-Caster
+    source: "Playkit pp. 12, 22-23"
+    description: >
+      Wields the sacred energies of Wares-Stones. Follows one of 8 elemental Gates.
+    perks:
+      - id: wares-knowledge
+        name: "Wares Knowledge"
+        description: "Can read, write, and speak the Holy Writ."
+      - id: wisdom
+        name: Wisdom
+        description: "+1 bonus on Knowledge Rolls."
+      - id: wares-stone
+        name: "Wares-Stone"
+        description: "Starts with a Wares-Stone used to cast Techniques."
+    gates_with_paired_skills:
+      sun: { paired_skill: "Astronomy" }
+      metal: { paired_skill: "Geology" }
+      fire: { paired_skill: "Pharmacology" }
+      wood: { paired_skill: "Mineralogy" }
+      moon: { paired_skill: "Language" }
+      wind: { paired_skill: "Meteorology" }
+      water: { paired_skill: "Botany" }
+      earth: { paired_skill: "Zoology" }
+    skill_packages:
+      - id: adept
+        name: Adept
+        notes: "Take Word-Casting (chosen Gate): Level 2 + paired Skill: Level 2."
+        skills:
+          - { name: "Riding", level: 1 }
+          - { name: "Mental Resistance", level: 1 }
+        bonus_golda: 100
+      - id: war-caster
+        name: War-Caster
+        notes: "Take Word-Casting (chosen Gate): Level 2 + paired Skill: Level 2."
+        skills:
+          - { name: "Riding", level: 1 }
+          - { name: "Mental Resistance", level: 1 }
+        bonus_golda: 50
+      - id: shadow-caster
+        name: Shadow-Caster
+        notes: "Take Word-Casting (chosen Gate): Level 2 + paired Skill: Level 2."
+        skills:
+          - { name: "Riding", level: 1 }
+          - { name: "Mental Resistance", level: 1 }
+        bonus_golda: 100
+    equipment_packages:
+      - id: word-caster-a
+        name: "Word-Caster Equipment Package A"
+        items: ["Short Sword", "Hardened Leathers", "Open Helmet"]
+        total_golda: 70
+        notes: "Assumes some direct combat. Light armor."
+      - id: word-caster-b
+        name: "Word-Caster Equipment Package B"
+        items: ["Dagger", "Leather Vest"]
+        total_golda: 30
+        notes: "Spend remaining golda on general items if other warriors handle combat."
+
+  - id: spiritualist
+    name: Spiritualist
+    source: "Playkit pp. 13, 23-24"
+    description: >
+      Member of one of Ahan's religious orders. Two flavors: Monks (channel inner power, Numenism)
+      and Invokers (channel divine power found in nature).
+    perks:
+      - id: allies-in-faith
+        name: "Allies in Faith"
+        description: "+1 to First Impression Rolls vs same religious order; -1 vs all others."
+      - id: sermon
+        name: Sermon
+        description: >
+          Make a LUC Roll Difficulty [16 - CHA] to impress a number of people equal to the amount
+          rolled over Difficulty +1. May ask for a simple favor or boost an NPC's morale.
+    skill_packages:
+      - id: monk-votarist
+        name: "Monk - Votarist"
+        skills:
+          - { name: "Numenism", level: 2 }
+          - { name: "Medicine", level: 1 }
+          - { name: "Botany", level: 1 }
+          - { name: "Riding", level: 1 }
+          - { name: "Mental Resistance", level: 1 }
+        optional_choose_one:
+          - { description: "Weapon*: Level 1, +100 golda" }
+          - { description: "Mental Resistance: +1 Level, +100 golda" }
+          - { description: "Physical Resistance: Level 1, +150 Golda" }
+      - id: monk-militant
+        name: "Monk - Militant"
+        skills:
+          - { name: "Numenism", level: 2 }
+          - { name: "Medicine", level: 1 }
+          - { name: "Botany", level: 1 }
+          - { name: "Riding", level: 1 }
+          - { name: "Mental Resistance", level: 1 }
+        optional_choose_one:
+          - { description: "Weapon*: Level 2, +50 golda" }
+          - { description: "Weapon*: Level 1 / Defense: Level 1, +50 golda" }
+          - { description: "Weapon*: Level 1 / Physical Resistance: Level 1, +100 golda" }
+          - { description: "Weapon*: Level 1 / Mental Resistance: Level 1, +100 golda" }
+          - { description: "Drive: Level 1, +50 golda" }
+      - id: invoker-evangelist
+        name: "Invoker - Evangelist"
+        skills:
+          - { name: "Invocation", level: 2 }
+          - { name: "Medicine", level: 1 }
+          - { name: "Botany", level: 1 }
+          - { name: "Riding", level: 1 }
+          - { name: "Mental Resistance", level: 1 }
+        optional_choose_one:
+          - { description: "Weapon*: Level 1, +100 golda" }
+          - { description: "Mental Resistance: +1 Level, +100 golda" }
+          - { description: "Physical Resistance: Level 1, +150 Golda" }
+      - id: invoker-denouncer
+        name: "Invoker - Denouncer"
+        skills:
+          - { name: "Invocation", level: 2 }
+          - { name: "Medicine", level: 1 }
+          - { name: "Botany", level: 1 }
+          - { name: "Riding", level: 1 }
+          - { name: "Mental Resistance", level: 1 }
+          - { name: "Weapon*", level: 1 }
+        optional_choose_one:
+          - { description: "Weapon*: +1 Level, +50 golda" }
+          - { description: "Defense: Level 1, +50 golda" }
+          - { description: "Physical Resistance: Level 1, +100 golda" }
+          - { description: "Mental Resistance: Level 1, +100 golda" }
+    equipment_packages:
+      - id: spiritualist-a
+        name: "Spiritualist Equipment Package A"
+        items: ["Longsword", "Lamellar Armor", "Open Helmet"]
+        total_golda: 90
+        notes: "For Spiritualists who fight directly."
+      - id: spiritualist-b
+        name: "Spiritualist Equipment Package B"
+        items: ["Hardened Leathers", "Open Helmet"]
+        total_golda: 55
+        notes: "For unarmed Monks supporting via Techniques. Numetic Force handles defense and damage."
+
+  - id: tradesfolk
+    name: Tradesfolk
+    source: "Playkit pp. 13, 24-25"
+    description: >
+      Wide variety of professions. Class Perks are profession-specific.
+    perks: []
+    professions:
+      - id: thief
+        name: Thief
+        perks:
+          - id: price-loot
+            name: "Price Loot"
+            description: "Assess stolen-goods/treasure value via Knowledge Roll. Treated as Level 1 Specialized Skill."
+          - id: thieves-toolkit
+            name: "Thief's Toolkit"
+            description: "Oil, wire, crowbar, common keys, climbing hook, magnifying glass."
+        skill_package:
+          - { name: "Finesse", level: 3 }
+          - { name: "Riding", level: 1 }
+          - { name: "Athletics", level: 2 }
+          - { name: "Escape", level: 1 }
+          - { name: "Search", level: 1 }
+        bonus_golda: 100
+        equipment_package:
+          items: ["Thief's Toolkit"]
+          cost: "Free"
+      - id: bard
+        name: Bard
+        perks:
+          - id: public-performance
+            name: "Public Performance"
+            description: >
+              Earn money via CHA Roll in tavern/town square against the lowest Base CHA present
+              (3 if otherwise unspecified). Earn [Amount Opponent's CHA Was Exceeded By x 0.5] golda.
+              Skills like Music, Oratory, Athletics may add. On Total Failure or Perfect Success of
+              the loser, payout is doubled.
+        skill_package:
+          - { name: "Music", level: 3 }
+          - { name: "Riding", level: 1 }
+          - { name: "Oratory", level: 2 }
+          - { name: "Negotiation", level: 1 }
+          - { name: "Language", level: 1 }
+        bonus_golda: 100
+        equipment_package:
+          items: ["Fair clothing", "Instrument"]
+          cost: "Free"
+      - id: alchemist
+        name: Alchemist
+        perks:
+          - id: wares-dabbler
+            name: "Wares-Dabbler"
+            description: "Like Word-Casters, can read/write/speak the Sacred Writ via SEN Roll."
+          - id: component-analysis
+            name: "Component Analysis"
+            description: >
+              SEN Roll (+ Word-Casting Skill) to discern ingredients of medicines, poisons, etc.
+              Replicate a sampled mixture in [(Difficulty - Word-Casting Level) x 1D5] days,
+              then AGI Roll to compound.
+        skill_package:
+          - { name: "Word-Casting/Metal", level: 1 }
+          - { name: "Finesse", level: 1 }
+          - { name: "Riding", level: 1 }
+          - { name: "Mental Resistance", level: 1 }
+          - { name: "Pharmacology", level: 2 }
+          - { name: "Mineralogy", level: 1 }
+        bonus_golda: 100
+        equipment_package:
+          items: ["Alchemist Toolkit"]
+          cost: "Free"
+      - id: doctor
+        name: Doctor
+        perks:
+          - id: consultation
+            name: Consultation
+            description: "Provide medical exam for [Medicine Skill Level x 10] golda."
+          - id: doctors-bag
+            name: "Doctor's Bag"
+            description: "Bandages, invigorators, healing salve, neutralizers."

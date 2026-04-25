@@ -1,0 +1,290 @@
+# Wares Blade Invocations
+# Source: Playkit pp. 56-60
+#
+# Used by Spiritualist Invokers. Unlike Numenism, techniques can only be used at their default Level.
+# Two sub-categories visible in the Playkit: "Fingers" (single-finger gestures) and "Palms".
+
+discipline: invocation
+techniques:
+  # ===== FINGERS =====
+  - id: deed-of-waking-invocation
+    name: "Deed of Waking"
+    romanization: ECHU-KAN
+    source: "Playkit p. 56"
+    sub_category: fingers
+    level: 1
+    segments_required: 1
+    requisites: "Must touch target"
+    effect: "Removes paralysis and unconsciousness"
+    range: "0"
+    target: "1 person"
+    duration: Permanent
+    save: null
+    description: |
+      The caster makes a prayer to instil their fingertips with a holy spirit that allows the
+      target to recover from unconsciousness, paralysis, and similar effects. If these were
+      caused by Techniques, the target must additionally make a successful CON Roll with a
+      Difficulty of (Technique's Level + 5) to recover.
+
+  - id: soothing-finger
+    name: "Soothing Finger"
+    romanization: REGUNER
+    source: "Playkit p. 56"
+    sub_category: fingers
+    level: 1
+    segments_required: 1
+    requisites: "Must touch target"
+    effect: "Temporarily removes damage"
+    range: "0"
+    target: "1 person"
+    duration: "1 Turn"
+    save: null
+    description: |
+      1D10 points of Physical or Mental damage are removed from the target for the duration
+      of this effect. The damage is regained as soon as the effect expires.
+
+  - id: arcane-finger
+    name: "Arcane Finger"
+    romanization: MAVUNER
+    source: "Playkit p. 56"
+    sub_category: fingers
+    level: 1
+    segments_required: 2
+    requisites: null
+    effect: "Find magically imbued items"
+    range: "0"
+    target: "Most powerful magical object within 20 liets (80m) of caster"
+    duration: "6 Turns or until item is found"
+    save: null
+    description: |
+      The caster's finger will automatically point to the most powerful magical object within
+      20 liets, provided they make a successful Difficulty 11 WIL Roll. This Roll can only be
+      attempted once a Turn for the duration of the effect.
+
+  - id: sinister-finger
+    name: "Sinister Finger"
+    romanization: DOUGINER
+    source: "Playkit p. 57"
+    sub_category: fingers
+    level: 1
+    segments_required: 2
+    requisites: null
+    effect: "Identifies fell creatures and enemies of the caster's deities"
+    range: "20 liets (80m)"
+    target: "\"Evil\" entities"
+    duration: "1 Turn"
+    save: null
+    description: |
+      The caster's finger points to any fell creatures within 20 liets, such as undead monsters,
+      as well as beings considered enemies of the caster's deities, such as demons and their envoys.
+
+  - id: ghostfire-finger
+    name: "Ghostfire Finger"
+    romanization: RYGANER
+    source: "Playkit p. 57"
+    sub_category: fingers
+    level: 1
+    segments_required: 2
+    requisites: null
+    effect: "Creates a \"hot\" sensation capable of dealing damage"
+    range: "0"
+    target: "1 person"
+    duration: Instant
+    save: "WIL 9"
+    description: |
+      Makes the caster's fingertips feel hot, dealing 1D5 Physical and Mental damage to the target.
+
+  - id: ghostchill-finger
+    name: "Ghostchill Finger"
+    romanization: SYGHNER
+    source: "Playkit p. 57"
+    sub_category: fingers
+    level: 1
+    segments_required: 1
+    requisites: "Must touch target"
+    effect: "Creates a \"cold\" sensation capable of dealing Mental damage"
+    range: "0"
+    target: "1 person"
+    duration: Instant
+    save: "WIL 9"
+    description: |
+      Makes the caster's fingertips feel cold, dealing 1D10 Mental damage to the target.
+
+  - id: radiant-finger
+    name: "Radiant Finger"
+    romanization: FUREYNER
+    source: "Playkit p. 57"
+    sub_category: fingers
+    level: 1
+    segments_required: 3
+    requisites: null
+    effect: "Creates light that repels fell creatures"
+    range: "0"
+    target: "2-liet (8m) radius around the caster"
+    duration: "1 Turn"
+    save: "See description"
+    description: |
+      Light that repels fell creatures, such as the undead, shines from the caster's fingertips,
+      illuminating everything within 2 liets of the caster. To enter this area, fell creatures
+      must make a successful WIL Roll with a Difficulty of [4 + Level Used At]. The Difficulty
+      is not affected by the creature's Rank.
+
+  # ===== PALMS =====
+  - id: shining-palm
+    name: "Shining Palm"
+    romanization: RIEFARAS
+    source: "Playkit p. 58"
+    sub_category: palms
+    level: 1
+    segments_required: 2
+    requisites: null
+    effect: "Repels fell creatures"
+    range: "1 liet (4m)"
+    target: "1 fell creature"
+    duration: Instant
+    save: "See description"
+    description: |
+      Holy light emanates from the caster's palm, driving away fell creatures, such as the
+      undead. The targeted creature must make a successful WIL Roll with a Difficulty equal
+      to the caster's <Invocation> Level or immediately flee the area.
+
+  - id: cursed-palm
+    name: "Cursed Palm"
+    romanization: DEIGARAS
+    source: "Playkit p. 58"
+    sub_category: palms
+    level: 1
+    segments_required: 1
+    requisites: null
+    effect: "Immobilizes target"
+    range: "1 liet (4m)"
+    target: "1 fell creature"
+    duration: "[1D5 + LUC] Segments"
+    save: "WIL 9"
+    description: |
+      Unless the target makes a successful WIL Roll, it will be paralyzed for the duration of
+      the effect. The caster can extend this by making a LUC Roll, increasing the duration by
+      a number of Segments equal to the Roll's outcome.
+
+  - id: curing-palm
+    name: "Curing Palm"
+    romanization: HIGARAS
+    source: "Playkit p. 58"
+    sub_category: palms
+    level: 1
+    segments_required: 3
+    requisites: "Must touch target"
+    effect: "Recovers Physical damage"
+    range: "0"
+    target: "1 person"
+    duration: Permanent
+    save: null
+    description: |
+      Recovers 1D5 Light Physical damage, or half that amount (rounding down) of Heavy Physical damage.
+
+  - id: blinding-palm
+    name: "Blinding Palm"
+    romanization: YRAGARAS
+    source: "Playkit p. 59"
+    sub_category: palms
+    level: 1
+    segments_required: 1
+    requisites: null
+    effect: "Blinds target"
+    range: "1 liet (4m)"
+    target: "1 person"
+    duration: "1D5 Turns"
+    save: "WIL 9"
+    description: |
+      Unless the target makes a successful WIL Roll, it will be blinded for the duration of
+      the effect. The impact this has on the target's actions is left to the WM's discretion.
+
+  - id: sightgiving-palm
+    name: "Sightgiving Palm"
+    romanization: CERAGARAS
+    source: "Playkit p. 59"
+    sub_category: palms
+    level: 1
+    segments_required: 3
+    requisites: "Must touch target"
+    effect: "Removes the effects of Blinding Palm"
+    range: "0"
+    target: "1 person"
+    duration: Permanent
+    save: null
+    description: "Removes the effects of Blinding Palm."
+
+  - id: phasing-palm
+    name: "Phasing Palm"
+    romanization: SURRYRAS
+    source: "Playkit p. 59"
+    sub_category: palms
+    level: 1
+    segments_required: 2
+    requisites: "Must touch target"
+    effect: "Allows hands to pass through living flesh"
+    range: "0"
+    target: "Flesh within touching distance"
+    duration: "1 Turn"
+    save: null
+    description: |
+      Imbues the caster's hands with a mysterious power that allows them to pass through
+      living flesh, including leather, as if it were made of water or air. The flesh is not
+      damaged by this, but the target will be shocked enough to take 1D5 Mental damage the
+      first time they are subjected to this effect unless they make a successful Difficulty
+      12 WIL Roll. Will not affect living flesh protected by appropriate arcane effects.
+
+  - id: telepathic-palm
+    name: "Telepathic Palm"
+    romanization: REEDINRAS
+    source: "Playkit p. 60"
+    sub_category: palms
+    level: 1
+    segments_required: 3
+    requisites: "Must touch target"
+    effect: "Reads target's thoughts"
+    range: "0"
+    target: "1 person"
+    duration: "1 Turn"
+    save: "WIL 8"
+    description: |
+      The caster can read the target's thoughts unless the target makes a successful WIL Roll.
+      If the target is expecting to be mind-read, they can try to deliberately shield information
+      from the caster. In this case, the caster must make a SEN Roll with a Difficulty chosen
+      by the WM to obtain the desired information.
+
+  - id: phantom-palm
+    name: "Phantom Palm"
+    romanization: RIUBIRAS
+    source: "Playkit p. 60"
+    sub_category: palms
+    level: 1
+    segments_required: 2
+    requisites: "Must touch target"
+    effect: "Causes target to hallucinate"
+    range: "0"
+    target: "1 person"
+    duration: "1T"
+    save: "WIL 9"
+    description: |
+      The target is subjected to a hallucination chosen by the caster. If the hallucination
+      is of something that would damage the target, the target takes damage as if it were real,
+      up to and including making CON or WIL Rolls for Heavy Damage. The target will return to
+      normal at the end of the effect's duration.
+
+  - id: cleansing-palm
+    name: "Cleansing Palm"
+    romanization: SAYNIRAS
+    source: "Playkit p. 60"
+    sub_category: palms
+    level: 1
+    segments_required: 3
+    requisites: "Must touch target"
+    effect: "Purifies contaminated objects"
+    range: "0"
+    target: "Cubic area up to 20 littes (80cm) in size"
+    duration: Permanent
+    save: null
+    description: |
+      Purifies objects that have been contaminated by non-arcane means. It cannot undo decay
+      or damage and only removes contamination. Cleansing Palm has no effect on living things.

@@ -1,0 +1,192 @@
+# Wares Blade weapons + ammunition
+# Source: Playkit Chapter 3 (p. 18)
+#
+# Damage Value notation: dice formulas as strings ("1D10", "2D5+5", etc.).
+# bn_modifier: { melee, charge, range }; null = cannot use that attack type.
+
+weapons:
+  # DAGGERS
+  - id: dagger
+    name: Dagger
+    source: "Playkit p. 18"
+    category: daggers
+    hands: 1
+    critical_value: 8
+    bn_modifier: { melee: 3, charge: 0, range: 1 }
+    damage_value: { melee: "1D5-1", ranged: "1D5-2" }
+    price_golda: 10
+  - id: throwing-dagger
+    name: "Throwing Dagger"
+    source: "Playkit p. 18"
+    category: daggers
+    hands: 1
+    critical_value: 8
+    bn_modifier: { melee: -3, charge: -4, range: 3 }
+    damage_value: { melee: "1D5-2", ranged: "1D5-2" }
+    price_golda: 5
+
+  # SWORDS
+  - id: short-sword
+    name: "Short Sword"
+    source: "Playkit p. 18"
+    category: swords
+    hands: 1
+    critical_value: 8
+    bn_modifier: { melee: 2, charge: 0, range: null }
+    damage_value: { melee: "1D10-3", ranged: null }
+    price_golda: 15
+  - id: rapier
+    name: Rapier
+    source: "Playkit p. 18"
+    category: swords
+    hands: 1
+    critical_value: 6
+    bn_modifier: { melee: 0, charge: 1, range: null }
+    damage_value: { melee: "1D10-2", ranged: null }
+    price_golda: 20
+  - id: longsword
+    name: Longsword
+    source: "Playkit p. 18"
+    category: swords
+    hands: 1
+    critical_value: 8
+    bn_modifier: { melee: 0, charge: -2, range: null }
+    damage_value: { melee: "1D10", ranged: null }
+    price_golda: 25
+  - id: bastard-sword
+    name: "Bastard Sword"
+    source: "Playkit p. 18"
+    category: swords
+    hands: "1 or 2"
+    critical_value: 8
+    bn_modifier: { melee: -2, charge: -4, range: null }
+    damage_value: { melee: "1D10+3(5)", ranged: null }
+    price_golda: 35
+    notes: "Damage Value 1D10+3 one-handed, 1D10+5 two-handed."
+  - id: greatsword
+    name: Greatsword
+    source: "Playkit p. 18"
+    category: swords
+    hands: 2
+    critical_value: 8
+    bn_modifier: { melee: -5, charge: -10, range: null }
+    damage_value: { melee: "1D10+10", ranged: null }
+    price_golda: 50
+
+  # BLUDGEONS
+  - id: wooden-club
+    name: "Wooden Club"
+    source: "Playkit p. 18"
+    category: bludgeons
+    hands: 1
+    critical_value: 10
+    bn_modifier: { melee: 2, charge: null, range: 1 }
+    damage_value: { melee: "2D5-5", ranged: null }
+    price_golda: 5
+  - id: spiked-club
+    name: "Spiked Club"
+    source: "Playkit p. 18"
+    category: bludgeons
+    hands: 1
+    critical_value: 10
+    bn_modifier: { melee: 0, charge: null, range: 0 }
+    damage_value: { melee: "2D5-4", ranged: null }
+    price_golda: 8
+  - id: wooden-staff
+    name: "Wooden Staff"
+    source: "Playkit p. 18"
+    category: bludgeons
+    hands: 2
+    critical_value: 10
+    bn_modifier: { melee: 0, charge: null, range: null }
+    damage_value: { melee: "2D5", ranged: null }
+    price_golda: 10
+  - id: mace
+    name: Mace
+    source: "Playkit p. 18"
+    category: bludgeons
+    hands: 1
+    critical_value: 10
+    bn_modifier: { melee: -1, charge: null, range: null }
+    damage_value: { melee: "2D5+5", ranged: null }
+    price_golda: 20
+
+  # SLINGS
+  - id: sling
+    name: Sling
+    source: "Playkit p. 18"
+    category: slings
+    hands: 1
+    critical_value: 10
+    bn_modifier: { melee: null, charge: null, range: -3 }
+    damage_value: { melee: null, ranged: "1D10-1" }
+    price_golda: 5
+    range_liets: 4
+    reload_segments: 1
+
+  # BOWS
+  - id: longbow
+    name: Longbow
+    source: "Playkit p. 18"
+    category: bows
+    hands: 2
+    critical_value: 6
+    bn_modifier: { melee: null, charge: null, range: 0 }
+    damage_value: { melee: null, ranged: "2D5" }
+    price_golda: 25
+    range_liets: 5
+    reload_segments: 1
+  - id: greatbow
+    name: Greatbow
+    source: "Playkit p. 18"
+    category: bows
+    hands: 2
+    critical_value: 4
+    bn_modifier: { melee: null, charge: null, range: -3 }
+    damage_value: { melee: null, ranged: "2D5+2" }
+    price_golda: 40
+    range_liets: 10
+    reload_segments: 1
+
+  # CROSSBOWS
+  - id: crossbow
+    name: Crossbow
+    source: "Playkit p. 18"
+    category: crossbows
+    hands: 2
+    critical_value: 4
+    bn_modifier: { melee: null, charge: null, range: 2 }
+    damage_value: { melee: null, ranged: "2D5+1" }
+    price_golda: 35
+    range_liets: 10
+    reload_segments: 5
+  - id: arbalest
+    name: Arbalest
+    source: "Playkit p. 18"
+    category: crossbows
+    hands: 2
+    critical_value: 3
+    bn_modifier: { melee: null, charge: null, range: 0 }
+    damage_value: { melee: null, ranged: "2D5+5" }
+    price_golda: 75
+    range_liets: 15
+    reload_segments: 10
+
+ammunition:
+  - id: longbow-arrows
+    name: "Longbow Arrows"
+    source: "Playkit p. 18"
+    bundle: "1 for 5"
+    note: "5 golda gets 1 longbow arrow."
+  - id: greatbow-arrows
+    name: "Greatbow Arrows"
+    source: "Playkit p. 18"
+    bundle: "2 for 5"
+  - id: crossbow-arrows
+    name: "Crossbow Arrows"
+    source: "Playkit p. 18"
+    bundle: "3 for 5"
+  - id: arbalest-arrows
+    name: "Arbalest Arrows"
+    source: "Playkit p. 18"
+    bundle: "5 for 5"

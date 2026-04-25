@@ -1,0 +1,61 @@
+# Wares Blade Word-Casting Techniques: Gate of the Sun
+# Source: Playkit p. 40
+
+discipline: word-casting
+gate: sun
+gate_description: "A Gate representing the sun, sharing its power and radiance."
+techniques:
+  - id: lesser-sunorb
+    name: "Lesser Sunorb"
+    romanization: LAH-KU
+    source: "Playkit p. 40"
+    gate: sun
+    level: 1
+    segments_required: 1
+    requisites: null
+    effect: "Lights up surrounding area"
+    range: "2 liets (8m)"
+    target: "3 liet (12m) radius"
+    duration: "5 Turns"
+    save: null
+    description: |
+      Creates a sun-like sphere 1 litte (4cm) in diameter that brightly illuminates everything
+      within 3 liets (12m). The sphere can be moved and travels at up to walking speed. Brighter
+      than a torch and will blind anything that looks directly at it, leaving them unable to act.
+      In combat, the affected character's IN, DN, and BN will be halved (rounding down).
+
+  - id: starblink
+    name: Starblink
+    romanization: LAH-HA
+    source: "Playkit p. 40"
+    gate: sun
+    level: 1
+    segments_required: 1
+    requisites: null
+    effect: "A flash of light blinds opponents for a few seconds"
+    range: "2 liets (8m)"
+    target: "Everyone within 50 liet (2m) of the center"
+    duration: Instant
+    save: "LUC 6"
+    description: |
+      Creates a flashing ball of light that blinds anybody who sees it for 1D5 Segments unless
+      they make a successful save. In combat, affected characters' DN and BN will be halved
+      (rounding down).
+
+  - id: snap
+    name: Snap
+    romanization: LAH-SAI
+    source: "Playkit p. 40"
+    gate: sun
+    level: 1
+    segments_required: 1
+    requisites: "Caster must have been exposed to sunlight in the last 3 etches (6 hours)"
+    effect: "Immobilizes an opponent for a few seconds"
+    range: "1 liet (4m)"
+    target: "1 person"
+    duration: Instant
+    save: "LUC 9"
+    description: |
+      Creates a small explosion that emits a high-pitched noise capable of temporarily paralyzing
+      the nervous system. Unless they successfully avoid it, the target is rendered Incapacitated
+      for 1D5 Segments and takes 1D5 Physical damage.

@@ -1,0 +1,60 @@
+# Wares Blade Word-Casting Techniques: Gate of Metal
+# Source: Playkit p. 41
+
+discipline: word-casting
+gate: metal
+gate_description: "A Gate representing imbuing metal with arcane energy, allowing it to be manipulated at will."
+techniques:
+  - id: metalshape
+    name: Metalshape
+    romanization: RAE-DOGG
+    source: "Playkit p. 41"
+    gate: metal
+    level: 1
+    segments_required: 3
+    requisites: "Must touch object"
+    effect: "Allows metal objects to be reshaped"
+    range: "0"
+    target: "1 metal object up to 5 cubic littes (20cm³) in size"
+    duration: Permanent
+    save: null
+    description: |
+      If the caster wishes to create especially complex shapes, they must make a SEN Roll with
+      a Difficulty chosen by the WM. This Technique will not work on metals that have been
+      subjected to Word-Casting Techniques or have special properties.
+
+  - id: metalbond
+    name: Metalbond
+    romanization: RAE-ZIAC
+    source: "Playkit p. 41"
+    gate: metal
+    level: 1
+    segments_required: 1
+    requisites: "At least one metal object; objects must be able to touch each other"
+    effect: "Joins metal objects to one another or non-metal objects"
+    range: "0"
+    target: "2 items to be joined together"
+    duration: "See description"
+    save: "WIL 9"
+    description: |
+      Bonds one metal object to another object, metal or otherwise. If the other object is
+      non-living, the bond will be permanent. Living objects can make a WIL Roll to avoid the
+      bond; even if the WIL Roll fails, the bonded metal will fall off after 1 Turn.
+
+  - id: ironleech
+    name: Ironleech
+    romanization: RAE-LEEQ
+    source: "Playkit p. 41"
+    gate: metal
+    level: 1
+    segments_required: 1
+    requisites: "Catalyst - Iron chips"
+    effect: "Drains target's iron"
+    range: "1 liet (4m)"
+    target: "1 person"
+    duration: "1 Turn"
+    save: "See description"
+    description: |
+      Drains the target of all iron, making breathing difficult and leaving them on the verge
+      of fainting. For the Technique's duration, the target must make a successful Difficulty 9
+      CON Roll at the beginning of every Sequence to avoid falling unconscious.

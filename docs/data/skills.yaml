@@ -1,0 +1,148 @@
+# Wares Blade Skills
+# Source: Playkit Chapter 3 (p. 16)
+# Each Skill has a governing Ability and category. Specialized Skills have no Ability.
+
+skills:
+  # COMBAT
+  - id: weapon-generic
+    name: "<Weapon>*"
+    category: combat
+    attribute: AGI
+    source: "Playkit p. 16"
+    notes: "One Skill per weapon category — longsword, mace, etc."
+
+  - id: defense
+    name: Defense
+    category: combat
+    attribute: AGI
+    source: "Playkit p. 16"
+    notes: "Adds to Base DN. Also adds to defenders' rolls in IN/DN."
+
+  # ADVENTURE — Physical
+  - id: athletics
+    name: Athletics
+    category: adventure-physical
+    attribute: AGI
+    source: "Playkit p. 16"
+  - id: escape
+    name: Escape
+    category: adventure-physical
+    attribute: AGI
+    source: "Playkit p. 16"
+  - id: riding
+    name: Riding
+    category: adventure-physical
+    attribute: AGI
+    source: "Playkit p. 16"
+  - id: finesse
+    name: Finesse
+    category: adventure-physical
+    attribute: AGI
+    source: "Playkit p. 16"
+  - id: physical-resistance
+    name: "Physical Resistance"
+    category: adventure-physical
+    attribute: CON
+    source: "Playkit p. 16"
+    notes: "Each Level adds 1 to Light Physical damage tolerance."
+
+  # ADVENTURE — Mental
+  - id: mental-resistance
+    name: "Mental Resistance"
+    category: adventure-mental
+    attribute: WIL
+    source: "Playkit p. 16"
+    notes: "Each Level adds 1 to Light Mental damage tolerance."
+  - id: search
+    name: Search
+    category: adventure-mental
+    attribute: SEN
+    source: "Playkit p. 16"
+  - id: negotiation
+    name: Negotiation
+    category: adventure-mental
+    attribute: CHA
+    source: "Playkit p. 16"
+  - id: medicine
+    name: Medicine
+    category: adventure-mental
+    attribute: SEN
+    source: "Playkit p. 16"
+  - id: astronomy
+    name: Astronomy
+    category: adventure-mental
+    attribute: SEN
+    source: "Playkit p. 16"
+  - id: botany
+    name: Botany
+    category: adventure-mental
+    attribute: SEN
+    source: "Playkit p. 16"
+  - id: zoology
+    name: Zoology
+    category: adventure-mental
+    attribute: SEN
+    source: "Playkit p. 16"
+  - id: geology
+    name: Geology
+    category: adventure-mental
+    attribute: SEN
+    source: "Playkit p. 16"
+  - id: language
+    name: Language
+    category: adventure-mental
+    attribute: SEN
+    source: "Playkit p. 16"
+  - id: meteorology
+    name: Meteorology
+    category: adventure-mental
+    attribute: SEN
+    source: "Playkit p. 16"
+  - id: mineralogy
+    name: Mineralogy
+    category: adventure-mental
+    attribute: SEN
+    source: "Playkit p. 16"
+  - id: pharmacology
+    name: Pharmacology
+    category: adventure-mental
+    attribute: SEN
+    source: "Playkit p. 16"
+
+  # SPECIALIZED (no governing Attribute)
+  - id: drive
+    name: Drive
+    category: specialized
+    attribute: null
+    source: "Playkit p. 16"
+    notes: "Required to operate a Ryude. See Chapter 14."
+  - id: word-casting
+    name: "Word-Casting"
+    category: specialized
+    attribute: null
+    source: "Playkit p. 16"
+    notes: "Indicates a Word-Caster's mastery of their Gate."
+  - id: numenism
+    name: Numenism
+    category: specialized
+    attribute: null
+    source: "Playkit p. 16"
+    notes: "Adherent's ability to draw out divine power."
+  - id: invocation
+    name: Invocation
+    category: specialized
+    attribute: null
+    source: "Playkit p. 16"
+    notes: "User's ability to draw on surrounding spirits."
+  - id: music
+    name: Music
+    category: specialized
+    attribute: AGI
+    source: "Playkit p. 16"
+    notes: "Tradesfolk public performance."
+  - id: oratory
+    name: Oratory
+    category: specialized
+    attribute: SEN
+    source: "Playkit p. 16"
+    notes: "Tradesfolk public performance."

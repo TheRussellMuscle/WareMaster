@@ -1,0 +1,157 @@
+# Wares Blade general adventuring goods
+# Source: Playkit Chapter 3 (p. 20)
+
+starter_kit:
+  description: "Every character begins with these items at no cost."
+  items:
+    - id: backpack-starter
+      name: Backpack
+      notes: "Holds smaller items and treasures."
+    - id: waterskin-starter
+      name: Waterskin
+      notes: "Three days' worth of drinking water."
+    - id: hemp-rope-starter
+      name: "Hemp Rope"
+      notes: "3 liets (~12 m) starting amount."
+    - id: torch-starter
+      name: Torch
+      notes: "Provides light for ~1 hour."
+    - id: flint-set-starter
+      name: "Flint Set"
+      notes: "Used to start fires."
+
+goods:
+  # CLOTHING
+  - id: travelling-clothes
+    name: "Travelling Clothes"
+    source: "Playkit p. 20"
+    category: clothing
+    price_golda: 10
+    notes: "Includes shoes."
+  - id: cloak
+    name: Cloak
+    source: "Playkit p. 20"
+    category: clothing
+    price_golda: 2
+    notes: "Protects against cold and heat."
+
+  # CONTAINERS
+  - id: backpack
+    name: Backpack
+    source: "Playkit p. 20"
+    category: containers
+    price_golda: 3
+    notes: "Holds 2,000 silver coins worth."
+  - id: bag
+    name: Bag
+    source: "Playkit p. 20"
+    category: containers
+    price_golda: 1
+    notes: "Holds 500 silver coins."
+  - id: waterskin
+    name: Waterskin
+    source: "Playkit p. 20"
+    category: containers
+    price_golda: 2
+    notes: "Holds 1 garom of water (3 days' supply)."
+
+  # LIGHT SOURCES
+  - id: candle
+    name: Candle
+    source: "Playkit p. 20"
+    category: light
+    price_golda: "2 for 5"
+    notes: "Lasts for 6 Turns."
+  - id: torch
+    name: Torch
+    source: "Playkit p. 20"
+    category: light
+    price_golda: "1 for 5"
+    notes: "Lasts for 1 hour."
+  - id: oil-lantern
+    name: "Oil Lantern"
+    source: "Playkit p. 20"
+    category: light
+    price_golda: 25
+  - id: lamp-oil
+    name: "Lamp-Oil"
+    source: "Playkit p. 20"
+    category: light
+    price_golda: "2 for 5"
+    notes: "Fuels an oil lantern for 8 hours."
+  - id: flint-set
+    name: "Flint Set"
+    source: "Playkit p. 20"
+    category: light
+    price_golda: 3
+
+  # CLIMBING GEAR
+  - id: hemp-rope
+    name: "Hemp Rope"
+    source: "Playkit p. 20"
+    category: climbing
+    price_golda: "1 per liet"
+  - id: climbing-hook
+    name: "Climbing Hook"
+    source: "Playkit p. 20"
+    category: climbing
+    price_golda: "4 for 5"
+    notes: "Supports one person."
+  - id: iron-peg
+    name: "Iron Peg"
+    source: "Playkit p. 20"
+    category: climbing
+    price_golda: "10 for 6"
+  - id: hook
+    name: Hook
+    source: "Playkit p. 20"
+    category: climbing
+    price_golda: "2 for 2"
+
+  # CAMPING GEAR
+  - id: camping-tent
+    name: "Camping Tent"
+    source: "Playkit p. 20"
+    category: camping
+    price_golda: 30
+    notes: "For 2 people; assembly tools included."
+  - id: blanket
+    name: Blanket
+    source: "Playkit p. 20"
+    category: camping
+    price_golda: 10
+    notes: "For 1 person."
+
+  # RATIONS
+  - id: dried-meat
+    name: "Dried Meat"
+    source: "Playkit p. 20"
+    category: rations
+    price_golda: 1
+    notes: "1 meal's worth."
+  - id: smoked-meat
+    name: "Smoked Meat"
+    source: "Playkit p. 20"
+    category: rations
+    price_golda: 2
+    notes: "1 meal's worth."
+
+  # OTHER
+  - id: fair-clothing
+    name: "Fair Clothing"
+    source: "Playkit p. 20"
+    category: other
+    price_golda: "20-100"
+    notes: "+1 to First Impression Rolls when worn."
+  - id: thiefs-toolkit
+    name: "Thief's Toolkit"
+    source: "Playkit p. 20"
+    category: other
+    price_golda: 80
+    notes: "Wire, file, oil, keys, etc."
+  - id: stringed-instruments
+    name: "Stringed Instruments"
+    source: "Playkit p. 20"
+    category: other
+    price_golda: "6-12"
+    notes: "Price varies by type and size."

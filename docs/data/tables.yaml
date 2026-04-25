@@ -1,0 +1,156 @@
+# Wares Blade reference tables
+# Source: Playkit Chapters 4 & 6
+
+difficulty_examples:
+  source: "Playkit p. 27"
+  ranges:
+    - { range: "1-3", description: "Even a child could do it" }
+    - { range: "4-5", description: "Easy even without the relevant skills" }
+    - { range: "6-7", description: "Easy with the relevant skills" }
+    - { range: "8-9", description: "Average for mavericks, more challenging for an unskilled layman" }
+    - { range: "10-11", description: "Manageable for skilled professionals, but even a maverick will struggle without the right skills" }
+    - { range: "12-13", description: "High risk of failure, even for professionals" }
+    - { range: "14-15", description: "Maybe if you're lucky..." }
+    - { range: "16+", description: "Typically impossible" }
+
+proficiency_gains:
+  source: "Playkit p. 35"
+  rows:
+    - { impact: Minimal, perfect_success: 5, total_failure: 1 }
+    - { impact: "Non-Critical", perfect_success: 10, total_failure: 5 }
+    - { impact: Tremendous, perfect_success: 20, total_failure: 10 }
+
+completion_bonus_examples:
+  source: "Playkit p. 35"
+  entries:
+    - { event: "Completed an objective set by the WM", bonus: 100 }
+    - { event: "Destroyed a Footman", bonus: 50 }
+    - { event: "Acquired a Footman", bonus: 100 }
+    - { event: "Destroyed a Courser", bonus: 100 }
+    - { event: "Acquired a Courser", bonus: 150 }
+    - { event: "Destroyed a Maledictor", bonus: 200 }
+    - { event: "Acquired a Maledictor", bonus: 250 }
+    - { event: "At least one character suffered Heavy Damage in battle", bonus: 30 }
+    - { event: "At least one character Incapacitated in battle", bonus: 50 }
+    - { event: "Previously acquired Ryude was damaged", bonus: "Durability Loss x 3" }
+    - { event: "Acquired valuable treasure", bonus: "Golda Value / 500" }
+    - { event: "Player cooperated with WM (as judged by WM)", bonus: 30 }
+    - { event: "Other (WM's choice)", bonus: "-50 to +50" }
+
+skill_advancement_costs:
+  source: "Playkit p. 35"
+  raise_existing: "(Current Skill Level + 1) x 100 PP"
+  acquire_level_1_combat: 200
+  acquire_level_1_adventure: 150
+  acquire_level_1_specialized: "Requires dedicated instructor and long training; cannot be purchased"
+
+luc_reserves:
+  source: "Playkit p. 35"
+  conversion: "100 LUC Reserve points = 1 Available LUC"
+  cap: "Cannot exceed character's initial LUC Ability Score"
+
+damage_recovery:
+  source: "Playkit p. 34"
+  light_damage:
+    physical_per_day: 1
+    mental_per_hour: 1
+  heavy_damage:
+    physical_days_per_point: "16 - CON"
+    mental_hours_per_point: "16 - CON"
+  notes:
+    - "Once all Heavy Damage of a track is recovered, remaining Light Damage of that track heals at the Light rate."
+    - "Mental Incapacitation recovers naturally at the Heavy Mental rate."
+    - "Physical Incapacitation does NOT recover naturally — must be treated by another."
+
+attunement_penalty_table_a:
+  source: "Playkit p. 64"
+  rows:
+    - { roll: "10-7", result: "Base Drive permanently reduced by 1" }
+    - { roll: "6-4", result: "Ryude SPE permanently reduced by 1" }
+    - { roll: "3-2", result: "Ryude SPE and POW permanently reduced by 1" }
+    - { roll: "1", result: "Roll again on Table B" }
+
+attunement_penalty_table_b:
+  source: "Playkit p. 64"
+  rows:
+    - { roll: "10-7", result: "Discomfort: WIL Roll — success → Base Drive -1 perm; fail → operator's CON -1 for the day" }
+    - { roll: "6-4", result: "Ryude Lurgy: CON Roll — success → Base Drive -1 perm + operator -1 CON; fail → operator -1 CON + 1D5 Physical" }
+    - { roll: "3-2", result: "Mental Pressure: WIL Roll — success → operator -1 CON, roll again Table 1; fail → 1D10 Mental" }
+    - { roll: "1", result: "Immobilized: Ryude refuses to move. Operator takes 2D10 Mental damage" }
+
+operator_error_table_a_normal:
+  source: "Playkit p. 65"
+  rows:
+    - { roll: "10-7", result: "Slip-up — repeat the Operator Roll." }
+    - { roll: "6-4", result: "Drop or near-fall, minimal impact." }
+    - { roll: "3-2", result: "Serious or irreparable error." }
+    - { roll: "1", result: "Roll on Table B." }
+
+operator_error_table_b_normal:
+  source: "Playkit p. 65"
+  rows:
+    - { roll: "10-7", result: "BAL Roll: fail → Ryude falls and takes 1D5 damage." }
+    - { roll: "6-4", result: "BAL Roll: fail → Ryude falls; 1D5 damage; occupants take 1D10 Physical." }
+    - { roll: "3-2", result: "Ryude falls, takes 1D10 damage; occupants take 1D10 Physical." }
+    - { roll: "1", result: "Falls; takes 3D5 damage; all occupants take 3D5 Physical." }
+
+operator_error_table_a_combat:
+  source: "Playkit p. 66"
+  rows:
+    - { roll: "10-7", result: "Minor mistake, no real bearing." }
+    - { roll: "6-4", result: "BAL Roll: fail → IN/DN halved next Segment." }
+    - { roll: "3-2", result: "BAL Roll: fail → Ryude falls, 1D10 Physical to all occupants." }
+    - { roll: "1", result: "Roll on Table B." }
+
+operator_error_table_b_combat:
+  source: "Playkit p. 67"
+  rows:
+    - { roll: "10-7", result: "Weapon dropped. LUC Roll: success → at your feet; fail → 2D5 liets in random direction." }
+    - { roll: "6-4", result: "Weapon broken." }
+    - { roll: "3-2", result: "Arm broken: 3 → left (non-dominant) arm; 2 → right (dominant) arm." }
+    - { roll: "1", result: "Accidentally attack self. Damage doubled after factoring POW." }
+
+standard_damage_penalty_table:
+  source: "Playkit p. 69"
+  trigger: "Each multiple of 10 Durability lost"
+  rows:
+    - { roll: "10-7", result: "ARM -1" }
+    - { roll: "6-4", result: "POW -1" }
+    - { roll: "3-2", result: "SPE -1" }
+    - { roll: "1", result: "Roll on Critical Damage Table A" }
+
+critical_damage_table_a:
+  source: "Playkit p. 69"
+  trigger: "When a single attack's damage ≥ Ryude's ARM"
+  rows:
+    - { roll: "10-7", result: "ARM -[1D5]; operator takes [1D10] Physical" }
+    - { roll: "6-4", result: "POW -[1D5]; operator takes [1D10] Physical" }
+    - { roll: "3-2", result: "SPE -[1D5]; operator takes [1D10] Physical" }
+    - { roll: "1", result: "Roll on Critical Damage Table B" }
+
+critical_damage_table_b:
+  source: "Playkit p. 69"
+  rows:
+    - { roll: "10-7", result: "Power Failure (roll 1D10: 10→Neck, 9-6→Left Arm, 5-2→Right Arm, 1→Leg)" }
+    - { roll: "6-4", result: "Vessel Rupture (roll on Damage Location Table)" }
+    - { roll: "3-2", result: "Coolant Leak" }
+    - { roll: "1", result: "Persona Destroyed" }
+
+damage_location_table:
+  source: "Playkit p. 70"
+  rows:
+    - { roll: "10-9", location: "Left Arm (Non-Dominant)" }
+    - { roll: "8-7", location: "Right Arm (Dominant)" }
+    - { roll: "6-5", location: "Left Leg" }
+    - { roll: "4-3", location: "Right Leg" }
+    - { roll: "2", location: "Neck" }
+    - { roll: "1", location: "Torso" }
+
+ryude_repair_costs:
+  source: "Playkit p. 71"
+  durability_damage:
+    time: "1 to 8 etches per point"
+    cost_golda: "10 to 80 per point"
+  ability_damage:
+    time: "1 to 8 days per point"
+    cost_golda: "100 to 800 per point"

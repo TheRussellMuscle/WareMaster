@@ -1,0 +1,116 @@
+# Wares Blade Ryude Weapons + Armor
+# Source: Playkit p. 72
+
+ryude_weapons:
+  # SWORDS
+  - id: ryude-rapier
+    name: Rapier
+    source: "Playkit p. 72"
+    category: swords
+    hands: 1
+    critical_value: 6
+    bn_modifier: { melee: 0, charge: 2, range: null }
+    damage_value: { melee: "1D10-1", ranged: null }
+    price_golda: 200
+  - id: ryude-longsword
+    name: Longsword
+    source: "Playkit p. 72"
+    category: swords
+    hands: 1
+    critical_value: 8
+    bn_modifier: { melee: 0, charge: -2, range: null }
+    damage_value: { melee: "1D10", ranged: null }
+    price_golda: 250
+  - id: ryude-bastard-sword-1h
+    name: "Bastard Sword (1-Handed)"
+    source: "Playkit p. 72"
+    category: swords
+    hands: 1
+    critical_value: 8
+    bn_modifier: { melee: -2, charge: -4, range: null }
+    damage_value: { melee: "1D10+2", ranged: null }
+    price_golda: 350
+  - id: ryude-bastard-sword-2h
+    name: "Bastard Sword (2-Handed)"
+    source: "Playkit p. 72"
+    category: swords
+    hands: 2
+    critical_value: 8
+    bn_modifier: { melee: -1, charge: -4, range: null }
+    damage_value: { melee: "1D10+5", ranged: null }
+    price_golda: 350
+
+  # BLUDGEONS
+  - id: ryude-iron-club
+    name: "Iron Club"
+    source: "Playkit p. 72"
+    category: bludgeons
+    hands: 2
+    critical_value: 10
+    bn_modifier: { melee: -2, charge: null, range: null }
+    damage_value: { melee: "2D5+3", ranged: null }
+    price_golda: 100
+  - id: ryude-morning-star
+    name: "Morning Star"
+    source: "Playkit p. 72"
+    category: bludgeons
+    hands: 1
+    critical_value: 9
+    bn_modifier: { melee: -3, charge: null, range: null }
+    damage_value: { melee: "2D5+4", ranged: null }
+    price_golda: 300
+
+  # SPEARS
+  - id: ryude-javelin
+    name: Javelin
+    source: "Playkit p. 72"
+    category: spears
+    hands: 1
+    critical_value: 7
+    bn_modifier: { melee: 0, charge: 3, range: 1 }
+    damage_value: { melee: "1D10", ranged: null }
+    price_golda: 150
+  - id: ryude-pike
+    name: Pike
+    source: "Playkit p. 72"
+    category: spears
+    hands: 2
+    critical_value: 7
+    bn_modifier: { melee: -2, charge: -1, range: -3 }
+    damage_value: { melee: "1D10+5", ranged: null }
+    price_golda: 350
+
+ryude_armor:
+  # PARTIAL
+  - id: ryude-face-guard
+    name: "Face Guard"
+    source: "Playkit p. 72"
+    armor_class: partial
+    arm_modifier: 0
+    spe_modifier: -1
+    price_golda: 150
+    notes: "+5 DN against any attacks targeting the unit's Persona."
+  - id: ryude-gauntlets
+    name: Gauntlets
+    source: "Playkit p. 72"
+    armor_class: partial
+    arm_modifier: 0
+    spe_modifier: -1
+    price_golda: 300
+    notes: "Prevents Ryude from taking damage if an unarmed attack is a Total Failure."
+
+  # SHIELDS
+  - id: ryude-buckler
+    name: Buckler
+    source: "Playkit p. 72"
+    armor_class: shield
+    arm_modifier: 1
+    spe_modifier: -1
+    price_golda: 150
+  - id: ryude-heater-shield
+    name: "Heater Shield"
+    source: "Playkit p. 72"
+    armor_class: shield
+    arm_modifier: 2
+    spe_modifier: -2
+    price_golda: 250
