@@ -2,6 +2,7 @@ import { Outlet } from '@tanstack/react-router';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Sidebar } from './Sidebar';
 import { CommandPalette } from './CommandPalette';
+import { useCampaignStore } from '@/stores/campaign-store';
 
 /**
  * Top-level layout: sidebar on the left, top bar with clock + command palette,
@@ -24,12 +25,13 @@ export function AppShell(): React.JSX.Element {
 }
 
 function TopBar(): React.JSX.Element {
+  const current = useCampaignStore((s) => s.current);
   return (
     <header
       className="flex h-12 items-center justify-between border-b border-[var(--color-parchment-400)] bg-[var(--color-parchment-100)]/40 px-4"
     >
       <div className="font-display text-sm tracking-wide text-[var(--color-ink-soft)]">
-        No campaign open
+        {current ? current.name : 'No campaign open'}
       </div>
       <div className="flex items-center gap-3">
         <CommandPalette />

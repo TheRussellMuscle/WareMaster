@@ -6,10 +6,11 @@ WareMaster tracks characters, combat, and downtime activities (such as healing-o
 
 ## Status
 
-**Foundation phase.** No application code yet — this commit establishes:
+In active development. Phase-by-phase implementation roadmap lives in [PLAN.md](./PLAN.md).
 
 - Stack decisions ([STACK.md](./STACK.md))
-- Structured documentation of the Wares Blade rules under [`docs/`](./docs/README.md), used as the reference for everything the app will eventually do.
+- Implementation plan and architecture ([PLAN.md](./PLAN.md))
+- Structured documentation of the Wares Blade rules under [`docs/`](./docs/README.md), used as the reference for everything the app does.
 
 ## Documentation
 

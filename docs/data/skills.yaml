@@ -4,12 +4,93 @@
 
 skills:
   # COMBAT
-  - id: weapon-generic
-    name: "<Weapon>*"
+  # Each weapon type is its own Skill in Wares Blade — there is no generic
+  # "weapon" Skill. Skill-package entries written as "Weapon*" or
+  # "Weapon/One Type" are placeholders the player resolves at character
+  # creation by allocating the package level across one or more specific
+  # weapons (e.g. Longsword Lv 2, OR Longsword Lv 1 + Dagger Lv 1).
+  # Source: Playkit p. 16, Chapters 5 + 8.
+  - id: dagger
+    name: Dagger
     category: combat
     attribute: AGI
-    source: "Playkit p. 16"
-    notes: "One Skill per weapon category — longsword, mace, etc."
+    source: "Playkit p. 16, p. 18"
+  - id: throwing-dagger
+    name: "Throwing Dagger"
+    category: combat
+    attribute: AGI
+    source: "Playkit p. 16, p. 18"
+  - id: short-sword
+    name: "Short Sword"
+    category: combat
+    attribute: AGI
+    source: "Playkit p. 16, p. 18"
+  - id: rapier
+    name: Rapier
+    category: combat
+    attribute: AGI
+    source: "Playkit p. 16, p. 18"
+  - id: longsword
+    name: Longsword
+    category: combat
+    attribute: AGI
+    source: "Playkit p. 16, p. 18"
+  - id: bastard-sword
+    name: "Bastard Sword"
+    category: combat
+    attribute: AGI
+    source: "Playkit p. 16, p. 18"
+    notes: "Bastard Sword can be wielded 1H or 2H; the Skill applies to either grip."
+  - id: greatsword
+    name: Greatsword
+    category: combat
+    attribute: AGI
+    source: "Playkit p. 16, p. 18"
+  - id: wooden-club
+    name: "Wooden Club"
+    category: combat
+    attribute: AGI
+    source: "Playkit p. 16, p. 18"
+  - id: spiked-club
+    name: "Spiked Club"
+    category: combat
+    attribute: AGI
+    source: "Playkit p. 16, p. 18"
+  - id: wooden-staff
+    name: "Wooden Staff"
+    category: combat
+    attribute: AGI
+    source: "Playkit p. 16, p. 18"
+  - id: mace
+    name: Mace
+    category: combat
+    attribute: AGI
+    source: "Playkit p. 16, p. 18"
+  - id: sling
+    name: Sling
+    category: combat
+    attribute: AGI
+    source: "Playkit p. 16, p. 18"
+  - id: longbow
+    name: Longbow
+    category: combat
+    attribute: AGI
+    source: "Playkit p. 16, p. 18"
+  - id: greatbow
+    name: Greatbow
+    category: combat
+    attribute: AGI
+    source: "Playkit p. 16, p. 18"
+  - id: crossbow
+    name: Crossbow
+    category: combat
+    attribute: AGI
+    source: "Playkit p. 16, p. 18"
+  - id: arbalest
+    name: Arbalest
+    category: combat
+    attribute: AGI
+    source: "Playkit p. 16, p. 18"
 
   - id: defense
     name: Defense
