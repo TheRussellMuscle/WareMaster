@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "WareMaster",
-  "version": "0.1.0",
+  "version": "0.3.0-alpha.1",
   "identifier": "dev.waremaster.app",
   "build": {
     "frontendDist": "../dist",
@@ -35,6 +35,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "createUpdaterArtifacts": true,
     "category": "Utility",
     "shortDescription": "Wares Blade TTRPG companion",
     "longDescription": "Free, open-source desktop companion for the Wares Blade tabletop RPG. Tracks campaigns, characters, NPCs, monsters, Ryude, and combat.",
@@ -48,5 +49,13 @@
     "resources": [
       "resources/**/*"
     ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IERFNjgwODExMzhCRUYyNDgKUldSSThyNDRFUWhvM3NQL09YeUxXVmJkR3VxZk9HTTh3Z29zdHpHeDJGSzNkMVNSc2x6dTBwVUEK",
+      "endpoints": [
+        "https://github.com/TheRussellMuscle/WareMaster/releases/latest/download/latest.json"
+      ]
+    }
   }
 }

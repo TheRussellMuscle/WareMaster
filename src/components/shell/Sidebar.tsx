@@ -1,12 +1,12 @@
 import { Link } from '@tanstack/react-router';
 import {
   BookOpen,
+  Coffee,
   Home,
   Library,
   Scroll,
   Settings,
   Swords,
-  Users,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
@@ -49,11 +49,21 @@ export function Sidebar(): React.JSX.Element {
         ))}
       </nav>
 
-      <div className="mt-auto px-2 text-[10px] text-[var(--color-ink-faint)]">
-        <div className="flex items-center gap-1.5">
-          <Users className="h-3 w-3" aria-hidden />
-          v0.1.0 · foundation
-        </div>
+      <div className="mt-auto flex flex-col gap-1.5 px-2 text-[10px] text-[var(--color-ink-faint)]">
+        <a
+          href="https://ko-fi.com/brendanrussell"
+          target="_blank"
+          rel="noreferrer noopener"
+          className={cn(
+            'flex items-center gap-1.5 rounded-sm px-1 py-0.5',
+            'text-[var(--color-ink-faint)] hover:text-[var(--color-rust)]',
+            'transition-colors',
+          )}
+        >
+          <Coffee className="h-3 w-3" aria-hidden />
+          Support on Ko-fi
+        </a>
+        <div className="px-1">v0.3.0-alpha.1 · phase 3</div>
       </div>
     </aside>
   );

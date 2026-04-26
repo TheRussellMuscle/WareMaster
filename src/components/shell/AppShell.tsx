@@ -2,13 +2,16 @@ import { Outlet } from '@tanstack/react-router';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Sidebar } from './Sidebar';
 import { CommandPalette } from './CommandPalette';
+import { UpdateDialog } from '@/components/updater/UpdateDialog';
 import { useCampaignStore } from '@/stores/campaign-store';
+import { useUpdater } from '@/hooks/useUpdater';
 
 /**
  * Top-level layout: sidebar on the left, top bar with clock + command palette,
  * main outlet wrapped in a parchment surface.
  */
 export function AppShell(): React.JSX.Element {
+  const updater = useUpdater();
   return (
     <TooltipProvider delayDuration={300}>
       <div className="flex h-screen w-screen overflow-hidden">
@@ -20,6 +23,7 @@ export function AppShell(): React.JSX.Element {
           </main>
         </div>
       </div>
+      <UpdateDialog state={updater} />
     </TooltipProvider>
   );
 }

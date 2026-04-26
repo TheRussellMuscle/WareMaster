@@ -1,6 +1,6 @@
 {
   "name": "waremaster",
-  "version": "0.1.0",
+  "version": "0.3.0-alpha.1",
   "private": true,
   "type": "module",
   "description": "Free, open-source desktop companion for the Wares Blade TTRPG.",
@@ -30,6 +30,8 @@
     "@tauri-apps/api": "^2.5.0",
     "@tauri-apps/plugin-dialog": "^2.2.0",
     "@tauri-apps/plugin-fs": "^2.2.0",
+    "@tauri-apps/plugin-process": "^2.0.0",
+    "@tauri-apps/plugin-updater": "^2.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.4",

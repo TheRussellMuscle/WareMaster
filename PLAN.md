@@ -585,12 +585,16 @@ Each phase ships a runnable app. Phases are sequential; each phase's deliverable
 Does **not** introduce new domain or engine code; only assets and a small amount of UI wiring (prop additions where art is consumed).
 
 ### Phase 8 (V1 polish) — distribution, updater, journal (2–3 days)
-1. CI: [.github/workflows/release.yml](.github/workflows/release.yml) builds Win/Mac/Linux artifacts.
-2. `tauri-plugin-updater` config + signing key.
+
+**Status update (v0.3.0-alpha.1):** items 1 and 2 (CI release workflow + `tauri-plugin-updater` config + ed25519 signing key) shipped early to support an alpha tester program after Phase 3. Tester builds now arrive automatically on every tag push. Remaining Phase 8 scope = items 3–6 below.
+
+1. ~~CI: [.github/workflows/release.yml](.github/workflows/release.yml) builds Win/Mac/Linux artifacts.~~ **Shipped in v0.3.0-alpha.1.**
+2. ~~`tauri-plugin-updater` config + signing key.~~ **Shipped in v0.3.0-alpha.1.**
 3. Markdown editor (Tiptap or Milkdown) for biographies + session journals — [src/components/editor/MarkdownEditor.tsx](src/components/editor/MarkdownEditor.tsx).
 4. Print-friendly character sheet — [src/styles/print.css](src/styles/print.css).
 5. Vault export/import (zip).
 6. Onboarding flow (first-launch wizard).
+7. OS code signing (Authenticode for Windows, Apple Developer ID + notarization for macOS) — deferred from the alpha cycle to remove the SmartScreen / Gatekeeper warnings testers see today.
 
 ---
 
