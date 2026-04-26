@@ -20,7 +20,7 @@ const NAV: NavItem[] = [
   { to: '/', label: 'Home', icon: Home },
   { to: '/campaigns', label: 'Campaigns', icon: Scroll },
   { to: '/templates/monsters', label: 'Templates', icon: Library },
-  { to: '/reference/classes', label: 'Reference', icon: BookOpen },
+  { to: '/reference', label: 'Reference', icon: BookOpen },
   { to: '/settings', label: 'Settings', icon: Settings },
 ];
 
