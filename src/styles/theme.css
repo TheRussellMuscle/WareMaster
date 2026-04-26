@@ -1,0 +1,25 @@
+@theme {
+  /* Parchment palette */
+  --color-parchment-50: #faf3e3;
+  --color-parchment-100: #f1e6c8;
+  --color-parchment-200: #e6d5a8;
+  --color-parchment-300: #d4be88;
+  --color-parchment-400: #b29562;
+
+  --color-ink: #2c1f0f;
+  --color-ink-soft: #4a3520;
+  --color-ink-faint: #6b5236;
+
+  --color-rust: #8b3a2a;       /* danger / Ryude crit */
+  --color-verdigris: #2e5e4a;  /* success / healing */
+  --color-gilt: #b88836;       /* perfect success / gold */
+
+  /* Typography */
+  --font-display: 'Cinzel', 'EB Garamond', Georgia, serif;
+  --font-body: 'Lora', 'Iowan Old Style', 'Georgia', serif;
+  --font-italic: 'EB Garamond', 'Lora', Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Borders */
+  --border-illuminated: 2px double var(--color-parchment-400);
+}
