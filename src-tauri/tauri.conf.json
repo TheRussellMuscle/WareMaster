@@ -34,7 +34,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["app", "dmg", "appimage", "deb", "nsis"],
     "createUpdaterArtifacts": true,
     "category": "Utility",
     "shortDescription": "Wares Blade TTRPG companion",

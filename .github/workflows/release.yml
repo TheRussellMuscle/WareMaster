@@ -65,6 +65,30 @@ jobs:
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Extract release notes from CHANGELOG.md
+        id: notes
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          HEADING="## [${VERSION}]"
+          if [ -f CHANGELOG.md ]; then
+            NOTES=$(awk -v h="$HEADING" '
+              index($0, h) == 1 { capture = 1; next }
+              capture && /^## \[/ { exit }
+              capture { print }
+            ' CHANGELOG.md)
+          else
+            NOTES=""
+          fi
+          if [ -z "$(echo "$NOTES" | tr -d '[:space:]')" ]; then
+            NOTES="See [commits](https://github.com/${{ github.repository }}/commits/${GITHUB_REF_NAME}) for what changed."
+          fi
+          {
+            echo 'value<<RELEASE_NOTES_EOF'
+            echo "$NOTES"
+            echo 'RELEASE_NOTES_EOF'
+          } >> "$GITHUB_OUTPUT"
+
       - name: Build & release
         uses: tauri-apps/tauri-action@v0
         env:
@@ -74,12 +98,7 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: 'WareMaster __VERSION__'
-          releaseBody: |
-            See [CHANGELOG / commits](https://github.com/TheRussellMuscle/WareMaster/commits/${{ github.ref_name }}) for what changed.
-
-            **Alpha builds are unsigned.** On Windows, click "More info → Run anyway" past the SmartScreen warning. On macOS, right-click the app → Open the first time. On Linux, `chmod +x` the AppImage and run.
-
-            Updates after this release will arrive automatically — the app checks GitHub on launch.
+          releaseBody: ${{ steps.notes.outputs.value }}
           releaseDraft: false
           prerelease: false
           includeUpdaterJson: true
