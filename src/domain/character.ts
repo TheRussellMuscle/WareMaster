@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { IdSchema } from './ids';
 import { ClassIdSchema } from './class';
 import { GateSchema } from './technique';
+import { CurrentSegmentSchema } from './action-log';
 
 const AbilitiesSchema = z.object({
   SEN: z.number().int(),
@@ -74,6 +75,12 @@ const CharacterStateSchema = z.object({
   active_effects: z.array(ActiveEffectSchema).default([]),
   /** Segment-index timestamp when recovery was last applied. */
   last_recovery_tick: z.number().int().default(0),
+  /**
+   * Current-Segment state set by the sheet's "Set IN/DN" action. Null when
+   * not in a segment (or when End Segment was clicked). Persists across
+   * reloads so the WM can leave mid-fight.
+   */
+  current_segment: CurrentSegmentSchema.nullable().default(null),
 });
 export type CharacterState = z.infer<typeof CharacterStateSchema>;
 

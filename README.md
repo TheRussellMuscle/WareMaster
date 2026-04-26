@@ -8,18 +8,29 @@ WareMaster tracks campaigns, characters, NPCs, monsters, Ryude, combat, and down
 
 ## Status
 
-**Phase 3 alpha — `v0.3.0-alpha.1`.** Early testers welcome.
+**Phase 5 alpha — `v0.4.0-alpha.1`.** Early testers welcome.
 
 What's working today:
 
 - Parchment-themed shell with native Wares Blade unit tooltips (etch, liet, gro, golda, …).
+- **Project-explorer sidebar** — campaigns expand inline to a per-campaign search box and the character list nested underneath; expansion + search persist across reloads.
 - Full reference browser over the 21 bundled YAML data files: classes, skills, weapons, armor, beastiary, Ryude, techniques, tables.
 - Vault on disk at `~/Documents/WareMaster/` — plaintext YAML / Markdown, git-friendly, hand-editable.
-- Campaign creation and management.
+- Campaign creation, management, and character browsing with search / sort / filters / status badges.
 - Character creation wizard following the 8 rule-aligned steps from the Playkit (class pick, ability rolls, skill packages, equipment packages, Word-Caster gate / Spiritualist order / Tradesfolk profession when applicable, biography).
-- Character sheet with full stat block, skills, equipment.
+- **Live character sheet with sheet-level rolling**:
+  - "This Segment" panel under Derived stats with `Set IN/DN`, automatic Total Absorption ×2 / ÷2 on Perfect / Total Failure.
+  - Per-weapon `Attack` buttons (BN, crit detection, damage minus current-segment absorption, Total Failure flags next-Segment IN halving).
+  - Per-technique `Cast` buttons for Word-Casting, Numetic Arts, and Invocations, with optional Mental damage cost.
+  - Per-skill `Roll` buttons for every catalog skill — including untrained ones at Lv 0 with the half-PP rule applied automatically.
+  - Per-ability roll buttons in the stat block (LUC opens a LUC Roll).
+  - `Save` button on the damage track header when in Heavy.
+  - LUC dice spend automatically (clamped to Available LUC) and restore on Perfect Success of non-combat skills.
+  - Rule explainers in every dialog quoting the relevant Playkit chapter.
+- **Campaign-wide action log** in a sticky right column — every roll across every character in the campaign, with character links per row.
+- **Auto-updates** on launch — signed with an ed25519 key.
 
-Phase-by-phase implementation roadmap lives in [PLAN.md](./PLAN.md). Next up: templates + named instances (Phase 4), dice + skill-check engines (Phase 5), time + recovery (Phase 6), combat tracker (Phase 7).
+Phase-by-phase implementation roadmap lives in [PLAN.md](./PLAN.md). Next up: monster / NPC / Ryude templates + instances (Phase 4), time + recovery (Phase 6), full multi-combatant tracker with undo/rewind (Phase 7).
 
 ## Download
 

@@ -48,6 +48,7 @@ function mkCharacter(overrides: Partial<Character['state']> = {}): Character {
       status_override: false,
       active_effects: [],
       last_recovery_tick: 0,
+      current_segment: null,
       ...overrides,
     },
     portrait_path: null,

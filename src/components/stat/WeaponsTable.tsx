@@ -1,5 +1,7 @@
+import { Sword } from 'lucide-react';
 import { ParchmentCard } from '@/components/parchment/ParchmentCard';
 import { AcronymTooltip } from '@/components/parchment/AcronymTooltip';
+import { useOptionalSheetActions } from '@/components/sheet/SheetActionsContext';
 import type { WeaponLine } from '@/engine/derive/weapon-lines';
 
 interface WeaponsTableProps {
@@ -11,6 +13,7 @@ interface WeaponsTableProps {
  * weapon's melee / charge / ranged BN totals, damage values, and crit value.
  */
 export function WeaponsTable({ lines }: WeaponsTableProps): React.JSX.Element {
+  const actions = useOptionalSheetActions();
   if (lines.length === 0) {
     return (
       <ParchmentCard>
@@ -37,6 +40,7 @@ export function WeaponsTable({ lines }: WeaponsTableProps): React.JSX.Element {
             <th>Ranged</th>
             <th>Damage</th>
             <th>Crit</th>
+            {actions && <th className="w-px"></th>}
           </tr>
         </thead>
         <tbody className="text-[var(--color-ink)]">
@@ -56,6 +60,18 @@ export function WeaponsTable({ lines }: WeaponsTableProps): React.JSX.Element {
               <td>{fmt(l.rangedBN)}</td>
               <td>{l.damageMelee ?? l.damageRanged ?? '—'}</td>
               <td>{l.criticalValue}</td>
+              {actions && (
+                <td className="text-right">
+                  <button
+                    type="button"
+                    onClick={() => actions.openAttack(l.weapon_id)}
+                    title={`Attack with ${l.name}`}
+                    className="inline-flex items-center gap-1 rounded-sm border border-[var(--color-parchment-400)] bg-[var(--color-rust)]/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--color-rust)] hover:bg-[var(--color-rust)]/20"
+                  >
+                    <Sword className="h-3 w-3" aria-hidden /> Attack
+                  </button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

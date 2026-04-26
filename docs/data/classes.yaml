@@ -11,7 +11,7 @@ classes:
     perks:
       - id: damage-modifier
         name: "Damage +/- 1"
-        description: "Deal +1 damage and take -1 damage."
+        description: "Deal +1 damage and gain +1 Absorb."
     skill_packages:
       - id: all-rounder
         name: All-Rounder
@@ -257,12 +257,16 @@ classes:
         equipment_package:
           items: ["Alchemist Toolkit"]
           cost: "Free"
-      - id: doctor
-        name: Doctor
-        perks:
-          - id: consultation
-            name: Consultation
-            description: "Provide medical exam for [Medicine Skill Level x 10] golda."
-          - id: doctors-bag
-            name: "Doctor's Bag"
-            description: "Bandages, invigorators, healing salve, neutralizers."
+      # TODO: re-enable when official Doctor rules ship (skill_package, equipment_package, bonus_golda).
+      # The TradesfolkProfessionSchema enum still includes 'doctor' so existing characters
+      # with `tradesfolk_profession: doctor` continue to load; the new-character wizard
+      # filters this profession out until the data is complete.
+      # - id: doctor
+      #   name: Doctor
+      #   perks:
+      #     - id: consultation
+      #       name: Consultation
+      #       description: "Provide medical exam for [Medicine Skill Level x 10] golda."
+      #     - id: doctors-bag
+      #       name: "Doctor's Bag"
+      #       description: "Bandages, invigorators, healing salve, neutralizers."

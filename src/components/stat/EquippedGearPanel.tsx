@@ -1,9 +1,10 @@
-import { X, ToggleLeft, ToggleRight } from 'lucide-react';
+import { X, ToggleLeft, ToggleRight, Sword } from 'lucide-react';
 import {
   IlluminatedHeading,
   ParchmentCard,
 } from '@/components/parchment/ParchmentCard';
 import { UnitTooltip } from '@/components/parchment/UnitTooltip';
+import { useOptionalSheetActions } from '@/components/sheet/SheetActionsContext';
 import { resolveEquippedSlots, type EquipmentSlots } from '@/engine/derive/equipment-slots';
 import type {
   Character,
@@ -38,6 +39,7 @@ export function EquippedGearPanel({
 }: EquippedGearPanelProps): React.JSX.Element {
   const slots = resolveEquippedSlots(character, catalog);
   const grip = character.equipment.bastard_sword_grip;
+  const actions = useOptionalSheetActions();
   return (
     <ParchmentCard className="flex flex-col gap-3">
       <IlluminatedHeading level={2}>Equipped gear</IlluminatedHeading>
@@ -110,6 +112,16 @@ export function EquippedGearPanel({
                           : 0
                       }
                     />
+                    {actions && (
+                      <button
+                        type="button"
+                        onClick={() => actions.openAttack(weapon.id)}
+                        title={`Attack with ${weapon.name}`}
+                        className="inline-flex items-center gap-1 rounded-sm border border-[var(--color-parchment-400)] bg-[var(--color-rust)]/10 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--color-rust)] hover:bg-[var(--color-rust)]/20"
+                      >
+                        <Sword className="h-3 w-3" aria-hidden /> Attack
+                      </button>
+                    )}
                     {onUnequip && (
                       <button
                         type="button"

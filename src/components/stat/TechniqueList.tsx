@@ -1,6 +1,8 @@
+import { Sparkles } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { UnitTooltip } from '@/components/parchment/UnitTooltip';
-import type { Technique, TechniqueFile } from '@/domain/technique';
+import { useOptionalSheetActions } from '@/components/sheet/SheetActionsContext';
+import type { Discipline, Gate, Technique, TechniqueFile } from '@/domain/technique';
 
 interface TechniqueListProps {
   files: TechniqueFile[];
@@ -34,14 +36,28 @@ function TechniqueGroup({ file }: { file: TechniqueFile }): React.JSX.Element {
       </header>
       <ul className="flex flex-col gap-2">
         {file.techniques.map((tech) => (
-          <TechniqueItem key={tech.id} tech={tech} />
+          <TechniqueItem
+            key={tech.id}
+            tech={tech}
+            discipline={file.discipline}
+            gate={file.gate}
+          />
         ))}
       </ul>
     </section>
   );
 }
 
-function TechniqueItem({ tech }: { tech: Technique }): React.JSX.Element {
+function TechniqueItem({
+  tech,
+  discipline,
+  gate,
+}: {
+  tech: Technique;
+  discipline: Discipline;
+  gate: Gate | undefined;
+}): React.JSX.Element {
+  const actions = useOptionalSheetActions();
   return (
     <li className="rounded-sm border border-[var(--color-parchment-300)] bg-[var(--color-parchment-50)]/60 px-3 py-2 text-sm">
       <header className="flex items-baseline justify-between gap-2">
@@ -53,9 +69,21 @@ function TechniqueItem({ tech }: { tech: Technique }): React.JSX.Element {
             </span>
           )}
         </div>
-        <span className="font-mono text-xs text-[var(--color-ink-faint)]">
-          Lv {tech.level}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-xs text-[var(--color-ink-faint)]">
+            Lv {tech.level}
+          </span>
+          {actions && (
+            <button
+              type="button"
+              onClick={() => actions.openTechniqueCast(tech, discipline, gate)}
+              title={`Cast ${tech.name}`}
+              className="inline-flex items-center gap-1 rounded-sm border border-[var(--color-parchment-400)] bg-[var(--color-gilt)]/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--color-gilt)] hover:bg-[var(--color-gilt)]/25"
+            >
+              <Sparkles className="h-3 w-3" aria-hidden /> Cast
+            </button>
+          )}
+        </div>
       </header>
 
       <dl className="mt-1 grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs md:grid-cols-4">

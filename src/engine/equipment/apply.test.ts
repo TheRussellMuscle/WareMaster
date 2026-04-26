@@ -55,6 +55,7 @@ function mkCharacter(over: Partial<Character> = {}): Character {
       status_override: false,
       active_effects: [],
       last_recovery_tick: 0,
+      current_segment: null,
     },
     portrait_path: null,
     notes_path: null,

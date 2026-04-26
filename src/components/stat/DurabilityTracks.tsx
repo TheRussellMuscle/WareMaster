@@ -1,3 +1,5 @@
+import { Heart } from 'lucide-react';
+import { useOptionalSheetActions } from '@/components/sheet/SheetActionsContext';
 import { DamageTrack, type TrackCell } from './DamageTrack';
 
 interface DurabilityTracksProps {
@@ -83,6 +85,8 @@ export function DurabilityTracks({
     ? (delta: number) =>
         onChange(Math.max(0, Math.min(incapEnd, current + delta)))
     : null;
+  const actions = useOptionalSheetActions();
+  const inHeavy = current > durability;
   return (
     <div className="flex flex-col gap-2">
       <header className="flex flex-wrap items-baseline gap-3">
@@ -148,6 +152,16 @@ export function DurabilityTracks({
             · damage {current} / cap {incapEnd}
           </span>
         </span>
+        {actions && inHeavy && (
+          <button
+            type="button"
+            onClick={() => actions.openSave('heavy-state-action')}
+            title="Roll the WIL save required to act while in Heavy (Rule §09)"
+            className="inline-flex items-center gap-1 rounded-sm border border-[var(--color-rust)]/60 bg-[var(--color-rust)]/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--color-rust)] hover:bg-[var(--color-rust)]/20"
+          >
+            <Heart className="h-3 w-3" aria-hidden /> Save
+          </button>
+        )}
       </header>
       <DamageTrack row={lightRow} label="Light" onCellClick={onCellClick} />
       <DamageTrack

@@ -5,7 +5,9 @@ import {
   listCampaigns as repoListCampaigns,
   updateCampaign as repoUpdateCampaign,
 } from '@/persistence/campaign-repo';
+import { listCharacters } from '@/persistence/character-repo';
 import type { Campaign } from '@/domain/campaign';
+import type { Character } from '@/domain/character';
 
 export interface ParseFailure {
   path: string;
@@ -18,8 +20,18 @@ interface CampaignState {
   loadingList: boolean;
   current: Campaign | null;
   loadingCurrent: boolean;
+  /**
+   * Character lists per campaign dir. Populated lazily by the sidebar tree
+   * when a campaign is expanded; callers can also refresh after create/delete.
+   */
+  charactersByCampaign: Record<string, Character[]>;
   refreshList: () => Promise<void>;
   loadByDir: (dirName: string) => Promise<Campaign | null>;
+  loadCharactersFor: (
+    campaignDir: string,
+    options?: { force?: boolean },
+  ) => Promise<Character[]>;
+  invalidateCharactersFor: (campaignDir: string) => void;
   create: (input: {
     name: string;
     wm: string;
@@ -30,12 +42,39 @@ interface CampaignState {
   setCurrent: (campaign: Campaign | null) => void;
 }
 
-export const useCampaignStore = create<CampaignState>((set) => ({
+export const useCampaignStore = create<CampaignState>((set, get) => ({
   list: [],
   listFailures: [],
   loadingList: false,
   current: null,
   loadingCurrent: false,
+  charactersByCampaign: {},
+
+  loadCharactersFor: async (campaignDir, options) => {
+    if (!options?.force) {
+      const cached = get().charactersByCampaign[campaignDir];
+      if (cached) return cached;
+    }
+    try {
+      const result = await listCharacters(campaignDir);
+      set((s) => ({
+        charactersByCampaign: {
+          ...s.charactersByCampaign,
+          [campaignDir]: result.items,
+        },
+      }));
+      return result.items;
+    } catch {
+      return [];
+    }
+  },
+
+  invalidateCharactersFor: (campaignDir) =>
+    set((s) => {
+      const next = { ...s.charactersByCampaign };
+      delete next[campaignDir];
+      return { charactersByCampaign: next };
+    }),
 
   refreshList: async () => {
     set({ loadingList: true });

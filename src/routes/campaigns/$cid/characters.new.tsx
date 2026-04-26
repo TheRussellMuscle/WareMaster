@@ -719,6 +719,7 @@ function buildDraft(
       status_override: false,
       active_effects: [],
       last_recovery_tick: 0,
+      current_segment: null,
     },
     portrait_path: null,
     notes_path: null,
@@ -1003,7 +1004,7 @@ function SpecializationStep({
     );
   }
   if (cls.id === 'tradesfolk') {
-    const professions: TradesfolkProfession[] = ['thief', 'bard', 'alchemist', 'doctor'];
+    const professions: TradesfolkProfession[] = ['thief', 'bard', 'alchemist'];
     return (
       <ParchmentCard>
         <h2 className="mb-2 font-display text-lg text-[var(--color-ink)]">

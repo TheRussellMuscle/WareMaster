@@ -31,6 +31,22 @@ import { ActiveEffectsPanel } from '@/components/stat/ActiveEffectsPanel';
 import { RecoveryPreview } from '@/components/stat/RecoveryPreview';
 import { StatusBanner } from '@/components/stat/StatusBanner';
 import { QuickAdjust } from '@/components/stat/QuickAdjust';
+import { ActionPanel } from '@/components/sheet/ActionPanel';
+import { ActionLog } from '@/components/sheet/ActionLog';
+import { useSheetDialogs } from '@/components/sheet/useSheetDialogs';
+import { SheetActionsProvider, useSheetActions } from '@/components/sheet/SheetActionsContext';
+import { SheetDialogsRoot } from '@/components/sheet/SheetDialogsRoot';
+import { useActionLogStore } from '@/stores/action-log-store';
+import type { ActionLogEntry } from '@/domain/action-log';
+import { Dices } from 'lucide-react';
+
+/**
+ * Module-level stable empty array — used as the fallback for the
+ * action-log Zustand selector so the same reference is returned on every
+ * render when the campaign's log isn't yet cached. Returning `[]` literal
+ * inline would trigger an infinite re-render loop.
+ */
+const EMPTY_LOG: ActionLogEntry[] = [];
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { RequireVault } from '@/components/shell/RequireVault';
 import { useCampaignStore } from '@/stores/campaign-store';
@@ -71,9 +87,21 @@ export const Route = createFileRoute('/campaigns/$cid/characters/$pcid')({
 });
 
 function CharacterSheet(): React.JSX.Element {
+  // Force a full unmount + remount of the inner sheet whenever we switch
+  // characters within the same campaign. TanStack Router reuses this route
+  // component when only the `$pcid` param changes, so without the key React
+  // would keep all of the sheet's state — including the previously-loaded
+  // `character` object, refs, and in-flight `reload()` promises. That let
+  // a late-resolving fetch stomp `setCharacter(prevCharacter)` over the new
+  // one, and auto-effects then wrote the mongrel state back to disk —
+  // showing up as the previous character's weapons accumulating on the new
+  // sheet. A fresh mount per `pcid` makes every navigation a clean slate.
+  const { pcid } = useParams({
+    from: '/campaigns/$cid/characters/$pcid',
+  });
   return (
     <RequireVault>
-      <CharacterSheetInner />
+      <CharacterSheetInner key={pcid} />
     </RequireVault>
   );
 }
@@ -150,6 +178,23 @@ function CharacterSheetInner(): React.JSX.Element {
     void updateCharacter(cid, updated);
   }, [character, catalog, cid]);
 
+  const dialogs = useSheetDialogs();
+  // Don't `?? EMPTY_LOG` inside the selector: that returns a fresh array
+  // every render when the campaign's log isn't yet cached, which Zustand
+  // sees as a new value and triggers an infinite render loop. Select the
+  // raw value (Character[] | undefined) and fall back outside the hook.
+  const cachedEntries = useActionLogStore(
+    (s) => s.entriesByCampaign[cid],
+  );
+  const logEntries = cachedEntries ?? EMPTY_LOG;
+  const logLoading = useActionLogStore((s) => !!s.loading[cid]);
+  const loadLog = useActionLogStore((s) => s.load);
+  const clearLog = useActionLogStore((s) => s.clear);
+
+  React.useEffect(() => {
+    void loadLog(cid);
+  }, [cid, loadLog]);
+
   if (loading || !character) {
     return (
       <ParchmentCard className="mx-auto max-w-2xl">
@@ -162,9 +207,15 @@ function CharacterSheetInner(): React.JSX.Element {
   const weaponLines = buildWeaponLines(character, catalog, derived.baseBN);
   const cls = catalog?.classes.classes.find((c) => c.id === character.class_id);
   const displayedStatus = effectiveStatus(character, derived);
+  const onCharacterChange = async (next: Character) => {
+    setCharacter(next);
+    await updateCharacter(cid, next);
+  };
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
+    <SheetActionsProvider value={dialogs}>
+    <div className="grid w-full grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
+    <div className="flex w-full flex-col gap-4">
       {/* Identity block */}
       <ParchmentCard className="flex flex-col gap-4">
         <header className="flex items-center gap-4">
@@ -278,6 +329,12 @@ function CharacterSheetInner(): React.JSX.Element {
               </h2>
               <DerivedStatsBlock values={derived} />
             </section>
+
+            <ActionPanel
+              character={character}
+              derived={derived}
+              onChange={onCharacterChange}
+            />
 
             <section className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm md:grid-cols-3">
               <QuickAdjust
@@ -476,36 +533,11 @@ function CharacterSheetInner(): React.JSX.Element {
 
       {/* Skills */}
       {!editing && (
-        <ParchmentCard>
-          <h2 className="mb-2 font-display text-lg text-[var(--color-ink)]">
+        <ParchmentCard className="flex flex-col gap-3">
+          <h2 className="font-display text-lg text-[var(--color-ink)]">
             Skills
           </h2>
-          {character.skills.length === 0 ? (
-            <p className="text-sm text-[var(--color-ink-soft)]">No skills listed.</p>
-          ) : (
-            <ul className="grid grid-cols-1 gap-1 text-sm md:grid-cols-2">
-              {character.skills.map((entry) => (
-                <li
-                  key={`${entry.skill_id}-${entry.level}`}
-                  className="flex items-baseline justify-between rounded-sm border border-[var(--color-parchment-300)] bg-[var(--color-parchment-50)]/60 px-3 py-1.5"
-                >
-                  <span>
-                    <span className="font-medium">
-                      {skillLabelFor(entry.skill_id, catalog?.skills.skills ?? null)}
-                    </span>
-                    <span className="ml-2 font-mono text-xs text-[var(--color-ink-soft)]">
-                      Lv {entry.level}
-                    </span>
-                  </span>
-                  {entry.pp > 0 && (
-                    <span className="font-mono text-xs text-[var(--color-ink-faint)]">
-                      <AcronymTooltip code="PP" /> {entry.pp}
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
+          <SkillsList character={character} catalog={catalog} />
         </ParchmentCard>
       )}
 
@@ -613,6 +645,163 @@ function CharacterSheetInner(): React.JSX.Element {
           void navigate({ to: '/campaigns/$cid', params: { cid } });
         }}
       />
+    </div>
+    {/* Right column: sticky campaign-wide Action Log on xl+; hidden below xl */}
+    {!editing && (
+      <aside className="sticky top-4 hidden max-h-[calc(100vh-2rem)] self-start overflow-y-auto xl:block">
+        <ActionLog
+          entries={logEntries}
+          loading={logLoading}
+          campaignDir={cid}
+          currentCharacterId={character.id}
+          onClear={() => clearLog(cid)}
+        />
+      </aside>
+    )}
+    </div>
+    {/*
+      key={character.id} forces a fresh mount of every dialog when you
+      navigate between characters in the campaign. Without it, dialog
+      state (selected weapon, manual dice values, the result preview)
+      survives the navigation — leading to the previous character's
+      weapons appearing in the new character's Attack dropdown.
+    */}
+    <SheetDialogsRoot
+      key={character.id}
+      dialogs={dialogs}
+      character={character}
+      derived={derived}
+      catalog={catalog}
+      campaignDir={cid}
+      onChange={onCharacterChange}
+    />
+    </SheetActionsProvider>
+  );
+}
+
+interface SkillRowProps {
+  skillId: string;
+  skillName: string;
+  level: number;
+  pp: number;
+  untrained?: boolean;
+}
+
+function SkillRow({
+  skillId,
+  skillName,
+  level,
+  pp,
+  untrained,
+}: SkillRowProps): React.JSX.Element {
+  const actions = useSheetActions();
+  return (
+    <li
+      className={`flex items-baseline justify-between rounded-sm border px-3 py-1.5 ${
+        untrained
+          ? 'border-[var(--color-parchment-300)]/60 bg-[var(--color-parchment-50)]/30'
+          : 'border-[var(--color-parchment-300)] bg-[var(--color-parchment-50)]/60'
+      }`}
+    >
+      <span>
+        <span
+          className={
+            untrained
+              ? 'text-[var(--color-ink-soft)]'
+              : 'font-medium'
+          }
+        >
+          {skillName}
+        </span>
+        <span className="ml-2 font-mono text-xs text-[var(--color-ink-soft)]">
+          Lv {level}
+        </span>
+      </span>
+      <span className="flex items-center gap-2">
+        {pp > 0 && (
+          <span className="font-mono text-xs text-[var(--color-ink-faint)]">
+            <AcronymTooltip code="PP" /> {pp}
+          </span>
+        )}
+        <button
+          type="button"
+          onClick={() => actions.openSkill(skillId)}
+          title={`Roll ${skillName}${untrained ? ' (untrained — half PP on Perfect/Total Failure)' : ''}`}
+          className="inline-flex items-center gap-1 rounded-sm border border-[var(--color-parchment-400)] bg-[var(--color-gilt)]/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--color-ink)] hover:bg-[var(--color-gilt)]/25"
+        >
+          <Dices className="h-3 w-3" aria-hidden /> Roll
+        </button>
+      </span>
+    </li>
+  );
+}
+
+const SKILL_CATEGORY_ORDER: Array<{
+  id: 'combat' | 'adventure-physical' | 'adventure-mental' | 'specialized';
+  label: string;
+}> = [
+  { id: 'combat', label: 'Combat' },
+  { id: 'adventure-physical', label: 'Adventure — Physical' },
+  { id: 'adventure-mental', label: 'Adventure — Mental' },
+  { id: 'specialized', label: 'Specialized' },
+];
+
+interface SkillsListProps {
+  character: Character;
+  catalog: ReferenceCatalog | null;
+}
+
+/**
+ * Show every skill from the bundled catalog grouped by category. Skills the
+ * character has trained appear with their Level + PP; the rest render at Lv 0
+ * with a subtle muted background. Each row gets a Roll button — untrained
+ * skills resolve via Skill Check's "untrained ⇒ Level 0, half PP on
+ * Perfect/Total Failure" path (Rule §07).
+ */
+function SkillsList({ character, catalog }: SkillsListProps): React.JSX.Element {
+  if (!catalog) {
+    return (
+      <p className="text-sm italic text-[var(--color-ink-soft)]">
+        Loading skill catalog…
+      </p>
+    );
+  }
+  const learned = new Map(
+    character.skills.map((e) => [e.skill_id, e]),
+  );
+  // Sort skills alphabetically by name within each category.
+  const byCategory = SKILL_CATEGORY_ORDER.map((cat) => ({
+    ...cat,
+    skills: catalog.skills.skills
+      .filter((s) => s.category === cat.id)
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name)),
+  }));
+
+  return (
+    <div className="flex flex-col gap-3">
+      {byCategory.map((cat) => (
+        <section key={cat.id}>
+          <h3 className="mb-1 font-display text-xs uppercase tracking-wider text-[var(--color-ink-faint)]">
+            {cat.label}
+          </h3>
+          <ul className="grid grid-cols-1 gap-1 text-sm md:grid-cols-2">
+            {cat.skills.map((s) => {
+              const entry = learned.get(s.id);
+              return (
+                <SkillRow
+                  key={s.id}
+                  skillId={s.id}
+                  skillName={s.name}
+                  level={entry?.level ?? 0}
+                  pp={entry?.pp ?? 0}
+                  untrained={!entry}
+                />
+              );
+            })}
+          </ul>
+        </section>
+      ))}
     </div>
   );
 }
@@ -1093,13 +1282,6 @@ function prettify(s: string): string {
     .join(' · ');
 }
 
-function skillLabelFor(
-  id: string,
-  skills: Array<{ id: string; name: string }> | null,
-): string {
-  if (!skills) return id;
-  return skills.find((s) => s.id === id)?.name ?? id;
-}
 
 function KV({
   label,

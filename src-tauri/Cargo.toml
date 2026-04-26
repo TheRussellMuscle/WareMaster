@@ -1,6 +1,6 @@
 [package]
 name = "waremaster"
-version = "0.3.0-alpha.1"
+version = "0.4.0-alpha.1"
 description = "WareMaster — Wares Blade TTRPG companion"
 authors = ["WareMaster contributors"]
 license = "MIT"
@@ -24,6 +24,7 @@ tauri-plugin-log = "2"
 tauri-plugin-fs = "2"
 tauri-plugin-dialog = "2"
 tauri-plugin-process = "2"
+tauri-plugin-shell = "2"
 ulid = "1"
 chrono = { version = "0.4", features = ["serde"] }
 

@@ -54,6 +54,8 @@ export interface CampaignPaths {
   sessionsDir: string;
   combatDir: string;
   historyDir: string;
+  /** Campaign-wide action log (every sheet roll across all characters). */
+  actionLog: string;
 }
 
 export function campaignPaths(dirName: string): CampaignPaths {
@@ -68,6 +70,7 @@ export function campaignPaths(dirName: string): CampaignPaths {
     sessionsDir: `${dir}/sessions`,
     combatDir: `${dir}/combat`,
     historyDir: `${dir}/.history`,
+    actionLog: `${dir}/action-log.yaml`,
   };
 }
 
