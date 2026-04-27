@@ -82,11 +82,11 @@ export function InstanceSpawnDialog({
   const fallback: PortraitFallback = React.useMemo(() => {
     if (kind === 'monster') {
       const t = selected?.template as MonsterTemplate | undefined;
-      return { kind: 'monster', rank: t?.rank ?? null };
+      return { kind: 'monster', rank: t?.rank ?? null, templateId: t?.id };
     }
     if (kind === 'ryude') {
       const t = selected?.template as RyudeTemplate | undefined;
-      return { kind: 'ryude', rType: t?.type ?? 'Footman' };
+      return { kind: 'ryude', rType: t?.type ?? 'Footman', templateId: t?.id };
     }
     return { kind: 'npc', archetype: 'simple' };
   }, [kind, selected]);

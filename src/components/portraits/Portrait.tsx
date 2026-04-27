@@ -1,4 +1,6 @@
 import * as React from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
+import { X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import type { ClassId } from '@/domain/class';
 import { usePortrait, type PortraitFallback } from '@/hooks/usePortrait';
@@ -15,7 +17,9 @@ interface PortraitProps {
   classId?: ClassId | null;
   /** Display label (e.g. character name) used as alt text and badge. */
   name: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  /** When true, clicking the portrait opens a full-size lightbox. */
+  clickable?: boolean;
   className?: string;
 }
 
@@ -23,6 +27,8 @@ const SIZE_CLASS: Record<NonNullable<PortraitProps['size']>, string> = {
   sm: 'h-12 w-12 text-base',
   md: 'h-20 w-20 text-2xl',
   lg: 'h-32 w-32 text-4xl',
+  xl: 'h-48 w-48 text-5xl',
+  '2xl': 'h-64 w-64 text-6xl',
 };
 
 const CLASS_LABEL: Record<ClassId, string> = {
@@ -87,6 +93,7 @@ export function Portrait({
   classId,
   name,
   size = 'md',
+  clickable = false,
   className,
 }: PortraitProps): React.JSX.Element {
   const fallback: PortraitFallback =
@@ -95,6 +102,7 @@ export function Portrait({
       ? { kind: 'class', classId }
       : { kind: 'class', classId: 'tradesfolk' });
   const [errored, setErrored] = React.useState(false);
+  const [lightboxOpen, setLightboxOpen] = React.useState(false);
   const { url, tier } = usePortrait({ vaultPath, fallback });
 
   React.useEffect(() => {
@@ -103,20 +111,53 @@ export function Portrait({
 
   if (url && !errored) {
     return (
-      <div
-        className={cn(
-          'overflow-hidden rounded-sm border-2 border-[var(--color-parchment-400)]',
-          SIZE_CLASS[size],
-          className,
+      <>
+        <div
+          role={clickable ? 'button' : undefined}
+          tabIndex={clickable ? 0 : undefined}
+          onClick={clickable ? () => setLightboxOpen(true) : undefined}
+          onKeyDown={
+            clickable
+              ? (e) => (e.key === 'Enter' || e.key === ' ') && setLightboxOpen(true)
+              : undefined
+          }
+          className={cn(
+            'overflow-hidden rounded-sm border-2 border-[var(--color-parchment-400)] bg-[var(--color-parchment-100)]',
+            SIZE_CLASS[size],
+            clickable && 'cursor-pointer hover:border-[var(--color-rust)]/60 transition-colors',
+            className,
+          )}
+        >
+          <img
+            src={url}
+            alt={name}
+            className="h-full w-full object-contain"
+            onError={() => setErrored(true)}
+          />
+        </div>
+
+        {clickable && (
+          <Dialog.Root open={lightboxOpen} onOpenChange={setLightboxOpen}>
+            <Dialog.Portal>
+              <Dialog.Overlay className="fixed inset-0 z-50 bg-[var(--color-ink)]/70 backdrop-blur-sm" />
+              <Dialog.Content className="fixed left-1/2 top-1/2 z-50 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-3 outline-none">
+                <Dialog.Title className="sr-only">{name}</Dialog.Title>
+                <img
+                  src={url}
+                  alt={name}
+                  className="max-h-[82vh] max-w-[82vw] rounded-sm border-2 border-[var(--color-parchment-400)] object-contain shadow-2xl"
+                />
+                <p className="font-display text-sm tracking-wide text-[var(--color-parchment-100)]">
+                  {name}
+                </p>
+                <Dialog.Close className="absolute -right-3 -top-3 flex h-7 w-7 items-center justify-center rounded-full border border-[var(--color-parchment-400)] bg-[var(--color-parchment-200)] text-[var(--color-ink-soft)] hover:bg-[var(--color-rust)]/10">
+                  <X className="h-4 w-4" />
+                </Dialog.Close>
+              </Dialog.Content>
+            </Dialog.Portal>
+          </Dialog.Root>
         )}
-      >
-        <img
-          src={url}
-          alt={name}
-          className="h-full w-full object-cover"
-          onError={() => setErrored(true)}
-        />
-      </div>
+      </>
     );
   }
 

@@ -250,7 +250,7 @@ export function TemplateListRoute({
                       vaultPath={null}
                       fallback={fallback}
                       name={row.name}
-                      size="sm"
+                      size="md"
                     />
                     <div className="min-w-0 flex-1">
                       <div className="truncate font-medium text-[var(--color-ink)]">
@@ -291,7 +291,8 @@ export function TemplateListRoute({
                         vaultPath={null}
                         fallback={fallback}
                         name={row.name}
-                        size="lg"
+                        size="xl"
+                        clickable
                         className="shrink-0"
                       />
                       <div className="min-w-0 flex-1">

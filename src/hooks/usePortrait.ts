@@ -43,24 +43,28 @@ export interface UsePortraitResult {
 /** Module-level cache so identical bundled lookups across many components hit the IPC layer once. */
 const bundledUrlCache = new Map<string, Promise<string | null>>();
 
-function bundledKeyFor(fallback: PortraitFallback): { kind: string; key: string } {
+function bundledKeyFor(fallback: PortraitFallback): { kind: string; keys: string[] } {
   switch (fallback.kind) {
     case 'class':
-      return { kind: 'classes', key: fallback.classId };
+      return { kind: 'classes', keys: [fallback.classId] };
     case 'monster': {
-      const rank = fallback.rank;
-      return rank
-        ? { kind: 'monsters', key: `rank-${rank}` }
-        : { kind: 'monsters', key: 'unknown' };
+      const keys: string[] = [];
+      if (fallback.templateId) keys.push(fallback.templateId);
+      if (fallback.rank) keys.push(`rank-${fallback.rank}`);
+      keys.push('unknown');
+      return { kind: 'monsters', keys };
     }
-    case 'ryude':
-      return { kind: 'ryude', key: fallback.rType.toLowerCase() };
+    case 'ryude': {
+      const keys: string[] = [];
+      if (fallback.templateId) keys.push(fallback.templateId);
+      keys.push(fallback.rType.toLowerCase());
+      return { kind: 'ryude', keys };
+    }
     case 'npc': {
-      // Prefer the explicit role; fall back to archetype.
-      if (fallback.role) {
-        return { kind: 'npc', key: fallback.role };
-      }
-      return { kind: 'npc', key: fallback.archetype };
+      const keys: string[] = [];
+      if (fallback.role) keys.push(fallback.role);
+      keys.push(fallback.archetype);
+      return { kind: 'npc', keys };
     }
   }
 }
@@ -70,11 +74,18 @@ async function loadBundledUrl(kind: string, key: string): Promise<string | null>
   let cached = bundledUrlCache.get(cacheKey);
   if (!cached) {
     cached = invoke<string>('bundled_portrait_url', { kind, key })
-      .then((path) => convertFileSrc(path))
       .catch(() => null);
     bundledUrlCache.set(cacheKey, cached);
   }
   return cached;
+}
+
+async function loadFirstBundledUrl(kind: string, keys: string[]): Promise<string | null> {
+  for (const key of keys) {
+    const url = await loadBundledUrl(kind, key);
+    if (url !== null) return url;
+  }
+  return null;
 }
 
 function customUrlFromVault(
@@ -101,8 +112,8 @@ export function usePortrait(args: {
   React.useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    const { kind, key } = bundledKeyFor(args.fallback);
-    void loadBundledUrl(kind, key).then((url) => {
+    const { kind, keys } = bundledKeyFor(args.fallback);
+    void loadFirstBundledUrl(kind, keys).then((url) => {
       if (cancelled) return;
       setBundled(url);
       setLoading(false);

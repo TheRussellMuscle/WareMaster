@@ -209,7 +209,8 @@ export function TemplateDetailRoute({
         <Portrait
           fallback={fallback}
           name={(resolved.template as { name: string }).name}
-          size="lg"
+          size="xl"
+          clickable
         />
         <div className="flex-1">
           <IlluminatedHeading level={1}>

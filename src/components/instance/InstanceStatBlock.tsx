@@ -10,18 +10,18 @@ import {
 import { ryudeOperatorRoll } from '@/engine/derive/instance-rolls';
 import { useActionLogStore } from '@/stores/action-log-store';
 import type { ActionLogEntry, CurrentSegment } from '@/domain/action-log';
-import type { MonsterTemplate } from '@/domain/monster';
+import type { MonsterTemplate, MonsterRank } from '@/domain/monster';
 import type {
   MonsterInstance,
   MonsterInstanceStatus,
 } from '@/domain/monster-instance';
-import type { RyudeTemplate } from '@/domain/ryude';
+import type { RyudeTemplate, RyudeType } from '@/domain/ryude';
 import type {
   RyudeAttunementState,
   RyudeInstance,
 } from '@/domain/ryude-instance';
 import type { NpcInstance } from '@/domain/npc-instance';
-import type { NpcTemplate, SimpleNpc, BeastNpc } from '@/domain/npc';
+import type { NpcTemplate, NpcArchetype, NpcRole, SimpleNpc, BeastNpc } from '@/domain/npc';
 import type { Character } from '@/domain/character';
 import type { Campaign } from '@/domain/campaign';
 import type { ReferenceCatalog } from '@/persistence/reference-loader';
@@ -34,6 +34,8 @@ import { RyudeOperatorDialog } from './dialogs/RyudeOperatorDialog';
 import { RyudeAttunementDialog } from './dialogs/RyudeAttunementDialog';
 import { RyudeAttackDialog } from './dialogs/RyudeAttackDialog';
 import { DurabilityTracks } from '@/components/stat/DurabilityTracks';
+import { Portrait } from '@/components/portraits/Portrait';
+import type { PortraitFallback } from '@/hooks/usePortrait';
 
 type Instance = MonsterInstance | RyudeInstance | NpcInstance;
 type Template = MonsterTemplate | RyudeTemplate | NpcTemplate;
@@ -57,6 +59,27 @@ type DialogState =
   | { kind: 'ryude-attunement' }
   | { kind: 'ryude-attack' }
   | null;
+
+function portraitFallback(
+  kind: TemplateKind,
+  instance: Instance,
+  template: Template,
+): PortraitFallback {
+  if (kind === 'monster') {
+    const t = template as MonsterTemplate;
+    const rank: MonsterRank | null = (instance as MonsterInstance).overrides.rank ?? t.rank ?? null;
+    return { kind: 'monster', rank, templateId: instance.template_id };
+  }
+  if (kind === 'ryude') {
+    const t = template as RyudeTemplate;
+    const rType: RyudeType = (instance as RyudeInstance).overrides.type ?? t.type ?? 'Footman';
+    return { kind: 'ryude', rType, templateId: instance.template_id };
+  }
+  const t = template as NpcTemplate;
+  const archetype: NpcArchetype = t.archetype;
+  const role: NpcRole | null = t.archetype === 'simple' ? (t as { role?: NpcRole }).role ?? null : null;
+  return { kind: 'npc', archetype, role };
+}
 
 export function InstanceStatBlock({
   kind,
@@ -130,6 +153,16 @@ export function InstanceStatBlock({
           {tickToast}
         </div>
       )}
+
+      <div className="flex justify-center">
+        <Portrait
+          vaultPath={instance.portrait_path}
+          fallback={portraitFallback(kind, instance, template)}
+          name={instance.name}
+          size="xl"
+          clickable
+        />
+      </div>
 
       {kind === 'monster' && (
         <MonsterSections

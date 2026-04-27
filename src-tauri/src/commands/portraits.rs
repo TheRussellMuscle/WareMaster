@@ -7,6 +7,7 @@
 //! resolver pattern from `reference.rs`.
 
 use std::path::{Path, PathBuf};
+use base64::Engine as _;
 use serde::Serialize;
 use tauri::{AppHandle, Manager};
 
@@ -24,9 +25,21 @@ const MONSTER_KEYS: &[&str] = &[
     "tusktooth",
     "old-fang",
     "metal-chimaera",
+    "magu-draph",
+    "metal-chimaera-4-armed",
+    "giant-mantis-shrimp",
+    "skeleton",
 ];
 
-const RYUDE_KEYS: &[&str] = &["footman", "courser", "maledictor", "unknown", "az-cude"];
+const RYUDE_KEYS: &[&str] = &[
+    "footman",
+    "courser",
+    "maledictor",
+    "unknown",
+    "az-cude",
+    "maltu-ragorsu",
+    "gisah-sharukann",
+];
 
 const NPC_KEYS: &[&str] = &[
     "merchant",
@@ -109,10 +122,10 @@ fn humanize(key: &str) -> String {
         .join(" ")
 }
 
-/// Resolve a bundled portrait to an absolute filesystem path. The frontend
-/// wraps the result with `convertFileSrc(...)` to load via the Tauri asset
-/// protocol. Returns an error if the file is missing — callers should fall
-/// back to a CSS placeholder in that case.
+/// Load a bundled portrait and return it as a base64 data URL
+/// (`data:image/png;base64,...`). The frontend can use the result directly as
+/// an `<img src>` without going through the Tauri asset protocol, which avoids
+/// scope-mismatch issues between dev and production resource paths.
 #[tauri::command]
 pub async fn bundled_portrait_url(
     app: AppHandle,
@@ -124,7 +137,10 @@ pub async fn bundled_portrait_url(
     if !path.exists() {
         return Err(format!("bundled portrait not found: {}/{}", kind, key));
     }
-    Ok(path.to_string_lossy().to_string())
+    let bytes = std::fs::read(&path)
+        .map_err(|e| format!("read portrait {}/{}: {}", kind, key, e))?;
+    let b64 = base64::engine::general_purpose::STANDARD.encode(&bytes);
+    Ok(format!("data:image/png;base64,{}", b64))
 }
 
 /// List the bundled portraits available for a given kind so the picker UI

@@ -8,7 +8,7 @@ WareMaster tracks campaigns, characters, NPCs, monsters, Ryude, combat, and down
 
 ## Status
 
-**Phase 4 + 5 alpha — `v0.5.0-alpha.1`.** Early testers welcome.
+**Phase 4 + 5 alpha — `v0.6.0-alpha.1`.** Early testers welcome.
 
 What's working today:
 
@@ -20,17 +20,19 @@ What's working today:
 - Character creation wizard following the 8 rule-aligned steps from the Playkit (class pick, ability rolls, skill packages, equipment packages, Word-Caster gate / Spiritualist order / Tradesfolk profession when applicable, biography).
 - **Live character sheet with sheet-level rolling**:
   - "This Segment" panel under Derived stats with `Set IN/DN`, automatic Total Absorption ×2 / ÷2 on Perfect / Total Failure.
-  - Per-weapon `Attack` buttons (BN, crit detection, damage minus current-segment absorption, Total Failure flags next-Segment IN halving).
+  - Per-weapon `Attack` buttons (BN, crit detection, damage minus current-session absorption, Total Failure flags next-Segment IN halving).
   - Per-technique `Cast` buttons for Word-Casting, Numetic Arts, and Invocations, with optional Mental damage cost.
   - Per-skill `Roll` buttons for every catalog skill — including untrained ones at Lv 0 with the half-PP rule applied automatically.
   - Per-ability roll buttons in the stat block (LUC opens a LUC Roll).
   - `Save` button on the damage track header when in Heavy.
   - LUC dice spend automatically (clamped to Available LUC) and restore on Perfect Success of non-combat skills.
   - Rule explainers in every dialog quoting the relevant Playkit chapter.
-- **Campaign-wide action log** in a sticky right column — every roll across every character in the campaign, with character links per row.
+  - **First Impression roll** (CHA-governed) and **class benefit roll buttons** (Sermon, Public Performance, Component Analysis, Price Loot).
+- **Campaign-wide action log** in a sticky right column — every roll across every character in the campaign, with character links per row. Also visible on NPC / Monster / Ryude detail pages.
 - **Auto-updates** on launch — signed with an ed25519 key.
-
-- **Templates + named instances + portraits** (Phase 4) — spawn named monsters, NPCs, and Ryude into a campaign from bundled or user-authored templates. Three-tier resolution chain (campaign overrides → vault → bundled), per-instance overrides + state, Ryude operator assignment, custom or bundled-default portraits served via the Tauri asset protocol.
+- **Templates + named instances + portraits** (Phase 4) — spawn named monsters, NPCs, and Ryude into a campaign from bundled or user-authored templates. Three-tier resolution chain (campaign overrides → vault → bundled), per-instance overrides + state, Ryude operator assignment, custom or bundled-default portraits. Real artwork for all 5 bundled monsters and all 3 bundled Ryude; clickable portraits open a full-size lightbox.
+- **Active effects solver** — 15 canonical effect kinds, preset picker, live IN/BN/DN modifier annotations in the stat block.
+- **Global custom items** — vault-wide custom weapons and armor with full stat fields; auto-migrates legacy per-character items on first load.
 
 Phase-by-phase implementation roadmap lives in [PLAN.md](./PLAN.md). Next up: time + recovery (Phase 6), full multi-combatant tracker with undo/rewind (Phase 7).
 

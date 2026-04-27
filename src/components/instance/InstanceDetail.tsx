@@ -180,13 +180,13 @@ export function InstanceDetail({
       const m = (tpl ?? null) as MonsterTemplate | null;
       const inst = instance as MonsterInstance;
       const rank: MonsterRank | null = inst.overrides.rank ?? m?.rank ?? null;
-      return { kind: 'monster', rank };
+      return { kind: 'monster', rank, templateId: inst.template_id };
     }
     if (kind === 'ryude') {
       const r = (tpl ?? null) as RyudeTemplate | null;
       const inst = instance as RyudeInstance;
       const rType: RyudeType = inst.overrides.type ?? r?.type ?? 'Footman';
-      return { kind: 'ryude', rType };
+      return { kind: 'ryude', rType, templateId: inst.template_id };
     }
     const n = (tpl ?? null) as NpcTemplate | null;
     const archetype: NpcArchetype = n?.archetype ?? 'simple';
@@ -260,7 +260,8 @@ export function InstanceDetail({
               vaultPath={instance.portrait_path}
               fallback={fallback}
               name={instance.name}
-              size="lg"
+              size="2xl"
+              clickable
             />
             <div className="flex-1">
               <input

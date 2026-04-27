@@ -2,74 +2,79 @@
 
 All notable changes to WareMaster are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/) and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [0.5.0-alpha.2] — 2026-04-26
+## [0.6.0-alpha.1] — 2026-04-27
 
-Phase 4 polish: instance detail pages get expandable stat blocks, in-place dice rolls, and rule-based bookkeeping that mirrors what characters already get.
-
-### What's new
-
-- **Expandable instance stat blocks** — Monster / Ryude / Beast NPC / Simple NPC detail pages now render collapsible sections (Combat, Details, Equipment, Perks, Active Effects). Stats, state mutators (HP / damage / status / location), and roll buttons live inline next to the relevant numbers — no more split-pane preview + state grid.
-- **Per-instance dice rolls (Rule §07 / §08 / §14 / §15)** — every kind gets the right minimum-viable roll surface, all writing to the campaign action log (attributed to the instance):
-  - **Monster / Beast NPC**: Set IN/DN, Attack (with vs-character / vs-Ryude variant toggle, ×N crit multiplier), Ability Roll (any base ability).
-  - **Simple NPC**: Set IN/DN, Skill Roll (per notable skill — auto-fills CHA-governed skills from `cha_modifier`, prompts for base on others), Reaction.
-  - **Ryude**: Set IN/DN, Operator Roll (1D10 + Operator AGI Base + Ryude SPE + Drive Modifier), Attunement Check (1D10 − Drive Mod ≤ Attunement Value, Rule §14:38-66), Weapon Attack (×10 damage vs human targets per Rule §14:160). Roll buttons disabled when unmanned.
-  - **Full-Character NPC**: renders the same character sheet a PC gets — abilities, derived combat values, weapons table, skills list, action panel, all dialogs (skill / ability / attack / save / IN-DN / technique). Stat block is read-only (edit on the template); state edits round-trip to the NPC instance.
-- **Rule-based bookkeeping** brought forward from Phase 6 / 7 where it doesn't depend on the campaign clock or combat tracker:
-  - **Status auto-derivation** from damage thresholds (Rule §09:28-30 — wounded > durability, incapacitated > 2×, dead > 3×). Manual override pin available; "Use derived" / "Auto-update to ..." links surface the derived value when they diverge.
-  - **Per-instance segment state** (`current IN · DN · Absorption modifier`) on Monster / Ryude / NPC instances, mirroring `CurrentSegment` on character state. End Segment ticks active effects (`expires_at_segment ≤ current` removed) and clears the IN/DN snapshot.
-  - **Ryude operational status** chip (intact / damaged-light / damaged-heavy / disabled / destroyed) derived from durability ratio, with parchment-aware colors.
-  - **Ryude attribute damage** (SPE / POW / ARM / BAL deltas) surfaced in the Combat section; auto-applied to Operator Roll + Weapon Attack derivations.
-  - **Ryude attunement progression** suggested by the Attunement Check dialog per Rule §14:38-66 (unattuned + success → attuning, attuning + perfect → attuned, any total-failure → rejected). One-click Apply.
-
-### Engine changes
-
-- `MonsterInstanceState`, `RyudeInstanceState`, `NpcInstanceState` gain `segment: CurrentSegment | null` and `current_segment_index: number`.
-- `NpcInstanceState` additionally gains optional `available_luc` and `completion_bonus_pp` (used by the Full-Character NPC sheet adapter).
-- New `src/engine/derive/instance-bookkeeping.ts` — pure helpers: `monsterDerivedStatus`, `effectiveMonsterStatus`, `ryudeOperationalStatus`, `tickActiveEffects`, `endSegment`, `nextAttunementState`. 23 vitest cases.
-- New `src/engine/derive/instance-rolls.ts` — derivation helpers for instance roll inputs: `monsterAbilityRoll`, `monsterDamageFormula`, `ryudeOperatorRoll`, `ryudeAttunementContext`, `ryudeAttackContext`, `simpleNpcSkillContext`, plus `abilityBaseValue` / `effectiveRyudeAttribute` helpers. 24 vitest cases.
-- New `src/engine/adapters/npc-as-character.ts` — synthesizes a `Character` view from a Full-Character NPC instance + template (read on render) and folds state edits back via `applyCharacterStateToNpc`. Status enum collapses (`heavy-physical` / `heavy-mental` → `wounded`; `dead` / `insane` → `dead`). 14 vitest cases.
-
-### Refactors
-
-- `SkillsList` lifted from inline-in-route to `src/components/stat/SkillsList.tsx` so the Full-Character NPC sheet can reuse the same component.
-
-### Notes
-
-- Full-Character NPC sheet writes action-log entries with `character_id = instance.id` / `character_name = instance.name`. The `character_id` field is semantically misnamed for non-character actors; a follow-up schema-v2 will rename it to `actor_id` (deferred — current schema works fine).
-- Cross-instance damage application (auto-apply Attack damage to the target) and clock-driven recovery remain Phase 6 / 7.
-- 61 new vitest cases (23 bookkeeping + 24 rolls + 14 adapter); total 580 across 17 files.
-
-## [0.5.0-alpha.1] — 2026-04-26
-
-Third alpha. **Phase 4 (templates + named instances + portraits)** lands, plus two fixes from the v0.4.0-alpha.1 release.
+Phase 4 (templates + instances + portraits), Phase 4 bookkeeping polish, active effects, global custom items, roll expansions, and real bundled portrait artwork — everything since v0.4.0-alpha.1.
 
 ### What's new
 
-- **Templates + instances + portraits** — the campaign Monsters / Ryude / NPCs sections are now real. Spawn a Maltu-Ragorsu (or any bundled monster / Ryude) into a campaign, give it a unique name, assign an operator, upload a custom portrait. Everything round-trips to YAML in the vault and re-loads on app restart.
-  - **Template resolution chain** — campaign-scoped → vault-scoped → bundled. Vault templates override bundled ones with the same id; campaign templates override both. Missing templates render a yellow repair banner instead of crashing.
-  - **Spawn dialog** with a template browser (search + Bundled/Vault/Campaign filters), name override, operator picker (Ryude only, plus an "unmanned" toggle), portrait upload, and a quantity stepper for bulk monster spawns ("Goblin 1, 2, 3").
-  - **Per-instance state** — current damage, status, attunement (Ryude), location. Stored on each instance YAML; survives reload.
-  - **Three NPC archetypes** via discriminated union — beast (full monster stat block), simple (CHA-modifier + role), full-character (complete sheet).
-  - **Sidebar branches** — Characters / NPCs / Monsters / Ryude all expand inline under each campaign, lazy-loaded with the same search filter as Characters.
-  - **Templates routes** — `/templates/monsters`, `/templates/ryude`, `/templates/npcs` show bundled + vault templates with create/edit/duplicate/delete via a YAML-backed editor.
-  - **Bundled portraits** — 27 placeholder PNGs (parchment monogram silhouettes baked at 512×512) under `src-tauri/resources/portraits/`. Re-bake any time with `pnpm portraits:bake`.
-- **Portrait pipeline** — generalized from character-only to all entity kinds. Three-tier resolution: instance custom → template default → bundled fallback → CSS placeholder. Served via Tauri's existing `assetProtocol` extended to `$RESOURCE/portraits/**` (chose this over the originally-planned `bundle://` custom scheme — simpler and more reliable on Windows).
+#### Templates + instances + portraits (Phase 4)
+
+- **Templates + instances + portraits** — campaign Monsters / Ryude / NPCs are real. Spawn named monsters, NPCs, and Ryude from bundled or user-authored templates; give each a unique name, assign an operator (Ryude), upload a custom portrait.
+  - **Three-tier template resolution** — campaign-scoped → vault-scoped → bundled. Missing templates render a yellow repair banner instead of crashing.
+  - **Spawn dialog** with template browser (search + Bundled/Vault/Campaign filters), name override, operator picker, portrait upload, and a quantity stepper for bulk spawns.
+  - **Per-instance state** — current damage, status, attunement (Ryude), location; survives reload.
+  - **Three NPC archetypes** — beast (full monster stat block), simple (CHA-modifier + role), full-character (complete sheet).
+  - **Sidebar branches** — Characters / NPCs / Monsters / Ryude expand inline under each campaign with the same search filter as Characters.
+  - **Templates routes** — `/templates/monsters`, `/templates/ryude`, `/templates/npcs` with create/edit/duplicate/delete via YAML-backed editor.
+- **Portrait pipeline** — three-tier resolution: instance custom → entity-specific bundled → rank/type bundled → CSS placeholder. Served as base64 data URLs from the Rust backend (bypasses asset-protocol scope restrictions in dev + production without a custom scheme).
+- **Real bundled portraits** — full-colour artwork for all 5 bundled monsters (Tusktooth, Magu-Draph, Metal-Chimaera, Giant Mantis Shrimp, Skeleton) and all 3 bundled Ryude (Az-Cude, Maltu-Ragorsu, Gisah-Sharukann). Entity-specific images take priority over generic rank/type fallbacks.
+- **Clickable portrait lightbox** — any portrait with `clickable` prop opens a full-size overlay via a Radix Dialog. Available in template lists, template detail, instance detail, instance expanded stat block, and the spawn dialog.
+
+#### Instance stat block polish
+
+- **Expandable instance stat blocks** — Monster / Ryude / Beast NPC / Simple NPC detail pages render collapsible sections (Combat, Details, Equipment, Perks, Active Effects). Stats, state mutators, and roll buttons live inline.
+- **Per-instance dice rolls (Rule §07 / §08 / §14 / §15)**:
+  - **Monster / Beast NPC**: Set IN/DN, Attack (vs-character / vs-Ryude toggle, ×N crit multiplier), Ability Roll.
+  - **Simple NPC**: Set IN/DN, Skill Roll, Reaction.
+  - **Ryude**: Set IN/DN, Operator Roll, Attunement Check (Rule §14:38-66), Weapon Attack. Roll buttons disabled when unmanned.
+  - **Full-Character NPC**: renders the same character sheet a PC gets — full stat block, skills, weapons, dialogs.
+- **Rule-based bookkeeping** (Rule §09):
+  - **Status auto-derivation** from damage thresholds (wounded > durability, incapacitated > 2×, dead > 3×) with manual override pin.
+  - **Per-instance segment state** (`current IN · DN · Absorption modifier`). End Segment ticks active effects and clears the snapshot.
+  - **Ryude operational status** chip (intact / damaged-light / damaged-heavy / disabled / destroyed).
+  - **Ryude attribute damage** (SPE / POW / ARM / BAL deltas) surfaced in Combat; auto-applied to rolls.
+  - **Ryude attunement progression** with one-click Apply.
+- **Campaign log in all sheet views** — the action log sticky column now appears on NPC / Monster / Ryude detail pages as well as the character sheet.
+
+#### Active effects solver
+
+- **15 canonical effect kinds** via `KNOWN_EFFECT_KINDS`. Blinded, Airshield, and Mistcalled resolve to live IN / BN / DN modifiers via `resolveEffectMods()`; `DerivedCombatValues` exposes raw values + `activeEffectMods` for formula annotation in the stat block.
+- **Preset picker** in `ActiveEffectsPanel` pre-fills label + kind from the reference effect list.
+
+#### Global custom items
+
+- Custom items are now vault-wide (`items/*.yaml`). New **Custom Items** sidebar section and `/items` / `/items/$iid` routes.
+- **Full weapon / armor stat fields**: category, hands, BN modifiers, damage, absorption, slot, unique flag, shop availability.
+- Engine functions (`equipItem`, `buildWeaponLines`, `resolveEquippedSlots`, `AbsorptionPanel`) fall back to custom items via adapters — full weapons-table and attack-roll support.
+- Characters with legacy `custom_items` arrays **auto-migrate** to the global store on first load.
+
+#### Roll expansions
+
+- **First Impression roll dialog** — CHA-governed, editable difficulty. Spiritualist characters get an "Allies in Faith" context selector (neutral / same order / different order) applying ±1.
+- **Class benefit roll buttons** — `ClassBenefitsSection` computes formula placeholders inline and surfaces roll buttons for Sermon (LUC), Public Performance (CHA), Component Analysis (SEN), Price Loot (SEN). Tradesfolk class benefits now correctly display profession perks.
+- **Add Item dialog** — browse the full gear catalog by tab and add to inventory without a gold deduction (loot drops and GM grants).
 
 ### Fixes
 
-- **Critical hits now apply *and* double the Warrior +1 damage bonus** (Rule §06 §1, §08 §2). Previously the bonus was missing from the damage path entirely, so it was neither added on a normal hit nor doubled on a crit. The dice cap (Rule §08 LUC max) still applies to dice only — flat bonuses (Warrior +1, future technique bonuses) are exempt per Rule §06 §1, then the crit multiplier scales both. The Attack dialog and action log now show the breakdown, e.g. `(rolled 7 ⇒ 10 + 1 Warrior × 2 crit = 22)`.
-- **Update changelog renders Markdown** — the auto-updater dialog used to display headings/bullets/code-spans/links as raw `**text**` characters. Now uses `react-markdown` with parchment-themed component overrides; links open in the OS browser via the Tauri shell plugin and `rehype-sanitize` strips any unsafe content.
+- **Critical hits apply and double the Warrior +1 damage bonus** (Rule §06 §1, §08 §2) — previously the bonus was missing from the damage path entirely.
+- **Update changelog renders Markdown** — the auto-updater dialog now uses `react-markdown` with parchment-themed overrides; links open in the OS browser via the Tauri shell plugin.
+- **general-goods.yaml** — seven variable-priced entries (candle, torch, lamp-oil, hemp-rope, climbing gear, fair-clothing, instruments) now carry correct base prices.
 
 ### Engine changes
 
-- `DerivedCombatValues` gains `warriorDamageBonus: number` (1 for Warrior, 0 otherwise).
-- `AttackInput` gains optional `flatDamageBonus`. `AttackResult` gains `damageBreakdown: { diceTotal, flatBonus, critMultiplier }` for breakdown displays.
-- New `src/engine/templates/resolve.ts` — pure resolver for the three-tier template chain.
+- New `src/engine/derive/active-effect-modifiers.ts` — `resolveEffectMods()`, `KNOWN_EFFECT_KINDS`.
+- New `src/engine/derive/instance-bookkeeping.ts` — 23 vitest cases.
+- New `src/engine/derive/instance-rolls.ts` — 24 vitest cases.
+- New `src/engine/adapters/npc-as-character.ts` — 14 vitest cases.
+- New `src/engine/templates/resolve.ts` — three-tier template chain resolver.
+- New `src/domain/custom-item.ts`, `src/persistence/custom-item-repo.ts`, `src/stores/custom-item-store.ts`.
+- `DerivedCombatValues` gains `warriorDamageBonus`, `rawIN/BN/DN`, `activeEffectMods`.
 
 ### Notes
 
-- 24 new vitest cases (8 attack + 4 combat-values + 12 template-resolver). Total: 169 tests across 13 files (real source, not counting agent-worktree duplicates).
-- Template authoring v1 ships a YAML editor (parchment-themed, validates on save). Field-by-field forms per archetype are deferred to a future release; the YAML path covers all three NPC archetypes including Full-Character via "Duplicate from bundled" affordance.
+- Cross-instance damage application and clock-driven recovery remain Phase 6.
+- Total new vitest cases since v0.4.0-alpha.1: ~155+; running total ~580.
 
 ## [0.4.0-alpha.1] — 2026-04-26
 
@@ -107,9 +112,8 @@ Second alpha. **Phase 5 (dice + skill-check engines)** ships, and the sheet beco
 
 ### What's coming next
 
-- **Phase 4** — monster, NPC, and Ryude templates plus named instances inside campaigns; portrait pipeline.
 - **Phase 6** — campaign clock with closed-form healing, effect expiry, and Ryude self-repair.
-- **Phase 7** — full multi-combatant tracker with declared actions, IN ordering, and event-log undo/rewind. (The sheet's per-character "This Segment" panel and campaign action log are stepping stones, not replacements.)
+- **Phase 7** — full multi-combatant tracker with declared actions, IN ordering, and event-log undo/rewind.
 
 See [PLAN.md](PLAN.md) for the full design and remaining phase work.
 
@@ -118,8 +122,6 @@ See [PLAN.md](PLAN.md) for the full design and remaining phase work.
 - **Builds remain unsigned.** Same first-run dance as 0.3.0-alpha.1: SmartScreen → "More info → Run anyway" on Windows; right-click → Open or Privacy & Security → "Open Anyway" on macOS; `chmod +x` and run on Linux.
 - **Auto-update from 0.3.0-alpha.1** should arrive on next launch — the updater is signed with the same ed25519 key.
 - **Vault format**: existing `state.action_log` arrays on character YAMLs are silently dropped (Zod strips unknown keys); the new campaign-wide log lives at `campaigns/<dir>/action-log.yaml`.
-- **If you've been hitting the weapon-accumulation bug**, the remount fix prevents *new* corruption but doesn't reverse existing data. Open `~/Documents/WareMaster/campaigns/<your-campaign>/characters/<character>.yaml` in a text editor and trim each character's `equipment.weapons:` array back to what it should be. The `.scripts/validate_yaml.py` script will sanity-check the structure afterwards.
-- **Found a bug?** Please [open an issue](https://github.com/TheRussellMuscle/WareMaster/issues).
 
 ### Support
 
@@ -161,5 +163,6 @@ See [PLAN.md](PLAN.md) for the full design and remaining phase work.
 
 WareMaster is a free side-project. If it's saving you time at the table, [Ko-fi](https://ko-fi.com/brendanrussell) is the most direct way to help keep it going.
 
+[0.6.0-alpha.1]: https://github.com/TheRussellMuscle/WareMaster/compare/v0.4.0-alpha.1...v0.6.0-alpha.1
 [0.4.0-alpha.1]: https://github.com/TheRussellMuscle/WareMaster/releases/tag/v0.4.0-alpha.1
 [0.3.0-alpha.1]: https://github.com/TheRussellMuscle/WareMaster/releases/tag/v0.3.0-alpha.1

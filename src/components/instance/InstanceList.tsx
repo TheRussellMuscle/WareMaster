@@ -295,7 +295,7 @@ function InstanceRow({
       r.kind === 'missing'
         ? `⚠ template "${inst.template_id}" missing`
         : `${tpl?.name ?? inst.template_id} · Rank ${rank ?? '?'} · ${r.source}`;
-    fallback = { kind: 'monster', rank };
+    fallback = { kind: 'monster', rank, templateId: inst.template_id };
   } else if (kind === 'ryude') {
     const inst = localInstance as RyudeInstance;
     const r = resolveRyudeTemplate(
@@ -316,7 +316,7 @@ function InstanceRow({
       r.kind === 'missing'
         ? `⚠ template "${inst.template_id}" missing · ${opLabel}`
         : `${tpl?.name ?? inst.template_id} · ${rType} · ${opLabel}`;
-    fallback = { kind: 'ryude', rType };
+    fallback = { kind: 'ryude', rType, templateId: inst.template_id };
   } else {
     const inst = localInstance as NpcInstance;
     const r = resolveNpcTemplate(inst.template_id, vaultNpcs, campaignNpcs);
@@ -376,7 +376,7 @@ function InstanceRow({
             vaultPath={instance.portrait_path}
             fallback={fallback}
             name={instance.name}
-            size="sm"
+            size="md"
           />
           <div className="min-w-0 flex-1">
             <div className="truncate font-medium text-[var(--color-ink)]">

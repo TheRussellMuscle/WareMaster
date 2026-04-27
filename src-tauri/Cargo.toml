@@ -1,6 +1,6 @@
 [package]
 name = "waremaster"
-version = "0.5.0-alpha.2"
+version = "0.6.0-alpha.1"
 description = "WareMaster — Wares Blade TTRPG companion"
 authors = ["WareMaster contributors"]
 license = "MIT"
@@ -27,6 +27,7 @@ tauri-plugin-process = "2"
 tauri-plugin-shell = "2"
 ulid = "1"
 chrono = { version = "0.4", features = ["serde"] }
+base64 = "0.22"
 
 [target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]
 tauri-plugin-updater = "2"
