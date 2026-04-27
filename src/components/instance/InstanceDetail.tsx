@@ -13,6 +13,9 @@ import {
 import { useCampaignStore } from '@/stores/campaign-store';
 import { useReferenceStore } from '@/stores/reference-store';
 import { useTemplateStore } from '@/stores/template-store';
+import { useActionLogStore } from '@/stores/action-log-store';
+import { ActionLog } from '@/components/sheet/ActionLog';
+import type { ActionLogEntry } from '@/domain/action-log';
 import {
   indexTemplates,
   resolveMonsterTemplate,
@@ -52,6 +55,7 @@ interface InstanceDetailProps {
 
 // Stable empty array — see InstanceList.tsx for the why.
 const EMPTY_CHARACTERS: ReturnType<typeof useCampaignStore.getState>['charactersByCampaign'][string] = [];
+const EMPTY_LOG: ActionLogEntry[] = [];
 
 export function InstanceDetail({
   campaign,
@@ -76,6 +80,12 @@ export function InstanceDetail({
   const loadCharactersFor = useCampaignStore((s) => s.loadCharactersFor);
   const invalidate = useCampaignStore((s) => s.invalidateInstancesFor);
 
+  const cachedEntries = useActionLogStore((s) => s.entriesByCampaign[campaignDir]);
+  const logEntries = cachedEntries ?? EMPTY_LOG;
+  const logLoading = useActionLogStore((s) => !!s.loading[campaignDir]);
+  const loadLog = useActionLogStore((s) => s.load);
+  const clearLog = useActionLogStore((s) => s.clear);
+
   React.useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -98,6 +108,10 @@ export function InstanceDetail({
     loadCampaignTemplates,
     loadCharactersFor,
   ]);
+
+  React.useEffect(() => {
+    void loadLog(campaignDir);
+  }, [campaignDir, loadLog]);
 
   const vaultMonsters = React.useMemo(
     () => indexTemplates(globalTemplates.monster ?? []),
@@ -230,101 +244,113 @@ export function InstanceDetail({
     (resolvedTemplate as NpcTemplate).archetype === 'full-character';
 
   return (
-    <div className="flex flex-col gap-4">
-      <ParchmentCard>
-        <Link
-          to={backTo}
-          params={{ cid: campaignDir }}
-          className="inline-flex items-center gap-1 text-xs text-[var(--color-ink-faint)] hover:text-[var(--color-rust)]"
-        >
-          <ArrowLeft className="h-3 w-3" /> Back
-        </Link>
-
-        <div className="mt-3 flex items-start gap-4">
-          <Portrait
-            vaultPath={instance.portrait_path}
-            fallback={fallback}
-            name={instance.name}
-            size="lg"
-          />
-          <div className="flex-1">
-            <input
-              type="text"
-              value={instance.name}
-              onChange={(e) =>
-                setInstance({ ...instance, name: e.target.value } as Instance)
-              }
-              onBlur={() => void persist(instance)}
-              className="w-full bg-transparent font-display text-3xl text-[var(--color-ink)] outline-none focus:bg-[var(--color-parchment-100)]/40 focus:px-1"
-            />
-            <div className="mt-1 text-xs text-[var(--color-ink-faint)]">
-              <span className="font-mono">{instance.id}</span>
-              {' · template '}
-              <span className="font-mono">{instance.template_id}</span>
-              {resolved?.kind === 'resolved' && ` · ${resolved.source}`}
-            </div>
-            {portraitTarget && (
-              <div className="mt-3">
-                <PortraitPicker
-                  fallback={fallback}
-                  name={instance.name}
-                  mode={{
-                    kind: 'live',
-                    target: portraitTarget,
-                    vaultPath: instance.portrait_path,
-                    onChange: (path) => {
-                      void persist({ ...instance, portrait_path: path } as Instance);
-                    },
-                  }}
-                />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {resolved?.kind === 'missing' && (
-          <div className="mt-4 rounded-sm border-2 border-[var(--color-gilt)]/40 bg-[var(--color-gilt)]/10 p-3 text-sm text-[var(--color-ink-soft)]">
-            <strong>Template missing.</strong> The template{' '}
-            <code>{resolved.templateId}</code> is not present in the campaign,
-            vault, or bundled reference. Add it to your vault or this campaign's
-            templates folder, or delete this instance.
-          </div>
-        )}
-
-        {saveError && (
-          <div className="mt-3 rounded-sm border border-[var(--color-rust)]/60 bg-[var(--color-rust)]/10 p-2 text-xs text-[var(--color-rust)]">
-            Save failed: {saveError}
-          </div>
-        )}
-      </ParchmentCard>
-
-      {isFullCharNpc ? (
-        <FullCharacterNpcSheet
-          campaign={campaign}
-          instance={instance as NpcInstance}
-          template={resolvedTemplate as FullCharacterNpc}
-          catalog={catalog}
-          onPersist={async (next) => {
-            setInstance(next);
-            await persist(next);
-          }}
-        />
-      ) : (
+    <div className="grid w-full grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
+      <div className="flex w-full flex-col gap-4">
         <ParchmentCard>
-          <InstanceStatBlock
-            kind={kind}
+          <Link
+            to={backTo}
+            params={{ cid: campaignDir }}
+            className="inline-flex items-center gap-1 text-xs text-[var(--color-ink-faint)] hover:text-[var(--color-rust)]"
+          >
+            <ArrowLeft className="h-3 w-3" /> Back
+          </Link>
+
+          <div className="mt-3 flex items-start gap-4">
+            <Portrait
+              vaultPath={instance.portrait_path}
+              fallback={fallback}
+              name={instance.name}
+              size="lg"
+            />
+            <div className="flex-1">
+              <input
+                type="text"
+                value={instance.name}
+                onChange={(e) =>
+                  setInstance({ ...instance, name: e.target.value } as Instance)
+                }
+                onBlur={() => void persist(instance)}
+                className="w-full bg-transparent font-display text-3xl text-[var(--color-ink)] outline-none focus:bg-[var(--color-parchment-100)]/40 focus:px-1"
+              />
+              <div className="mt-1 text-xs text-[var(--color-ink-faint)]">
+                <span className="font-mono">{instance.id}</span>
+                {' · template '}
+                <span className="font-mono">{instance.template_id}</span>
+                {resolved?.kind === 'resolved' && ` · ${resolved.source}`}
+              </div>
+              {portraitTarget && (
+                <div className="mt-3">
+                  <PortraitPicker
+                    fallback={fallback}
+                    name={instance.name}
+                    mode={{
+                      kind: 'live',
+                      target: portraitTarget,
+                      vaultPath: instance.portrait_path,
+                      onChange: (path) => {
+                        void persist({ ...instance, portrait_path: path } as Instance);
+                      },
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {resolved?.kind === 'missing' && (
+            <div className="mt-4 rounded-sm border-2 border-[var(--color-gilt)]/40 bg-[var(--color-gilt)]/10 p-3 text-sm text-[var(--color-ink-soft)]">
+              <strong>Template missing.</strong> The template{' '}
+              <code>{resolved.templateId}</code> is not present in the campaign,
+              vault, or bundled reference. Add it to your vault or this campaign's
+              templates folder, or delete this instance.
+            </div>
+          )}
+
+          {saveError && (
+            <div className="mt-3 rounded-sm border border-[var(--color-rust)]/60 bg-[var(--color-rust)]/10 p-2 text-xs text-[var(--color-rust)]">
+              Save failed: {saveError}
+            </div>
+          )}
+        </ParchmentCard>
+
+        {isFullCharNpc ? (
+          <FullCharacterNpcSheet
             campaign={campaign}
-            instance={instance}
-            template={resolvedTemplate}
-            characters={characters}
+            instance={instance as NpcInstance}
+            template={resolvedTemplate as FullCharacterNpc}
             catalog={catalog}
             onPersist={async (next) => {
               setInstance(next);
               await persist(next);
             }}
           />
-        </ParchmentCard>
-      )}
+        ) : (
+          <ParchmentCard>
+            <InstanceStatBlock
+              kind={kind}
+              campaign={campaign}
+              instance={instance}
+              template={resolvedTemplate}
+              characters={characters}
+              catalog={catalog}
+              onPersist={async (next) => {
+                setInstance(next);
+                await persist(next);
+              }}
+            />
+          </ParchmentCard>
+        )}
+      </div>
+
+      <aside className="sticky top-0 hidden max-h-[calc(100vh-6rem)] self-start overflow-y-auto xl:block">
+        <ActionLog
+          entries={logEntries}
+          loading={logLoading}
+          campaignDir={campaignDir}
+          currentCharacterId={instance.id}
+          onClear={() => clearLog(campaignDir)}
+        />
+      </aside>
     </div>
   );
 }

@@ -19,6 +19,9 @@ import {
   resolveRyudeTemplate,
 } from '@/engine/templates/resolve';
 import { deleteInstance, updateInstance } from '@/persistence/instance-repo';
+import { useActionLogStore } from '@/stores/action-log-store';
+import { ActionLog } from '@/components/sheet/ActionLog';
+import type { ActionLogEntry } from '@/domain/action-log';
 import type { TemplateKind } from '@/persistence/paths';
 import type { MonsterInstance } from '@/domain/monster-instance';
 import type { RyudeInstance } from '@/domain/ryude-instance';
@@ -46,6 +49,7 @@ interface InstanceListProps {
 // Stable empty array — Zustand selectors must return the same reference
 // across renders for unchanged state, otherwise React re-renders forever.
 const EMPTY_CHARACTERS: Character[] = [];
+const EMPTY_LOG: ActionLogEntry[] = [];
 
 export function InstanceList({
   campaign,
@@ -70,6 +74,12 @@ export function InstanceList({
   const loadCampaignTemplates = useTemplateStore((s) => s.loadCampaign);
   const invalidate = useCampaignStore((s) => s.invalidateInstancesFor);
 
+  const cachedEntries = useActionLogStore((s) => s.entriesByCampaign[campaignDir]);
+  const logEntries = cachedEntries ?? EMPTY_LOG;
+  const logLoading = useActionLogStore((s) => !!s.loading[campaignDir]);
+  const loadLog = useActionLogStore((s) => s.load);
+  const clearLog = useActionLogStore((s) => s.clear);
+
   const [spawnOpen, setSpawnOpen] = React.useState(false);
   const [deleting, setDeleting] = React.useState<string | null>(null);
   const [expandedId, setExpandedId] = React.useState<string | null>(null);
@@ -85,6 +95,10 @@ export function InstanceList({
     loadGlobal,
     loadCampaignTemplates,
   ]);
+
+  React.useEffect(() => {
+    void loadLog(campaignDir);
+  }, [campaignDir, loadLog]);
 
   // Load instances on mount AND whenever the cache is invalidated (sets
   // `instances` back to undefined). Bounded: after load `instances` becomes
@@ -128,79 +142,90 @@ export function InstanceList({
   };
 
   return (
-    <ParchmentCard>
-      <header className="flex items-start justify-between gap-3">
-        <div>
-          <IlluminatedHeading level={2}>{title}</IlluminatedHeading>
-          <p className="mt-1 text-sm text-[var(--color-ink-soft)]">
-            {description}
+    <div className="grid w-full grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
+      <ParchmentCard>
+        <header className="flex items-start justify-between gap-3">
+          <div>
+            <IlluminatedHeading level={2}>{title}</IlluminatedHeading>
+            <p className="mt-1 text-sm text-[var(--color-ink-soft)]">
+              {description}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSpawnOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-sm border border-[var(--color-parchment-400)] bg-[var(--color-gilt)]/15 px-3 py-1.5 text-sm font-medium hover:bg-[var(--color-gilt)]/25"
+          >
+            <Plus className="h-4 w-4" aria-hidden /> Spawn
+          </button>
+        </header>
+
+        {instances === undefined ? (
+          <p className="mt-6 text-sm italic text-[var(--color-ink-faint)]">
+            Loading…
           </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setSpawnOpen(true)}
-          className="inline-flex items-center gap-1.5 rounded-sm border border-[var(--color-parchment-400)] bg-[var(--color-gilt)]/15 px-3 py-1.5 text-sm font-medium hover:bg-[var(--color-gilt)]/25"
-        >
-          <Plus className="h-4 w-4" aria-hidden /> Spawn
-        </button>
-      </header>
+        ) : instances.length === 0 ? (
+          <div className="mt-6 rounded-sm border border-dashed border-[var(--color-parchment-400)] bg-[var(--color-parchment-50)]/40 p-6 text-center text-sm italic text-[var(--color-ink-faint)]">
+            No {title.toLowerCase()} spawned yet. Click <strong>Spawn</strong> to add one.
+          </div>
+        ) : (
+          <ul className="mt-6 divide-y divide-[var(--color-parchment-300)] rounded-sm border border-[var(--color-parchment-300)] bg-[var(--color-parchment-50)]/40">
+            {instances.map((instance) => (
+              <InstanceRow
+                key={instance.id}
+                kind={kind}
+                instance={instance}
+                campaign={campaign}
+                catalog={catalog}
+                characters={characters}
+                vaultMonsters={vaultMonsters}
+                vaultRyude={vaultRyude}
+                vaultNpcs={vaultNpcs}
+                campaignMonsters={campaignMonsters}
+                campaignRyude={campaignRyude}
+                campaignNpcs={campaignNpcs}
+                expanded={expandedId === instance.id}
+                onToggle={() =>
+                  setExpandedId((cur) =>
+                    cur === instance.id ? null : instance.id,
+                  )
+                }
+                onDelete={() => setDeleting(instance.id)}
+                onPersisted={() => invalidate(campaignDir, kind)}
+              />
+            ))}
+          </ul>
+        )}
 
-      {instances === undefined ? (
-        <p className="mt-6 text-sm italic text-[var(--color-ink-faint)]">
-          Loading…
-        </p>
-      ) : instances.length === 0 ? (
-        <div className="mt-6 rounded-sm border border-dashed border-[var(--color-parchment-400)] bg-[var(--color-parchment-50)]/40 p-6 text-center text-sm italic text-[var(--color-ink-faint)]">
-          No {title.toLowerCase()} spawned yet. Click <strong>Spawn</strong> to add one.
-        </div>
-      ) : (
-        <ul className="mt-6 divide-y divide-[var(--color-parchment-300)] rounded-sm border border-[var(--color-parchment-300)] bg-[var(--color-parchment-50)]/40">
-          {instances.map((instance) => (
-            <InstanceRow
-              key={instance.id}
-              kind={kind}
-              instance={instance}
-              campaign={campaign}
-              catalog={catalog}
-              characters={characters}
-              vaultMonsters={vaultMonsters}
-              vaultRyude={vaultRyude}
-              vaultNpcs={vaultNpcs}
-              campaignMonsters={campaignMonsters}
-              campaignRyude={campaignRyude}
-              campaignNpcs={campaignNpcs}
-              expanded={expandedId === instance.id}
-              onToggle={() =>
-                setExpandedId((cur) =>
-                  cur === instance.id ? null : instance.id,
-                )
-              }
-              onDelete={() => setDeleting(instance.id)}
-              onPersisted={() => invalidate(campaignDir, kind)}
-            />
-          ))}
-        </ul>
-      )}
+        <InstanceSpawnDialog
+          open={spawnOpen}
+          onClose={() => setSpawnOpen(false)}
+          kind={kind}
+          campaignId={campaign.id}
+          campaignDir={campaignDir}
+          characters={characters}
+        />
 
-      <InstanceSpawnDialog
-        open={spawnOpen}
-        onClose={() => setSpawnOpen(false)}
-        kind={kind}
-        campaignId={campaign.id}
-        campaignDir={campaignDir}
-        characters={characters}
-      />
+        <ConfirmDialog
+          open={deleting != null}
+          onOpenChange={(o) => !o && setDeleting(null)}
+          title={`Delete ${title.toLowerCase().replace(/s$/, '')}?`}
+          description="The instance YAML and its custom portrait file will be removed. This cannot be undone."
+          confirmLabel="Delete"
+          destructive
+          onConfirm={onConfirmDelete}
+        />
+      </ParchmentCard>
 
-      <ConfirmDialog
-        open={deleting != null}
-        onOpenChange={(o) => !o && setDeleting(null)}
-        title={`Delete ${title.toLowerCase().replace(/s$/, '')}?`}
-        description="The instance YAML and its custom portrait file will be removed. This cannot be undone."
-        confirmLabel="Delete"
-        destructive
-        onConfirm={onConfirmDelete}
-      />
-    </ParchmentCard>
+      <aside className="sticky top-0 hidden max-h-[calc(100vh-6rem)] self-start overflow-y-auto xl:block">
+        <ActionLog
+          entries={logEntries}
+          loading={logLoading}
+          campaignDir={campaignDir}
+          onClear={() => clearLog(campaignDir)}
+        />
+      </aside>
+    </div>
   );
 }
 

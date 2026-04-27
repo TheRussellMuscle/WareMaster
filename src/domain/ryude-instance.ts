@@ -22,6 +22,14 @@ const RyudeAttunementStateSchema = z.enum([
 ]);
 export type RyudeAttunementState = z.infer<typeof RyudeAttunementStateSchema>;
 
+const ActiveEffectSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  source: z.string().optional(),
+  expires_at_segment: z.number().int().nullable(),
+});
+export type ActiveEffect = z.infer<typeof ActiveEffectSchema>;
+
 const RepairTicketSchema = z.object({
   id: z.string(),
   description: z.string(),
@@ -46,6 +54,7 @@ const RyudeInstanceStateSchema = z.object({
   }),
   attunement_state: RyudeAttunementStateSchema.default('unattuned'),
   repair_queue: z.array(RepairTicketSchema).default([]),
+  active_effects: z.array(ActiveEffectSchema).default([]),
   last_recovery_tick: z.number().int().default(0),
   location: z.string().default(''),
   segment: CurrentSegmentSchema.nullable().default(null),

@@ -7,10 +7,7 @@ import {
   ryudeOperationalStatus,
   type RyudeOperationalStatus,
 } from '@/engine/derive/instance-bookkeeping';
-import {
-  monsterAbilityRoll,
-  ryudeOperatorRoll,
-} from '@/engine/derive/instance-rolls';
+import { ryudeOperatorRoll } from '@/engine/derive/instance-rolls';
 import { useActionLogStore } from '@/stores/action-log-store';
 import type { ActionLogEntry, CurrentSegment } from '@/domain/action-log';
 import type { MonsterTemplate } from '@/domain/monster';
@@ -36,6 +33,7 @@ import { InstanceSetInDnDialog } from './dialogs/InstanceSetInDnDialog';
 import { RyudeOperatorDialog } from './dialogs/RyudeOperatorDialog';
 import { RyudeAttunementDialog } from './dialogs/RyudeAttunementDialog';
 import { RyudeAttackDialog } from './dialogs/RyudeAttackDialog';
+import { DurabilityTracks } from '@/components/stat/DurabilityTracks';
 
 type Instance = MonsterInstance | RyudeInstance | NpcInstance;
 type Template = MonsterTemplate | RyudeTemplate | NpcTemplate;
@@ -53,7 +51,7 @@ interface Props {
 type DialogState =
   | { kind: 'attack-monster' }
   | { kind: 'ability-monster' }
-  | { kind: 'skill-simple' }
+  | { kind: 'skill-simple'; skillId?: string }
   | { kind: 'set-in-dn' }
   | { kind: 'ryude-operator' }
   | { kind: 'ryude-attunement' }
@@ -108,11 +106,8 @@ export function InstanceStatBlock({
       }
     } else if (kind === 'ryude') {
       const inst = instance as RyudeInstance;
-      const result = endSegment(inst.state as never);
-      const next: RyudeInstance = {
-        ...inst,
-        state: result.state as RyudeInstance['state'],
-      };
+      const result = endSegment(inst.state);
+      const next: RyudeInstance = { ...inst, state: result.state };
       await onPersist(next);
       if (result.expired.length > 0) {
         setTickToast(
@@ -249,6 +244,7 @@ export function InstanceStatBlock({
             template={template as SimpleNpc}
             instance={instance as NpcInstance}
             catalog={catalog}
+            initialSkillId={dialog?.kind === 'skill-simple' ? dialog.skillId : undefined}
             onResolve={logResolve}
           />
           <InstanceSetInDnDialog
@@ -463,6 +459,9 @@ function MonsterSections({
   // Beast NPCs share the same stat block; we only use the state slice.
   const state = instance.state as MonsterInstance['state'];
   const durability = parseDurability(template);
+  const rank =
+    (instance as MonsterInstance).overrides?.rank ??
+    (template as MonsterTemplate).rank;
   const derived = effectiveMonsterStatus(
     {
       status: state.status,
@@ -501,62 +500,68 @@ function MonsterSections({
             <StatPill label="WIL" value={template.base_wil ?? '—'} />
             <StatPill label="CHA" value={template.base_cha ?? '—'} />
           </div>
-          <div className="grid grid-cols-3 gap-1.5">
+          <div className="grid grid-cols-4 gap-1.5">
             <StatPill label="Damage" value={String(template.damage_value)} />
             <StatPill
               label="Absorption"
               value={String(template.total_absorption ?? '—')}
             />
             <StatPill label="Reaction" value={template.reaction} />
+            {rank && <StatPill label="Rank" value={rank} />}
           </div>
+          {(template.base_sen_vs_ryude != null ||
+            template.damage_value_vs_ryude != null ||
+            template.total_absorption_vs_ryude != null) && (
+            <div className="flex flex-col gap-0.5">
+              <div className="text-[9px] uppercase tracking-wider text-[var(--color-ink-faint)]">
+                vs Ryude
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                <StatPill
+                  label="SEN"
+                  value={
+                    template.base_sen_vs_ryude != null
+                      ? String(template.base_sen_vs_ryude)
+                      : '—'
+                  }
+                />
+                <StatPill
+                  label="Damage"
+                  value={
+                    template.damage_value_vs_ryude != null
+                      ? String(template.damage_value_vs_ryude)
+                      : '—'
+                  }
+                />
+                <StatPill
+                  label="Absorption"
+                  value={
+                    template.total_absorption_vs_ryude != null
+                      ? String(template.total_absorption_vs_ryude)
+                      : '—'
+                  }
+                />
+              </div>
+            </div>
+          )}
           <div className="flex flex-wrap gap-1.5">
             <RollButton onClick={() => openDialog({ kind: 'set-in-dn' })} label="Set IN/DN" />
             <RollButton onClick={() => openDialog({ kind: 'attack-monster' })} label="Attack" />
             <RollButton onClick={() => openDialog({ kind: 'ability-monster' })} label="Ability" />
             <RollButton onClick={onEndSegment} label="End Segment" />
           </div>
-          <div className="grid grid-cols-3 items-center gap-2 text-xs">
-            <label className="flex items-center justify-between gap-2">
-              <span className="text-[10px] uppercase tracking-wider text-[var(--color-ink-faint)]">
-                Phys dmg
-              </span>
-              <NumberCell
-                value={state.current_physical_damage}
-                onChange={(v) => setStateField('current_physical_damage', v)}
-              />
-            </label>
-            <label className="flex items-center justify-between gap-2">
-              <span className="text-[10px] uppercase tracking-wider text-[var(--color-ink-faint)]">
-                Mental dmg
-              </span>
-              <NumberCell
-                value={state.current_mental_damage}
-                onChange={(v) => setStateField('current_mental_damage', v)}
-              />
-            </label>
-            <label className="flex items-center justify-between gap-2">
-              <span className="text-[10px] uppercase tracking-wider text-[var(--color-ink-faint)]">
-                Status
-              </span>
-              <select
-                value={state.status}
-                onChange={(e) => {
-                  const newStatus = e.target.value as MonsterInstanceStatus;
-                  void onPersist({
-                    ...(instance as MonsterInstance),
-                    state: { ...state, status: newStatus, status_override: true },
-                  } as Instance);
-                }}
-                className="h-7 rounded-sm border border-[var(--color-parchment-400)] bg-[var(--color-parchment-50)] px-1.5 text-xs"
-              >
-                {(['fine', 'wounded', 'incapacitated', 'dead'] as const).map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
+          <DurabilityTracks
+            durability={durability}
+            current={state.current_physical_damage}
+            label="Physical"
+            onChange={(v) => setStateField('current_physical_damage', v)}
+          />
+          <DurabilityTracks
+            durability={durability}
+            current={state.current_mental_damage}
+            label="Mental"
+            onChange={(v) => setStateField('current_mental_damage', v)}
+          />
           <div className="text-[10px] italic text-[var(--color-ink-faint)]">
             Derived from damage + Durability {durability}:
           </div>
@@ -600,30 +605,29 @@ function MonsterSections({
           <Detail label="Intelligence" value={template.intelligence} />
           <Detail label="Habitat" value={template.primary_habitat} />
           {dispositionLine && <Detail label="Disposition" value={dispositionLine} />}
-          {template.base_sen_vs_ryude !== undefined &&
-            template.base_sen_vs_ryude !== null && (
-              <Detail label="vs-Ryude SEN" value={String(template.base_sen_vs_ryude)} />
-            )}
-          {template.damage_value_vs_ryude !== undefined &&
-            template.damage_value_vs_ryude !== null && (
-              <Detail label="vs-Ryude Damage" value={String(template.damage_value_vs_ryude)} />
-            )}
-          {template.total_absorption_vs_ryude !== undefined &&
-            template.total_absorption_vs_ryude !== null && (
-              <Detail
-                label="vs-Ryude Absorption"
-                value={String(template.total_absorption_vs_ryude)}
-              />
-            )}
         </div>
       </StatSection>
 
-      {state.active_effects.length > 0 && (
-        <ActiveEffectsSection
-          effects={state.active_effects}
-          currentSegment={state.current_segment_index}
-        />
-      )}
+      <ActiveEffectsSection
+        effects={state.active_effects}
+        currentSegment={state.current_segment_index}
+        onAdd={(eff) =>
+          void onPersist({
+            ...(instance as MonsterInstance),
+            state: { ...state, active_effects: [...state.active_effects, eff] },
+          } as Instance)
+        }
+        onRemove={(id) =>
+          void onPersist({
+            ...(instance as MonsterInstance),
+            state: {
+              ...state,
+              active_effects: state.active_effects.filter((e) => e.id !== id),
+            },
+          } as Instance)
+        }
+      />
+      <NotesSection notes={(instance as MonsterInstance).overrides?.notes} />
     </>
   );
 }
@@ -639,16 +643,42 @@ function Detail({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
+function NotesSection({ notes }: { notes: string | undefined }) {
+  if (!notes?.trim()) return null;
+  return (
+    <StatSection title="Notes">
+      <p className="whitespace-pre-wrap text-xs text-[var(--color-ink-soft)]">{notes}</p>
+    </StatSection>
+  );
+}
+
 function ActiveEffectsSection({
   effects,
   currentSegment,
+  onAdd,
+  onRemove,
 }: {
   effects: MonsterInstance['state']['active_effects'];
   currentSegment: number;
+  onAdd?: (effect: { id: string; label: string; expires_at_segment: number | null }) => void;
+  onRemove?: (id: string) => void;
 }) {
+  const [showForm, setShowForm] = React.useState(false);
+  const [newLabel, setNewLabel] = React.useState('');
+  const [newExpiry, setNewExpiry] = React.useState('');
+
+  const handleAdd = () => {
+    if (!newLabel.trim() || !onAdd) return;
+    const expiry = newExpiry.trim() !== '' ? parseInt(newExpiry, 10) : null;
+    onAdd({ id: ulid(), label: newLabel.trim(), expires_at_segment: expiry });
+    setNewLabel('');
+    setNewExpiry('');
+    setShowForm(false);
+  };
+
   return (
     <StatSection
-      defaultOpen
+      defaultOpen={effects.length > 0}
       title="Active Effects"
       icon={<Zap className="h-3.5 w-3.5 text-[var(--color-ink-faint)]" aria-hidden />}
       rightSlot={
@@ -657,26 +687,83 @@ function ActiveEffectsSection({
         </span>
       }
     >
-      <ul className="flex flex-col gap-1">
-        {effects.map((eff) => (
-          <li
-            key={eff.id}
-            className="flex items-center gap-2 rounded-sm border border-[var(--color-parchment-300)] bg-[var(--color-parchment-50)]/60 px-2 py-1 text-xs"
+      {effects.length > 0 && (
+        <ul className="flex flex-col gap-1 mb-2">
+          {effects.map((eff) => (
+            <li
+              key={eff.id}
+              className="flex items-center gap-2 rounded-sm border border-[var(--color-parchment-300)] bg-[var(--color-parchment-50)]/60 px-2 py-1 text-xs"
+            >
+              <span className="font-medium text-[var(--color-ink)]">{eff.label}</span>
+              {eff.expires_at_segment !== null && (
+                <span className="font-mono text-[10px] text-[var(--color-ink-faint)]">
+                  until seg {eff.expires_at_segment}
+                </span>
+              )}
+              {eff.source && (
+                <span className="text-[10px] italic text-[var(--color-ink-faint)]">
+                  {eff.source}
+                </span>
+              )}
+              {onRemove && (
+                <button
+                  type="button"
+                  onClick={() => onRemove(eff.id)}
+                  className="ml-auto text-[10px] text-[var(--color-ink-faint)] hover:text-[var(--color-rust)]"
+                  aria-label="Remove effect"
+                >
+                  ×
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      {onAdd && (
+        showForm ? (
+          <div className="flex flex-col gap-1.5">
+            <input
+              type="text"
+              placeholder="Effect label"
+              value={newLabel}
+              onChange={(e) => setNewLabel(e.target.value)}
+              className="h-7 rounded-sm border border-[var(--color-parchment-400)] bg-[var(--color-parchment-50)] px-2 text-xs"
+            />
+            <input
+              type="number"
+              placeholder="Expires at seg (blank = permanent)"
+              value={newExpiry}
+              onChange={(e) => setNewExpiry(e.target.value)}
+              className="h-7 rounded-sm border border-[var(--color-parchment-400)] bg-[var(--color-parchment-50)] px-2 font-mono text-xs"
+            />
+            <div className="flex gap-1.5">
+              <button
+                type="button"
+                disabled={!newLabel.trim()}
+                onClick={handleAdd}
+                className="rounded-sm border border-[var(--color-parchment-400)] bg-[var(--color-gilt)]/15 px-2 py-0.5 text-[10px] disabled:opacity-50 hover:bg-[var(--color-gilt)]/25"
+              >
+                Add
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowForm(false); setNewLabel(''); setNewExpiry(''); }}
+                className="text-[10px] text-[var(--color-ink-faint)] underline"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowForm(true)}
+            className="text-[10px] text-[var(--color-ink-faint)] underline hover:text-[var(--color-ink)]"
           >
-            <span className="font-medium text-[var(--color-ink)]">{eff.label}</span>
-            {eff.expires_at_segment !== null && (
-              <span className="font-mono text-[10px] text-[var(--color-ink-faint)]">
-                until seg {eff.expires_at_segment}
-              </span>
-            )}
-            {eff.source && (
-              <span className="ml-auto text-[10px] italic text-[var(--color-ink-faint)]">
-                {eff.source}
-              </span>
-            )}
-          </li>
-        ))}
-      </ul>
+            + Add effect
+          </button>
+        )
+      )}
     </StatSection>
   );
 }
@@ -873,9 +960,18 @@ function RyudeSections({
                 ))}
               </select>
               {instance.equipped_operator && !operator && (
-                <span className="text-[10px] text-[var(--color-rust)]">
-                  ⚠ operator id "{instance.equipped_operator.id}" no longer resolves
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-[var(--color-rust)]">
+                    ⚠ operator id "{instance.equipped_operator.id}" no longer resolves
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => void onPersist({ ...instance, equipped_operator: null })}
+                    className="text-[10px] underline text-[var(--color-rust)] hover:opacity-70"
+                  >
+                    Clear operator
+                  </button>
+                </div>
               )}
             </label>
             <label className="col-span-2 flex items-center justify-between gap-2">
@@ -958,8 +1054,46 @@ function RyudeSections({
         </StatSection>
       )}
 
-      {/* Ryude schema doesn't include active_effects today; add a parity field
-          in a follow-up if the WM needs to track environment effects on the unit. */}
+      <RepairQueueSection
+        tickets={state.repair_queue}
+        onAdd={(t) =>
+          void onPersist({
+            ...instance,
+            state: { ...state, repair_queue: [...state.repair_queue, t] },
+          })
+        }
+        onRemove={(id) =>
+          void onPersist({
+            ...instance,
+            state: {
+              ...state,
+              repair_queue: state.repair_queue.filter((t) => t.id !== id),
+            },
+          })
+        }
+      />
+
+      <ActiveEffectsSection
+        effects={state.active_effects}
+        currentSegment={state.current_segment_index}
+        onAdd={(eff) =>
+          void onPersist({
+            ...instance,
+            state: { ...state, active_effects: [...state.active_effects, eff] },
+          })
+        }
+        onRemove={(id) =>
+          void onPersist({
+            ...instance,
+            state: {
+              ...state,
+              active_effects: state.active_effects.filter((e) => e.id !== id),
+            },
+          })
+        }
+      />
+      <NotesSection notes={instance.overrides?.notes} />
+
     </>
   );
 }
@@ -1001,6 +1135,118 @@ function operationalColor(s: RyudeOperationalStatus): string {
     default:
       return 'text-[var(--color-ink-soft)]';
   }
+}
+
+/* ---------------- Repair Queue (Ryude) ---------------- */
+
+function RepairQueueSection({
+  tickets,
+  onAdd,
+  onRemove,
+}: {
+  tickets: RyudeInstance['state']['repair_queue'];
+  onAdd: (t: {
+    id: string;
+    description: string;
+    segment_started: number;
+    segments_remaining: number;
+  }) => void;
+  onRemove: (id: string) => void;
+}): React.JSX.Element {
+  const [showForm, setShowForm] = React.useState(false);
+  const [newDesc, setNewDesc] = React.useState('');
+  const [newSegs, setNewSegs] = React.useState('');
+
+  const handleAdd = () => {
+    if (!newDesc.trim()) return;
+    onAdd({
+      id: ulid(),
+      description: newDesc.trim(),
+      segment_started: 0,
+      segments_remaining: parseInt(newSegs, 10) || 1,
+    });
+    setNewDesc('');
+    setNewSegs('');
+    setShowForm(false);
+  };
+
+  return (
+    <StatSection
+      title="Repair Queue"
+      icon={<Wrench className="h-3.5 w-3.5 text-[var(--color-ink-faint)]" aria-hidden />}
+      defaultOpen={tickets.length > 0}
+    >
+      {tickets.length > 0 ? (
+        <ul className="flex flex-col gap-1 mb-2">
+          {tickets.map((t) => (
+            <li
+              key={t.id}
+              className="flex items-center gap-2 rounded-sm border border-[var(--color-parchment-300)] bg-[var(--color-parchment-50)]/60 px-2 py-1 text-xs"
+            >
+              <span className="flex-1 font-medium text-[var(--color-ink)]">{t.description}</span>
+              <span className="font-mono text-[10px] text-[var(--color-ink-faint)]">
+                {t.segments_remaining} seg remaining
+              </span>
+              <button
+                type="button"
+                onClick={() => onRemove(t.id)}
+                className="text-[10px] text-[var(--color-ink-faint)] hover:text-[var(--color-rust)]"
+                aria-label="Remove repair ticket"
+              >
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mb-2 text-xs italic text-[var(--color-ink-faint)]">No active repairs.</p>
+      )}
+      {showForm ? (
+        <div className="flex flex-col gap-1.5">
+          <input
+            type="text"
+            placeholder="Repair description"
+            value={newDesc}
+            onChange={(e) => setNewDesc(e.target.value)}
+            className="h-7 rounded-sm border border-[var(--color-parchment-400)] bg-[var(--color-parchment-50)] px-2 text-xs"
+          />
+          <input
+            type="number"
+            min={1}
+            placeholder="Segments remaining"
+            value={newSegs}
+            onChange={(e) => setNewSegs(e.target.value)}
+            className="h-7 rounded-sm border border-[var(--color-parchment-400)] bg-[var(--color-parchment-50)] px-2 font-mono text-xs"
+          />
+          <div className="flex gap-1.5">
+            <button
+              type="button"
+              disabled={!newDesc.trim()}
+              onClick={handleAdd}
+              className="rounded-sm border border-[var(--color-parchment-400)] bg-[var(--color-gilt)]/15 px-2 py-0.5 text-[10px] disabled:opacity-50 hover:bg-[var(--color-gilt)]/25"
+            >
+              Add
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShowForm(false); setNewDesc(''); setNewSegs(''); }}
+              className="text-[10px] text-[var(--color-ink-faint)] underline"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setShowForm(true)}
+          className="text-[10px] text-[var(--color-ink-faint)] underline hover:text-[var(--color-ink)]"
+        >
+          + Add repair
+        </button>
+      )}
+    </StatSection>
+  );
 }
 
 /* ---------------- Simple NPC ---------------- */
@@ -1068,7 +1314,7 @@ function SimpleNpcSections({
                       </span>
                     </span>
                     <RollButton
-                      onClick={() => openDialog({ kind: 'skill-simple' })}
+                      onClick={() => openDialog({ kind: 'skill-simple', skillId: s.skill_id })}
                       label="Roll"
                     />
                   </li>
@@ -1081,16 +1327,81 @@ function SimpleNpcSections({
             <RollButton onClick={() => openDialog({ kind: 'skill-simple' })} label="Skill / Reaction" />
             <RollButton onClick={onEndSegment} label="End Segment" />
           </div>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <label className="flex items-center justify-between gap-2">
-              <span className="text-[10px] uppercase tracking-wider text-[var(--color-ink-faint)]">
+          <div className="flex flex-col gap-2 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="w-20 shrink-0 text-[10px] uppercase tracking-wider text-[var(--color-ink-faint)]">
                 Phys dmg
               </span>
-              <NumberCell
-                value={state.current_physical_damage}
-                onChange={(v) => setStateField('current_physical_damage', v)}
-              />
-            </label>
+              <div className="flex items-center gap-1 text-[10px] text-[var(--color-ink-faint)]">
+                <button
+                  type="button"
+                  onClick={() => setStateField('current_physical_damage', Math.max(0, state.current_physical_damage - 5))}
+                  disabled={state.current_physical_damage === 0}
+                  className="rounded-sm border border-[var(--color-parchment-400)] bg-[var(--color-verdigris)]/10 px-1.5 py-0 hover:bg-[var(--color-verdigris)]/20 disabled:opacity-30"
+                  title="Heal 5"
+                >−5</button>
+                <button
+                  type="button"
+                  onClick={() => setStateField('current_physical_damage', Math.max(0, state.current_physical_damage - 1))}
+                  disabled={state.current_physical_damage === 0}
+                  className="rounded-sm border border-[var(--color-parchment-400)] bg-[var(--color-verdigris)]/10 px-1.5 py-0 hover:bg-[var(--color-verdigris)]/20 disabled:opacity-30"
+                  title="Heal 1"
+                >−1</button>
+                <NumberCell
+                  value={state.current_physical_damage}
+                  onChange={(v) => setStateField('current_physical_damage', Math.max(0, v))}
+                />
+                <button
+                  type="button"
+                  onClick={() => setStateField('current_physical_damage', state.current_physical_damage + 1)}
+                  className="rounded-sm border border-[var(--color-parchment-400)] bg-[var(--color-rust)]/10 px-1.5 py-0 hover:bg-[var(--color-rust)]/20"
+                  title="Take 1"
+                >+1</button>
+                <button
+                  type="button"
+                  onClick={() => setStateField('current_physical_damage', state.current_physical_damage + 5)}
+                  className="rounded-sm border border-[var(--color-parchment-400)] bg-[var(--color-rust)]/10 px-1.5 py-0 hover:bg-[var(--color-rust)]/20"
+                  title="Take 5"
+                >+5</button>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-20 shrink-0 text-[10px] uppercase tracking-wider text-[var(--color-ink-faint)]">
+                Mental dmg
+              </span>
+              <div className="flex items-center gap-1 text-[10px] text-[var(--color-ink-faint)]">
+                <button
+                  type="button"
+                  onClick={() => setStateField('current_mental_damage', Math.max(0, state.current_mental_damage - 5))}
+                  disabled={state.current_mental_damage === 0}
+                  className="rounded-sm border border-[var(--color-parchment-400)] bg-[var(--color-verdigris)]/10 px-1.5 py-0 hover:bg-[var(--color-verdigris)]/20 disabled:opacity-30"
+                  title="Heal 5"
+                >−5</button>
+                <button
+                  type="button"
+                  onClick={() => setStateField('current_mental_damage', Math.max(0, state.current_mental_damage - 1))}
+                  disabled={state.current_mental_damage === 0}
+                  className="rounded-sm border border-[var(--color-parchment-400)] bg-[var(--color-verdigris)]/10 px-1.5 py-0 hover:bg-[var(--color-verdigris)]/20 disabled:opacity-30"
+                  title="Heal 1"
+                >−1</button>
+                <NumberCell
+                  value={state.current_mental_damage}
+                  onChange={(v) => setStateField('current_mental_damage', Math.max(0, v))}
+                />
+                <button
+                  type="button"
+                  onClick={() => setStateField('current_mental_damage', state.current_mental_damage + 1)}
+                  className="rounded-sm border border-[var(--color-parchment-400)] bg-[var(--color-rust)]/10 px-1.5 py-0 hover:bg-[var(--color-rust)]/20"
+                  title="Take 1"
+                >+1</button>
+                <button
+                  type="button"
+                  onClick={() => setStateField('current_mental_damage', state.current_mental_damage + 5)}
+                  className="rounded-sm border border-[var(--color-parchment-400)] bg-[var(--color-rust)]/10 px-1.5 py-0 hover:bg-[var(--color-rust)]/20"
+                  title="Take 5"
+                >+5</button>
+              </div>
+            </div>
             <label className="flex items-center justify-between gap-2">
               <span className="text-[10px] uppercase tracking-wider text-[var(--color-ink-faint)]">
                 Status
@@ -1116,7 +1427,7 @@ function SimpleNpcSections({
                 ))}
               </select>
             </label>
-            <label className="col-span-2 flex items-center justify-between gap-2">
+            <label className="flex items-center justify-between gap-2">
               <span className="text-[10px] uppercase tracking-wider text-[var(--color-ink-faint)]">
                 Location
               </span>
@@ -1139,12 +1450,26 @@ function SimpleNpcSections({
         </StatSection>
       )}
 
-      {state.active_effects.length > 0 && (
-        <ActiveEffectsSection
-          effects={state.active_effects}
-          currentSegment={state.current_segment_index}
-        />
-      )}
+      <ActiveEffectsSection
+        effects={state.active_effects}
+        currentSegment={state.current_segment_index}
+        onAdd={(eff) =>
+          void onPersist({
+            ...instance,
+            state: { ...state, active_effects: [...state.active_effects, eff] },
+          })
+        }
+        onRemove={(id) =>
+          void onPersist({
+            ...instance,
+            state: {
+              ...state,
+              active_effects: state.active_effects.filter((e) => e.id !== id),
+            },
+          })
+        }
+      />
+      <NotesSection notes={(instance.overrides as { notes?: string }).notes} />
     </>
   );
 }
@@ -1184,8 +1509,6 @@ function RyudeDialogs({
   // Base IN = operator AGI base + Ryude SPE + Drive Modifier
   const opCtx = ryudeOperatorRoll(template, instance, operator);
   const opAgiBase = opCtx.base; // already floor(AGI/3)
-  const opSenBase = monsterAbilityRoll; // unused — sanity import to keep tree-shaker happy
-  void opSenBase;
   const baseIN = opAgiBase + opCtx.modifier; // SPE + DriveMod fold into "modifier"
   const baseDN = baseIN; // Same composite for Ryude (Rule §14 doesn't differentiate)
 

@@ -141,6 +141,7 @@ export function InstanceSpawnDialog({
           attribute_damage: { spe: 0, pow: 0, arm: 0, bal: 0 },
           attunement_state: 'unattuned',
           repair_queue: [],
+          active_effects: [],
           last_recovery_tick: 0,
           location: '',
           segment: null,

@@ -48,6 +48,7 @@ import type { ActionLogEntry } from '@/domain/action-log';
  * inline would trigger an infinite re-render loop.
  */
 const EMPTY_LOG: ActionLogEntry[] = [];
+const EMPTY_CUSTOM_ITEMS: CustomItem[] = [];
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { RequireVault } from '@/components/shell/RequireVault';
 import { useCampaignStore } from '@/stores/campaign-store';
@@ -183,7 +184,7 @@ function CharacterSheetInner(): React.JSX.Element {
   }, [character, catalog, cid]);
 
   // Global custom items store
-  const customItems = useCustomItemStore((s) => s.items ?? []);
+  const customItems = useCustomItemStore((s) => s.items ?? EMPTY_CUSTOM_ITEMS);
   const loadCustomItems = useCustomItemStore((s) => s.load);
   const createCustomItemGlobal = useCustomItemStore((s) => s.create);
 
@@ -244,7 +245,7 @@ function CharacterSheetInner(): React.JSX.Element {
 
   return (
     <SheetActionsProvider value={dialogs}>
-    <div className="grid w-full grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
+    <div className="grid w-full grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
     <div className="flex w-full flex-col gap-4">
       {/* Identity block */}
       <ParchmentCard className="flex flex-col gap-4">
@@ -691,7 +692,7 @@ function CharacterSheetInner(): React.JSX.Element {
     </div>
     {/* Right column: sticky campaign-wide Action Log on xl+; hidden below xl */}
     {!editing && (
-      <aside className="sticky top-4 hidden max-h-[calc(100vh-2rem)] self-start overflow-y-auto xl:block">
+      <aside className="sticky top-0 hidden max-h-[calc(100vh-6rem)] self-start overflow-y-auto xl:block">
         <ActionLog
           entries={logEntries}
           loading={logLoading}
