@@ -1,6 +1,8 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { Cog } from 'lucide-react';
-import { CategoryPlaceholder } from '@/components/sheet/CategoryPlaceholder';
+import * as React from 'react';
+import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router';
+import { RequireVault } from '@/components/shell/RequireVault';
+import { InstanceList } from '@/components/instance/InstanceList';
+import { useCampaignStore } from '@/stores/campaign-store';
 
 export const Route = createFileRoute('/campaigns/$cid/ryude')({
   component: RyudeTab,
@@ -8,17 +10,35 @@ export const Route = createFileRoute('/campaigns/$cid/ryude')({
 
 function RyudeTab(): React.JSX.Element {
   return (
-    <CategoryPlaceholder
+    <RequireVault>
+      <RyudeTabInner />
+    </RequireVault>
+  );
+}
+
+function RyudeTabInner(): React.JSX.Element {
+  const { cid } = useParams({ from: '/campaigns/$cid/ryude' });
+  const navigate = useNavigate();
+  const current = useCampaignStore((s) => s.current);
+  const loadByDir = useCampaignStore((s) => s.loadByDir);
+
+  React.useEffect(() => {
+    if (!current || current.dir_name !== cid) {
+      void loadByDir(cid).then((c) => {
+        if (!c) void navigate({ to: '/campaigns' });
+      });
+    }
+  }, [cid, current, loadByDir, navigate]);
+
+  if (!current || current.dir_name !== cid) {
+    return <div className="text-sm italic text-[var(--color-ink-faint)]">Loading…</div>;
+  }
+  return (
+    <InstanceList
+      campaign={current}
+      kind="ryude"
       title="Ryudes"
-      icon={Cog}
-      description="Wares-powered Ryude — Footmen, Coursers, and Maledictors operated by a character or NPC."
-      phase="Phase 4"
-      whatItWillDo={[
-        'Spawn Ryude from templates — Footman / Courser / Maledictor',
-        'Track per-unit Durability, attribute damage, and attunement state',
-        'Assign and unassign operators (PC or NPC instance)',
-        'Repair queue with day-counted ETAs (Courser self-repair 1/day)',
-      ]}
+      description="Wares-powered Ryude — Footmen, Coursers, and Maledictors. Each instance tracks Durability, attunement state, and operator assignment."
     />
   );
 }

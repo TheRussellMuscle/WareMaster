@@ -79,7 +79,6 @@ function CampaignDetailInner(): React.JSX.Element {
   const navigate = useNavigate();
   const current = useCampaignStore((s) => s.current);
   const loadByDir = useCampaignStore((s) => s.loadByDir);
-  const setCurrent = useCampaignStore((s) => s.setCurrent);
   const { catalog } = useReferenceData();
 
   const [characters, setCharacters] = React.useState<Character[]>([]);
@@ -110,11 +109,16 @@ function CampaignDetailInner(): React.JSX.Element {
         setLoading(false);
       }
     })();
+    // Note: we deliberately do NOT clear `current` on unmount. The user's
+    // mental model is that opening a campaign keeps it as the "active"
+    // context until they open a different one or explicitly close it. This
+    // makes "Spawn into campaign" from /templates default to the open
+    // campaign, and keeps the TopBar showing the campaign name across
+    // navigation to /templates, /reference, etc.
     return () => {
       cancelled = true;
-      setCurrent(null);
     };
-  }, [cid, loadByDir, navigate, setCurrent]);
+  }, [cid, loadByDir, navigate]);
 
   const decorated = React.useMemo(() => {
     return characters.map((c) => {

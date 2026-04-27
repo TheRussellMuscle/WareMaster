@@ -29,6 +29,20 @@ interface AttackRollDialogProps {
   ) => Promise<void>;
 }
 
+function damageExpression(r: ReturnType<typeof resolveAttack>): string {
+  const { diceTotal, flatBonus, critMultiplier } = r.damageBreakdown;
+  const parts: string[] = [String(diceTotal)];
+  if (flatBonus > 0) parts.push(`+ ${flatBonus} Warrior`);
+  const pre = diceTotal + flatBonus;
+  if (critMultiplier > 1) {
+    return `${parts.join(' ')} × ${critMultiplier} crit = ${pre * critMultiplier}`;
+  }
+  if (flatBonus > 0) {
+    return `${parts.join(' ')} = ${pre}`;
+  }
+  return String(pre);
+}
+
 export function AttackRollDialog({
   open,
   onClose,
@@ -131,6 +145,7 @@ export function AttackRollDialog({
       manualBn: manualMode ? manualBn.slice(0, bnDiceCount) : undefined,
       damageLucDice: lucDmg,
       manualDamage: manualMode ? manualDmg.slice(0, 1 + lucDmg) : undefined,
+      flatDamageBonus: derived.warriorDamageBonus,
     });
     setResult(r);
   };
@@ -150,10 +165,16 @@ export function AttackRollDialog({
       notes.push(
         'Total Failure on BN — IN halved next Segment; weapon may break (WM discretion).',
       );
-    if (result.outcome === 'hit' || result.isCritical)
+    if (result.outcome === 'hit' || result.isCritical) {
+      const { diceTotal, flatBonus, critMultiplier } = result.damageBreakdown;
+      const breakdown =
+        flatBonus > 0
+          ? `${diceTotal} dice + ${flatBonus} Warrior${critMultiplier > 1 ? ` × ${critMultiplier} crit` : ''}`
+          : `raw ${result.damageRollTotal}`;
       notes.push(
-        `Damage dealt to target: ${result.damageDealt} (raw ${result.damageRollTotal}, absorption ${targetAbsorption}).`,
+        `Damage dealt to target: ${result.damageDealt} (${breakdown}, absorption ${targetAbsorption}).`,
       );
+    }
     if (result.outcome === 'miss') notes.push('Missed.');
     if (lucBn + lucDmg > 0)
       notes.push(`Spent ${lucBn + lucDmg} LUC (${lucBn} BN + ${lucDmg} damage).`);
@@ -356,10 +377,7 @@ export function AttackRollDialog({
             Outcome: <strong>{result.outcome}</strong>. Damage dealt:{' '}
             <strong>{result.damageDealt}</strong>{' '}
             {result.damageDice.length > 0 && (
-              <>
-                (rolled {result.damageDice.join(', ')} ⇒{' '}
-                {result.damageRollTotal})
-              </>
+              <>(rolled {result.damageDice.join(', ')} ⇒ {damageExpression(result)})</>
             )}
           </div>
         </div>

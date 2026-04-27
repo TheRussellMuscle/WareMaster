@@ -59,6 +59,14 @@ export interface AttackInput {
   damageLucDice?: number;
   /** Manual damage dice (length must equal weapon dice + damageLucDice). */
   manualDamage?: number[];
+  /**
+   * Flat damage added to the rolled value before the crit multiplier and
+   * exempt from the weapon-max cap (Rule §06 §1 carves out "Critical Hits,
+   * the Warrior +1, or Techniques" as the only ways to exceed weapon max).
+   * Sources: Warrior +1 class perk, future technique flat-damage modifiers.
+   * Defaults to 0.
+   */
+  flatDamageBonus?: number;
 }
 
 export type AttackOutcome =
@@ -77,10 +85,19 @@ export interface AttackResult {
   damageFormula: DiceFormula;
   /** Dice values rolled for damage (may be empty on a miss / total failure). */
   damageDice: number[];
-  /** Raw `dice + modifier` value of the damage roll, before crit multiplier and absorption. */
+  /** Raw `dice + modifier + flatBonus` value of the damage roll, before crit multiplier and absorption. */
   damageRollTotal: number;
   /** Damage dealt after crit multiplier and absorption subtraction. Floored at 0. */
   damageDealt: number;
+  /** Components of `damageRollTotal` and the crit scaling for the result panel. */
+  damageBreakdown: {
+    /** Sum of dice + weapon modifier (capped at the weapon's base max). */
+    diceTotal: number;
+    /** Sum of flat bonuses (Warrior +1, technique bonuses, etc.). 0 on miss/total-failure. */
+    flatBonus: number;
+    /** 1 on hit, (BN dice count + 1) on critical-hit / perfect-success, 0 on miss/total-failure. */
+    critMultiplier: number;
+  };
   /** PP awarded to the weapon's skill (10 × multiplier on perfect, 5 × multiplier on total fail). */
   ppGain: number;
   /** True when Total Failure on BN — caller halves the attacker's IN next Segment. */
@@ -131,6 +148,9 @@ export function resolveAttack(input: AttackInput, rng?: Rng): AttackResult {
   let damageDice: number[] = [];
   let damageRollTotal = 0;
   let damageDealt = 0;
+  let diceTotal = 0;
+  let flatBonus = 0;
+  let critMultiplier = 0;
   if (outcome === 'hit' || isCritical) {
     const dmgLuc = input.damageLucDice ?? 0;
     if (dmgLuc < 0 || !Number.isInteger(dmgLuc)) {
@@ -150,13 +170,17 @@ export function resolveAttack(input: AttackInput, rng?: Rng): AttackResult {
     );
     damageDice = dmg.diceRolled;
     let raw = dmg.total;
-    // LUC damage cap — Rule §08 "you cannot exceed the weapon's maximum
-    // possible Damage Value". `damageFormula.max` is the max of the base
-    // formula (without LUC dice).
+    // LUC damage cap applies to the dice contribution only — Rule §08 caps the
+    // dice at the weapon's base max, but Rule §06 §1 explicitly carves out
+    // "Critical Hits, the Warrior +1, or Techniques" as bonus paths that may
+    // exceed that cap. So: cap dice → add flat bonus → multiply on crit.
     if (raw > damageFormula.max) raw = damageFormula.max;
+    diceTotal = raw;
+    flatBonus = input.flatDamageBonus ?? 0;
+    raw += flatBonus;
     damageRollTotal = raw;
-    const multiplier = isCritical ? bnRoll.diceRolled.length + 1 : 1;
-    damageDealt = Math.max(0, raw * multiplier - input.targetAbsorption);
+    critMultiplier = isCritical ? bnRoll.diceRolled.length + 1 : 1;
+    damageDealt = Math.max(0, raw * critMultiplier - input.targetAbsorption);
   }
 
   // PP — weapon skills are combat skills. Default impact column = Non-Critical.
@@ -188,6 +212,7 @@ export function resolveAttack(input: AttackInput, rng?: Rng): AttackResult {
     damageDice,
     damageRollTotal,
     damageDealt,
+    damageBreakdown: { diceTotal, flatBonus, critMultiplier },
     ppGain,
     inHalvedNextSegment: outcome === 'total-failure',
     weaponMayBreak: outcome === 'total-failure',

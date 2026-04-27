@@ -94,6 +94,7 @@ export async function createCampaign(
   await vaultMkdir(paths.sessionsDir);
   await vaultMkdir(paths.combatDir);
   await vaultMkdir(paths.historyDir);
+  await vaultMkdir(paths.templatesDir);
 
   await vaultWriteText(paths.yaml, yaml.dump(campaign, { lineWidth: 100 }));
   return campaign;

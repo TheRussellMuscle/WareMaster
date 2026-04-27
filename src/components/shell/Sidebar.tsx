@@ -20,6 +20,9 @@ import {
 import { cn } from '@/lib/cn';
 import { useCampaignStore } from '@/stores/campaign-store';
 import { useSidebarStore } from '@/stores/sidebar-store';
+import { useReferenceData } from '@/hooks/useReferenceData';
+import { useTemplateStore } from '@/stores/template-store';
+import type { TemplateKind } from '@/persistence/paths';
 import type { Campaign } from '@/domain/campaign';
 import type { Character } from '@/domain/character';
 
@@ -82,11 +85,16 @@ export function Sidebar(): React.JSX.Element {
             </div>
           )}
         </ExpandableNode>
-        <SidebarLink
-          to="/templates/monsters"
+        <ExpandableNode
+          id="templates"
           icon={Library}
           label="Templates"
-        />
+          to="/templates"
+        >
+          <TemplatesKindBranch kind="monster" label="Monsters" icon={PawPrint} />
+          <TemplatesKindBranch kind="ryude" label="Ryude" icon={Cog} />
+          <TemplatesKindBranch kind="npc" label="NPCs" icon={UserPlus} />
+        </ExpandableNode>
         <SidebarLink to="/reference" icon={BookOpen} label="Reference" />
         <SidebarLink to="/settings" icon={Settings} label="Settings" />
       </nav>
@@ -106,7 +114,7 @@ export function Sidebar(): React.JSX.Element {
           <Coffee className="h-3 w-3" aria-hidden />
           Support on Ko-fi
         </button>
-        <div className="px-1">v0.4.0-alpha.1 · phase 5</div>
+        <div className="px-1">v0.5.0-alpha.1 · phase 4</div>
       </div>
     </aside>
   );
@@ -277,25 +285,167 @@ function CampaignContents({
         </div>
       </div>
       <CharactersBranch campaignId={campaignId} search={search} />
-      <SidebarLink
-        to={`/campaigns/${campaignId}/npcs`}
-        icon={UserPlus}
-        label="NPCs · soon"
-        depth={2}
-      />
-      <SidebarLink
-        to={`/campaigns/${campaignId}/monsters`}
-        icon={PawPrint}
-        label="Monsters · soon"
-        depth={2}
-      />
-      <SidebarLink
-        to={`/campaigns/${campaignId}/ryude`}
-        icon={Cog}
-        label="Ryudes · soon"
-        depth={2}
-      />
+      <NpcsBranch campaignId={campaignId} search={search} />
+      <MonstersBranch campaignId={campaignId} search={search} />
+      <RyudeBranch campaignId={campaignId} search={search} />
     </div>
+  );
+}
+
+function NpcsBranch({
+  campaignId,
+  search,
+}: {
+  campaignId: string;
+  search: string;
+}): React.JSX.Element {
+  return (
+    <InstancesBranch
+      campaignId={campaignId}
+      search={search}
+      kind="npc"
+      icon={UserPlus}
+      label="NPCs"
+      to="/campaigns/$cid/npcs"
+      detailRoute="/campaigns/$cid/npcs/$nid"
+      detailParamKey="nid"
+    />
+  );
+}
+
+function MonstersBranch({
+  campaignId,
+  search,
+}: {
+  campaignId: string;
+  search: string;
+}): React.JSX.Element {
+  return (
+    <InstancesBranch
+      campaignId={campaignId}
+      search={search}
+      kind="monster"
+      icon={PawPrint}
+      label="Monsters"
+      to="/campaigns/$cid/monsters"
+      detailRoute="/campaigns/$cid/monsters/$mid"
+      detailParamKey="mid"
+    />
+  );
+}
+
+function RyudeBranch({
+  campaignId,
+  search,
+}: {
+  campaignId: string;
+  search: string;
+}): React.JSX.Element {
+  return (
+    <InstancesBranch
+      campaignId={campaignId}
+      search={search}
+      kind="ryude"
+      icon={Cog}
+      label="Ryudes"
+      to="/campaigns/$cid/ryude"
+      detailRoute="/campaigns/$cid/ryude/$rid"
+      detailParamKey="rid"
+    />
+  );
+}
+
+interface InstancesBranchProps {
+  campaignId: string;
+  search: string;
+  kind: 'npc' | 'monster' | 'ryude';
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  to: string;
+  detailRoute:
+    | '/campaigns/$cid/npcs/$nid'
+    | '/campaigns/$cid/monsters/$mid'
+    | '/campaigns/$cid/ryude/$rid';
+  detailParamKey: 'nid' | 'mid' | 'rid';
+}
+
+function InstancesBranch({
+  campaignId,
+  search,
+  kind,
+  icon,
+  label,
+  detailRoute,
+  detailParamKey,
+}: InstancesBranchProps): React.JSX.Element {
+  const id = `campaign:${campaignId}:${kind}s`;
+  const expanded = useSidebarStore((s) => !!s.expanded[id]);
+  const instances = useCampaignStore(
+    (s) => s.instancesByCampaign[campaignId]?.[kind],
+  );
+  const loadInstancesFor = useCampaignStore((s) => s.loadInstancesFor);
+
+  React.useEffect(() => {
+    if (expanded && !instances) {
+      void loadInstancesFor(campaignId, kind);
+    }
+  }, [expanded, instances, campaignId, kind, loadInstancesFor]);
+
+  const filtered = React.useMemo(() => {
+    if (!instances) return [];
+    const q = search.trim().toLowerCase();
+    if (!q) return instances;
+    return instances.filter((i) =>
+      (i as { name: string }).name.toLowerCase().includes(q),
+    );
+  }, [instances, search]);
+
+  const trailing =
+    instances != null ? (
+      <span className="text-[10px] text-[var(--color-ink-faint)]">
+        {filtered.length}
+        {filtered.length !== instances.length && ` / ${instances.length}`}
+      </span>
+    ) : null;
+
+  return (
+    <ExpandableNode id={id} icon={icon} label={label} depth={2} trailing={trailing}>
+      {!instances && expanded && (
+        <div
+          className="text-xs italic text-[var(--color-ink-faint)]"
+          style={{ paddingLeft: `${0.5 + 4 * 0.85}rem` }}
+        >
+          Loading…
+        </div>
+      )}
+      {instances && filtered.length === 0 && (
+        <div
+          className="text-xs italic text-[var(--color-ink-faint)]"
+          style={{ paddingLeft: `${0.5 + 4 * 0.85}rem` }}
+        >
+          {search ? 'No matches.' : `No ${label.toLowerCase()} spawned.`}
+        </div>
+      )}
+      {filtered.map((inst) => (
+        <Link
+          key={(inst as { id: string }).id}
+          to={detailRoute}
+          params={{ cid: campaignId, [detailParamKey]: (inst as { id: string }).id } as never}
+          className={cn(
+            'group flex items-center gap-2 rounded-sm px-2 py-1 text-xs',
+            'text-[var(--color-ink-soft)] hover:bg-[var(--color-parchment-200)]/60 hover:text-[var(--color-ink)]',
+            'transition-colors',
+          )}
+          style={{ paddingLeft: `${0.5 + 4 * 0.85}rem` }}
+          activeProps={{
+            className:
+              'bg-[var(--color-parchment-200)] text-[var(--color-ink)] font-medium',
+          }}
+        >
+          <span className="truncate">{(inst as { name: string }).name}</span>
+        </Link>
+      ))}
+    </ExpandableNode>
   );
 }
 
@@ -390,5 +540,109 @@ function CharacterLink({
     >
       <span className="truncate">{character.name}</span>
     </Link>
+  );
+}
+
+interface TemplatesKindBranchProps {
+  kind: TemplateKind;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+function TemplatesKindBranch({
+  kind,
+  label,
+  icon,
+}: TemplatesKindBranchProps): React.JSX.Element {
+  const id = `templates:${kind}`;
+  const expanded = useSidebarStore((s) => !!s.expanded[id]);
+  const { catalog } = useReferenceData();
+  const vault = useTemplateStore((s) => s.globalTemplates[kind]);
+  const loadGlobal = useTemplateStore((s) => s.loadGlobal);
+
+  React.useEffect(() => {
+    if (expanded) void loadGlobal(kind);
+  }, [expanded, kind, loadGlobal]);
+
+  const items = React.useMemo(() => {
+    const all: Array<{ id: string; name: string; source: 'bundled' | 'vault' }> = [];
+    if (kind === 'monster' && catalog) {
+      for (const t of catalog.beastiary.monsters) {
+        all.push({ id: t.id, name: t.name, source: 'bundled' });
+      }
+    }
+    if (kind === 'ryude' && catalog) {
+      for (const t of catalog.ryudeUnits.ryude_units) {
+        all.push({ id: t.id, name: t.name, source: 'bundled' });
+      }
+    }
+    for (const t of vault ?? []) {
+      const tt = t as { id: string; name: string };
+      all.push({ id: tt.id, name: tt.name, source: 'vault' });
+    }
+    return all.sort((a, b) => {
+      if (a.source !== b.source) return a.source === 'vault' ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
+  }, [catalog, vault, kind]);
+
+  const trailing = (
+    <span className="text-[10px] text-[var(--color-ink-faint)]">
+      {items.length}
+    </span>
+  );
+
+  const detailRoute =
+    kind === 'monster'
+      ? '/templates/monsters/$tid'
+      : kind === 'ryude'
+        ? '/templates/ryude/$tid'
+        : '/templates/npcs/$tid';
+  const listRoute =
+    kind === 'monster'
+      ? '/templates/monsters'
+      : kind === 'ryude'
+        ? '/templates/ryude'
+        : '/templates/npcs';
+
+  return (
+    <ExpandableNode
+      id={id}
+      icon={icon}
+      label={label}
+      depth={1}
+      to={listRoute}
+      trailing={trailing}
+    >
+      {expanded && items.length === 0 && (
+        <div
+          className="text-xs italic text-[var(--color-ink-faint)]"
+          style={{ paddingLeft: `${0.5 + 3 * 0.85}rem` }}
+        >
+          {kind === 'npc'
+            ? 'No NPC templates yet.'
+            : 'Loading…'}
+        </div>
+      )}
+      {items.map((it) => (
+        <Link
+          key={`${it.source}:${it.id}`}
+          to={detailRoute}
+          params={{ tid: it.id }}
+          className={cn(
+            'group flex items-center gap-2 rounded-sm px-2 py-1 text-xs',
+            'text-[var(--color-ink-soft)] hover:bg-[var(--color-parchment-200)]/60 hover:text-[var(--color-ink)]',
+            'transition-colors',
+          )}
+          style={{ paddingLeft: `${0.5 + 3 * 0.85}rem` }}
+          activeProps={{
+            className:
+              'bg-[var(--color-parchment-200)] text-[var(--color-ink)] font-medium',
+          }}
+        >
+          <span className="truncate">{it.name}</span>
+        </Link>
+      ))}
+    </ExpandableNode>
   );
 }

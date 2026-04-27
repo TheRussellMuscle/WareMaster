@@ -40,6 +40,9 @@ pub fn run() {
             commands::vault::vault_exists,
             commands::vault::vault_list_dir,
             commands::vault::vault_copy_file,
+            commands::portraits::bundled_portrait_url,
+            commands::portraits::list_bundled_portraits,
+            commands::portraits::list_portrait_kinds,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

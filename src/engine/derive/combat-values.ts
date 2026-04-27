@@ -32,6 +32,11 @@ export interface DerivedCombatValues {
   totalAbsorption: number;
   /** Warrior +1 component, exposed for breakdown displays. */
   warriorAbsorptionBonus: number;
+  /**
+   * Warrior +1 flat damage bonus added to every damage roll before the crit
+   * multiplier (rule §06 §1 / §10 §1). 0 for non-Warrior classes.
+   */
+  warriorDamageBonus: number;
   baseIN: number;
   baseBN: number;
   baseDN: number;
@@ -97,6 +102,7 @@ export function deriveCombatValues(
     modifier: totalArmorModifier,
     warriorBonus: warriorAbsorptionBonus,
   } = armorAbsorption(character, catalog);
+  const warriorDamageBonus = character.class_id === 'warrior' ? 1 : 0;
 
   const defenseSkillLevel = skillLevel(character, 'defense');
   const mentalResistanceLevel = skillLevel(character, 'mental-resistance');
@@ -131,6 +137,7 @@ export function deriveCombatValues(
     totalArmorModifier,
     totalAbsorption,
     warriorAbsorptionBonus,
+    warriorDamageBonus,
     baseIN,
     baseBN,
     baseDN,

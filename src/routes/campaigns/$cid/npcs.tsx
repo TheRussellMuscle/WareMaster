@@ -1,6 +1,8 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { UserPlus } from 'lucide-react';
-import { CategoryPlaceholder } from '@/components/sheet/CategoryPlaceholder';
+import * as React from 'react';
+import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router';
+import { RequireVault } from '@/components/shell/RequireVault';
+import { InstanceList } from '@/components/instance/InstanceList';
+import { useCampaignStore } from '@/stores/campaign-store';
 
 export const Route = createFileRoute('/campaigns/$cid/npcs')({
   component: NpcsTab,
@@ -8,17 +10,35 @@ export const Route = createFileRoute('/campaigns/$cid/npcs')({
 
 function NpcsTab(): React.JSX.Element {
   return (
-    <CategoryPlaceholder
+    <RequireVault>
+      <NpcsTabInner />
+    </RequireVault>
+  );
+}
+
+function NpcsTabInner(): React.JSX.Element {
+  const { cid } = useParams({ from: '/campaigns/$cid/npcs' });
+  const navigate = useNavigate();
+  const current = useCampaignStore((s) => s.current);
+  const loadByDir = useCampaignStore((s) => s.loadByDir);
+
+  React.useEffect(() => {
+    if (!current || current.dir_name !== cid) {
+      void loadByDir(cid).then((c) => {
+        if (!c) void navigate({ to: '/campaigns' });
+      });
+    }
+  }, [cid, current, loadByDir, navigate]);
+
+  if (!current || current.dir_name !== cid) {
+    return <div className="text-sm italic text-[var(--color-ink-faint)]">Loading…</div>;
+  }
+  return (
+    <InstanceList
+      campaign={current}
+      kind="npc"
       title="NPCs"
-      icon={UserPlus}
-      description="Named NPCs spawned from templates — merchants, soldiers, allies, and adversaries."
-      phase="Phase 4"
-      whatItWillDo={[
-        'Spawn instances from global or campaign-scoped NPC templates',
-        'Three archetypes — beast, simple-stat, and full-character schemas',
-        'Override individual stats per instance (name, portrait, equipment)',
-        'Track current state (damage, status effects, location) across sessions',
-      ]}
+      description="Named NPCs from templates — beasts, simple stat blocks, or full character sheets."
     />
   );
 }

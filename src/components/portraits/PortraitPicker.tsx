@@ -2,32 +2,43 @@ import * as React from 'react';
 import { Image as ImageIcon, X } from 'lucide-react';
 import { Portrait } from './Portrait';
 import {
-  importCharacterPortrait,
-  removeCharacterPortrait,
+  importPortrait,
+  removePortrait,
+  type PortraitTarget,
 } from '@/persistence/portrait-repo';
 import { pickImageFile } from '@/persistence/vault';
 import type { ClassId } from '@/domain/class';
+import type { PortraitFallback } from '@/hooks/usePortrait';
 
 export type PortraitPickerMode =
   /**
-   * "deferred" — the character doesn't exist yet (wizard). The picker holds
-   * the chosen source path; the parent imports it after createCharacter
-   * returns the new id.
+   * "deferred" — the entity doesn't exist yet (wizard / spawn dialog). The
+   * picker holds the chosen source path; the parent imports it after the
+   * create call returns the new id.
    */
   | { kind: 'deferred'; pendingSource: string | null; onPendingChange: (s: string | null) => void }
   /**
-   * "live" — the character exists. The picker imports immediately and fires
+   * "live" — the entity exists. The picker imports immediately and fires
    * `onChange` with the new vault-relative path (or null on remove).
    */
-  | { kind: 'live'; characterId: string; vaultPath: string | null; onChange: (path: string | null) => void };
+  | {
+      kind: 'live';
+      target: PortraitTarget;
+      vaultPath: string | null;
+      onChange: (path: string | null) => void;
+    };
 
 interface PortraitPickerProps {
+  /** Discriminator for fallback rendering. Pass either `fallback` or `classId`. */
+  fallback?: PortraitFallback;
+  /** Legacy character-only shorthand. Equivalent to `{ kind: 'class', classId }`. */
   classId?: ClassId | null;
   name: string;
   mode: PortraitPickerMode;
 }
 
 export function PortraitPicker({
+  fallback,
   classId,
   name,
   mode,
@@ -35,10 +46,12 @@ export function PortraitPicker({
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  // For the deferred case we render the chosen source with a `file://` URL
-  // through convertFileSrc; for the live case we render the vault path.
-  const previewVaultPath =
-    mode.kind === 'live' ? mode.vaultPath : null;
+  const previewVaultPath = mode.kind === 'live' ? mode.vaultPath : null;
+  const resolvedFallback: PortraitFallback =
+    fallback ??
+    (classId
+      ? { kind: 'class', classId }
+      : { kind: 'class', classId: 'tradesfolk' });
 
   const onChoose = async () => {
     setError(null);
@@ -58,15 +71,14 @@ export function PortraitPicker({
 
     setBusy(true);
     try {
-      // Replace any existing portrait first (best-effort, ignore errors).
       if (mode.vaultPath) {
         try {
-          await removeCharacterPortrait(mode.vaultPath);
+          await removePortrait(mode.vaultPath);
         } catch {
           /* ignore */
         }
       }
-      const next = await importCharacterPortrait(mode.characterId, chosen);
+      const next = await importPortrait(mode.target, chosen);
       mode.onChange(next);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -84,7 +96,7 @@ export function PortraitPicker({
     if (!mode.vaultPath) return;
     setBusy(true);
     try {
-      await removeCharacterPortrait(mode.vaultPath);
+      await removePortrait(mode.vaultPath);
       mode.onChange(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -107,7 +119,7 @@ export function PortraitPicker({
     <div className="flex items-center gap-3">
       <Portrait
         vaultPath={previewVaultPath}
-        classId={classId}
+        fallback={resolvedFallback}
         name={name}
         size="md"
       />
@@ -144,7 +156,7 @@ export function PortraitPicker({
         )}
         {!error && !filenameLabel && (
           <div className="text-[10px] text-[var(--color-ink-faint)]">
-            PNG, JPG, or WEBP up to 5 MB. Falls back to a class placeholder.
+            PNG, JPG, or WEBP up to 5 MB. Falls back to a placeholder.
           </div>
         )}
       </div>

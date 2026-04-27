@@ -8,7 +8,7 @@ WareMaster tracks campaigns, characters, NPCs, monsters, Ryude, combat, and down
 
 ## Status
 
-**Phase 5 alpha — `v0.4.0-alpha.1`.** Early testers welcome.
+**Phase 4 + 5 alpha — `v0.5.0-alpha.1`.** Early testers welcome.
 
 What's working today:
 
@@ -30,7 +30,9 @@ What's working today:
 - **Campaign-wide action log** in a sticky right column — every roll across every character in the campaign, with character links per row.
 - **Auto-updates** on launch — signed with an ed25519 key.
 
-Phase-by-phase implementation roadmap lives in [PLAN.md](./PLAN.md). Next up: monster / NPC / Ryude templates + instances (Phase 4), time + recovery (Phase 6), full multi-combatant tracker with undo/rewind (Phase 7).
+- **Templates + named instances + portraits** (Phase 4) — spawn named monsters, NPCs, and Ryude into a campaign from bundled or user-authored templates. Three-tier resolution chain (campaign overrides → vault → bundled), per-instance overrides + state, Ryude operator assignment, custom or bundled-default portraits served via the Tauri asset protocol.
+
+Phase-by-phase implementation roadmap lives in [PLAN.md](./PLAN.md). Next up: time + recovery (Phase 6), full multi-combatant tracker with undo/rewind (Phase 7).
 
 ## Download
 

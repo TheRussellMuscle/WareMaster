@@ -1,13 +1,17 @@
 import * as React from 'react';
-import { convertFileSrc } from '@tauri-apps/api/core';
 import { cn } from '@/lib/cn';
 import type { ClassId } from '@/domain/class';
-import { useVaultStore } from '@/stores/vault-store';
+import { usePortrait, type PortraitFallback } from '@/hooks/usePortrait';
 
 interface PortraitProps {
   /** Vault-relative path to a custom portrait (e.g. `portraits/characters/<id>.png`). */
   vaultPath?: string | null;
-  /** Class fallback used when no custom portrait is set or it fails to load. */
+  /** Fallback discriminator — drives both bundled lookup and CSS placeholder. */
+  fallback?: PortraitFallback;
+  /**
+   * Legacy shorthand — equivalent to `fallback={{ kind: 'class', classId }}`.
+   * Use the explicit `fallback` prop in new code.
+   */
   classId?: ClassId | null;
   /** Display label (e.g. character name) used as alt text and badge. */
   name: string;
@@ -39,35 +43,63 @@ const CLASS_TINT: Record<ClassId, string> = {
     'bg-[var(--color-parchment-300)]/30 text-[var(--color-ink-soft)] border-[var(--color-parchment-400)]',
 };
 
+const NEUTRAL_TINT =
+  'bg-[var(--color-parchment-200)] text-[var(--color-ink-soft)] border-[var(--color-parchment-400)]';
+const MONSTER_TINT =
+  'bg-[var(--color-rust)]/5 text-[var(--color-ink-soft)] border-[var(--color-parchment-400)]';
+const RYUDE_TINT =
+  'bg-[var(--color-verdigris)]/5 text-[var(--color-ink-soft)] border-[var(--color-parchment-400)]';
+
+function fallbackLabel(fallback: PortraitFallback, name: string): string {
+  switch (fallback.kind) {
+    case 'class':
+      return CLASS_LABEL[fallback.classId];
+    case 'monster':
+      return fallback.rank ? `R${fallback.rank}` : initials(name);
+    case 'ryude':
+      return fallback.rType.charAt(0); // F / C / M
+    case 'npc':
+      return initials(name);
+  }
+}
+
+function fallbackTint(fallback: PortraitFallback): string {
+  switch (fallback.kind) {
+    case 'class':
+      return CLASS_TINT[fallback.classId];
+    case 'monster':
+      return MONSTER_TINT;
+    case 'ryude':
+      return RYUDE_TINT;
+    case 'npc':
+      return NEUTRAL_TINT;
+  }
+}
+
 /**
  * Square portrait. Renders a custom uploaded image when `vaultPath` is set,
- * otherwise a class-fallback placeholder. Custom images live under the
- * vault at `portraits/characters/<id>.<ext>` per PLAN.md §B; we resolve them
- * to a webview-accessible URL via Tauri's `convertFileSrc`.
+ * otherwise loads a bundled default for the entity kind, otherwise a CSS
+ * placeholder. See `usePortrait` for the full resolution chain.
  */
 export function Portrait({
   vaultPath,
+  fallback: fallbackProp,
   classId,
   name,
   size = 'md',
   className,
 }: PortraitProps): React.JSX.Element {
-  const root = useVaultStore((s) => s.root);
+  const fallback: PortraitFallback =
+    fallbackProp ??
+    (classId
+      ? { kind: 'class', classId }
+      : { kind: 'class', classId: 'tradesfolk' });
   const [errored, setErrored] = React.useState(false);
+  const { url, tier } = usePortrait({ vaultPath, fallback });
 
-  // Reset error state if the source path changes (e.g. portrait re-uploaded).
   React.useEffect(() => {
     setErrored(false);
-  }, [vaultPath, root]);
-
-  const url = React.useMemo(() => {
-    if (!vaultPath || !root) return null;
-    // Build absolute host path. Both POSIX and Windows are valid for join.
-    const sep = root.includes('\\') ? '\\' : '/';
-    const trimmedRoot = root.replace(/[\\/]$/, '');
-    const trimmedRel = vaultPath.replace(/^[\\/]/, '').replace(/\\/g, '/');
-    return convertFileSrc(`${trimmedRoot}${sep}${trimmedRel}`);
-  }, [vaultPath, root]);
+  }, [url]);
 
   if (url && !errored) {
     return (
@@ -88,12 +120,9 @@ export function Portrait({
     );
   }
 
-  const tint = classId
-    ? CLASS_TINT[classId]
-    : 'bg-[var(--color-parchment-200)] text-[var(--color-ink-soft)] border-[var(--color-parchment-400)]';
-  const label = classId
-    ? CLASS_LABEL[classId]
-    : initials(name);
+  // CSS placeholder (custom image failed OR bundled image missing).
+  const tint = fallbackTint(fallback);
+  const label = tier === 'placeholder' ? initials(name) : fallbackLabel(fallback, name);
 
   return (
     <div

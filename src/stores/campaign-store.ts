@@ -6,8 +6,25 @@ import {
   updateCampaign as repoUpdateCampaign,
 } from '@/persistence/campaign-repo';
 import { listCharacters } from '@/persistence/character-repo';
+import { listInstances } from '@/persistence/instance-repo';
 import type { Campaign } from '@/domain/campaign';
 import type { Character } from '@/domain/character';
+import type { MonsterInstance } from '@/domain/monster-instance';
+import type { RyudeInstance } from '@/domain/ryude-instance';
+import type { NpcInstance } from '@/domain/npc-instance';
+import type { TemplateKind } from '@/persistence/paths';
+
+export interface CampaignInstances {
+  monster?: MonsterInstance[];
+  ryude?: RyudeInstance[];
+  npc?: NpcInstance[];
+}
+
+type InstanceForKind<K extends TemplateKind> = K extends 'monster'
+  ? MonsterInstance
+  : K extends 'ryude'
+    ? RyudeInstance
+    : NpcInstance;
 
 export interface ParseFailure {
   path: string;
@@ -25,6 +42,12 @@ interface CampaignState {
    * when a campaign is expanded; callers can also refresh after create/delete.
    */
   charactersByCampaign: Record<string, Character[]>;
+  /**
+   * Phase 4 instance lists per campaign dir, segmented by kind. Populated
+   * lazily; the sidebar branches and the campaign instance routes both call
+   * `loadInstancesFor`.
+   */
+  instancesByCampaign: Record<string, CampaignInstances>;
   refreshList: () => Promise<void>;
   loadByDir: (dirName: string) => Promise<Campaign | null>;
   loadCharactersFor: (
@@ -32,6 +55,12 @@ interface CampaignState {
     options?: { force?: boolean },
   ) => Promise<Character[]>;
   invalidateCharactersFor: (campaignDir: string) => void;
+  loadInstancesFor: <K extends TemplateKind>(
+    campaignDir: string,
+    kind: K,
+    options?: { force?: boolean },
+  ) => Promise<InstanceForKind<K>[]>;
+  invalidateInstancesFor: (campaignDir: string, kind?: TemplateKind) => void;
   create: (input: {
     name: string;
     wm: string;
@@ -49,6 +78,46 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
   current: null,
   loadingCurrent: false,
   charactersByCampaign: {},
+  instancesByCampaign: {},
+
+  loadInstancesFor: async <K extends TemplateKind>(
+    campaignDir: string,
+    kind: K,
+    options?: { force?: boolean },
+  ): Promise<InstanceForKind<K>[]> => {
+    if (!options?.force) {
+      const cached = get().instancesByCampaign[campaignDir]?.[kind];
+      if (cached) return cached as InstanceForKind<K>[];
+    }
+    try {
+      const result = await listInstances(campaignDir, kind);
+      set((s) => ({
+        instancesByCampaign: {
+          ...s.instancesByCampaign,
+          [campaignDir]: {
+            ...(s.instancesByCampaign[campaignDir] ?? {}),
+            [kind]: result.items,
+          },
+        },
+      }));
+      return result.items as InstanceForKind<K>[];
+    } catch {
+      return [];
+    }
+  },
+
+  invalidateInstancesFor: (campaignDir, kind) =>
+    set((s) => {
+      const next = { ...s.instancesByCampaign };
+      if (kind === undefined) {
+        delete next[campaignDir];
+      } else if (next[campaignDir]) {
+        const branch = { ...next[campaignDir] };
+        delete branch[kind];
+        next[campaignDir] = branch;
+      }
+      return { instancesByCampaign: next };
+    }),
 
   loadCharactersFor: async (campaignDir, options) => {
     if (!options?.force) {

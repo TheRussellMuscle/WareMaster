@@ -1,6 +1,8 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { PawPrint } from 'lucide-react';
-import { CategoryPlaceholder } from '@/components/sheet/CategoryPlaceholder';
+import * as React from 'react';
+import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router';
+import { RequireVault } from '@/components/shell/RequireVault';
+import { InstanceList } from '@/components/instance/InstanceList';
+import { useCampaignStore } from '@/stores/campaign-store';
 
 export const Route = createFileRoute('/campaigns/$cid/monsters')({
   component: MonstersTab,
@@ -8,17 +10,35 @@ export const Route = createFileRoute('/campaigns/$cid/monsters')({
 
 function MonstersTab(): React.JSX.Element {
   return (
-    <CategoryPlaceholder
+    <RequireVault>
+      <MonstersTabInner />
+    </RequireVault>
+  );
+}
+
+function MonstersTabInner(): React.JSX.Element {
+  const { cid } = useParams({ from: '/campaigns/$cid/monsters' });
+  const navigate = useNavigate();
+  const current = useCampaignStore((s) => s.current);
+  const loadByDir = useCampaignStore((s) => s.loadByDir);
+
+  React.useEffect(() => {
+    if (!current || current.dir_name !== cid) {
+      void loadByDir(cid).then((c) => {
+        if (!c) void navigate({ to: '/campaigns' });
+      });
+    }
+  }, [cid, current, loadByDir, navigate]);
+
+  if (!current || current.dir_name !== cid) {
+    return <div className="text-sm italic text-[var(--color-ink-faint)]">Loading…</div>;
+  }
+  return (
+    <InstanceList
+      campaign={current}
+      kind="monster"
       title="Monsters"
-      icon={PawPrint}
-      description="Named monster instances — bestiary creatures with this campaign's history and damage state."
-      phase="Phase 4"
-      whatItWillDo={[
-        'Spawn instances from the bundled bestiary or your own templates',
-        'Track per-instance state — current damage, status, location',
-        'Use bestiary base stats with optional overrides (hardier loot drop, named villain)',
-        'Vs-Ryude stat brackets when fighting mecha',
-      ]}
+      description="Named monster instances spawned into this campaign — bestiary creatures with this campaign's history and damage state."
     />
   );
 }

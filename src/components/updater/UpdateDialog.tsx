@@ -2,6 +2,7 @@ import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { Download, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import type { UpdaterState } from '@/hooks/useUpdater';
+import { ChangelogMarkdown } from './ChangelogMarkdown';
 
 interface UpdateDialogProps {
   state: UpdaterState;
@@ -66,12 +67,12 @@ export function UpdateDialog({ state }: UpdateDialogProps): React.JSX.Element | 
           {update.body ? (
             <div
               className={cn(
-                'mt-4 max-h-48 overflow-y-auto rounded-sm border border-[var(--color-parchment-300)]',
+                'mt-4 max-h-64 overflow-y-auto rounded-sm border border-[var(--color-parchment-300)]',
                 'bg-[var(--color-parchment-100)]/40 p-3 text-xs text-[var(--color-ink-soft)]',
-                'whitespace-pre-wrap font-body',
+                'font-body',
               )}
             >
-              {update.body}
+              <ChangelogMarkdown source={update.body} />
             </div>
           ) : null}
 

@@ -160,7 +160,7 @@ WareMaster/
 2. Template custom (`vault/portraits/templates/<template-id>.png`).
 3. Bundled default by `class_id` / `monster_id` / `ryude.type` / `npc.role`.
 
-**No base64 in YAML.** Portraits are files; instances reference vault-relative paths. Tauri's `convertFileSrc` renders them; bundled portraits served via a custom `bundle://` protocol registered in [src-tauri/src/lib.rs](src-tauri/src/lib.rs).
+**No base64 in YAML.** Portraits are files; instances reference vault-relative paths. Tauri's `convertFileSrc` renders them; bundled portraits are served via the existing Tauri `assetProtocol` extended to `$RESOURCE/portraits/**` (a custom `bundle://` scheme was the original design; we shipped the asset-protocol approach in v0.5.0-alpha.1 as it was simpler and more reliable on Windows). The `bundled_portrait_url` Tauri command in [src-tauri/src/commands/portraits.rs](src-tauri/src/commands/portraits.rs) returns absolute resource paths the frontend wraps with `convertFileSrc`.
 
 ---
 
@@ -537,7 +537,7 @@ Each phase ships a runnable app. Phases are sequential; each phase's deliverable
 3. NPC schemas (3 archetypes via discriminated union) — [src/domain/npc.ts](src/domain/npc.ts).
 4. Spawn dialog — [src/components/instance/InstanceSpawnDialog.tsx](src/components/instance/InstanceSpawnDialog.tsx).
 5. Routes — [src/routes/campaigns/$cid/{npcs,monsters,ryude}/...](src/routes/campaigns).
-6. Portrait pipeline — [src-tauri/src/commands/portraits.rs](src-tauri/src/commands/portraits.rs) (registers `bundle://` protocol), [src/persistence/portrait-repo.ts](src/persistence/portrait-repo.ts), [src/components/portraits/{Portrait,PortraitPicker}.tsx](src/components/portraits), [src/hooks/usePortrait.ts](src/hooks/usePortrait.ts).
+6. Portrait pipeline — [src-tauri/src/commands/portraits.rs](src-tauri/src/commands/portraits.rs) (extends `assetProtocol` to `$RESOURCE/portraits/**`), [src/persistence/portrait-repo.ts](src/persistence/portrait-repo.ts), [src/components/portraits/{Portrait,PortraitPicker}.tsx](src/components/portraits), [src/hooks/usePortrait.ts](src/hooks/usePortrait.ts).
 7. Bundled default portrait set committed under [src-tauri/resources/portraits/](src-tauri/resources/portraits) (placeholders OK initially; replace with art).
 
 ### Phase 5 — Dice + skill check engines (2–3 days)

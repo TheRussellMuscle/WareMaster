@@ -1,20 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router';
-import {
-  IlluminatedHeading,
-  ParchmentCard,
-} from '@/components/parchment/ParchmentCard';
+import { TemplateListRoute } from '@/components/template/TemplateListRoute';
 
 export const Route = createFileRoute('/templates/monsters')({
-  component: MonsterTemplates,
+  component: MonsterTemplatesRoute,
 });
 
-function MonsterTemplates(): React.JSX.Element {
+function MonsterTemplatesRoute(): React.JSX.Element {
   return (
-    <ParchmentCard>
-      <IlluminatedHeading level={2}>Monster Templates</IlluminatedHeading>
-      <p className="mt-2 text-sm text-[var(--color-ink-soft)]">
-        User-authored monster templates appear here in Phase 4.
-      </p>
-    </ParchmentCard>
+    <TemplateListRoute
+      kind="monster"
+      title="Monster Templates"
+      description="Bundled bestiary monsters and your vault-authored overrides. Vault templates override bundled ones with the same id; campaign templates override both (manage those from the campaign templates folder)."
+    />
   );
 }
