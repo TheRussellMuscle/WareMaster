@@ -114,6 +114,7 @@ export function npcInstanceToCharacter(
 
     state: npcStateToCharacterState(inst, tpl),
 
+    custom_items: [],
     portrait_path: inst.portrait_path,
     notes_path: inst.notes_path,
     created_at: inst.created_at,

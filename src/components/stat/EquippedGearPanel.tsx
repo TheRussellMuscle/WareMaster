@@ -10,12 +10,14 @@ import type {
   Character,
   BastardSwordGrip,
 } from '@/domain/character';
+import type { CustomItem } from '@/domain/custom-item';
 import type { ReferenceCatalog } from '@/persistence/reference-loader';
 import type { UnequipTarget } from '@/engine/equipment/apply';
 
 interface EquippedGearPanelProps {
   character: Character;
   catalog: ReferenceCatalog | null;
+  customItems?: CustomItem[];
   /** Move a slotted item back to inventory. */
   onUnequip?: (target: UnequipTarget) => void | Promise<void>;
   /** Switch the equipped Bastard Sword's grip. */
@@ -34,10 +36,11 @@ interface EquippedGearPanelProps {
 export function EquippedGearPanel({
   character,
   catalog,
+  customItems,
   onUnequip,
   onSetBastardGrip,
 }: EquippedGearPanelProps): React.JSX.Element {
-  const slots = resolveEquippedSlots(character, catalog);
+  const slots = resolveEquippedSlots(character, catalog, customItems);
   const grip = character.equipment.bastard_sword_grip;
   const actions = useOptionalSheetActions();
   return (

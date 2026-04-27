@@ -3,6 +3,8 @@ import { IdSchema } from './ids';
 import { ClassIdSchema } from './class';
 import { GateSchema } from './technique';
 import { CurrentSegmentSchema } from './action-log';
+import { CustomItemSchema } from './custom-item';
+export type { CustomItem } from './custom-item';
 
 const AbilitiesSchema = z.object({
   SEN: z.number().int(),
@@ -84,16 +86,6 @@ const CharacterStateSchema = z.object({
 });
 export type CharacterState = z.infer<typeof CharacterStateSchema>;
 
-const CustomItemSchema = z.object({
-  id: z.string().min(1),
-  name: z.string().min(1),
-  kind: z.enum(['weapon', 'armor', 'good']),
-  price_golda: z.number().int().nonnegative().nullable().default(null),
-  in_shop: z.boolean().default(true),
-  is_unique: z.boolean().default(false),
-  notes: z.string().default(''),
-});
-export type CustomItem = z.infer<typeof CustomItemSchema>;
 
 export const SpiritualistOrderSchema = z.enum([
   'monk-votarist',
@@ -150,6 +142,10 @@ export const CharacterSchema = z.object({
   techniques: z.array(z.string()).default([]),
   equipment: EquipmentSchema,
 
+  /**
+   * @deprecated Migrated to global vault items/ store. Kept for backward-compat
+   * parsing of existing character YAMLs. Auto-cleared on first character sheet load.
+   */
   custom_items: z.array(CustomItemSchema).default([]),
 
   golda: z.number().int().default(0),

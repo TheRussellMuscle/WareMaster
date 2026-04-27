@@ -8,6 +8,7 @@ import {
   Cog,
   Home,
   Library,
+  Package,
   PawPrint,
   Scroll,
   Search,
@@ -22,6 +23,7 @@ import { useCampaignStore } from '@/stores/campaign-store';
 import { useSidebarStore } from '@/stores/sidebar-store';
 import { useReferenceData } from '@/hooks/useReferenceData';
 import { useTemplateStore } from '@/stores/template-store';
+import { useCustomItemStore } from '@/stores/custom-item-store';
 import type { TemplateKind } from '@/persistence/paths';
 import type { Campaign } from '@/domain/campaign';
 import type { Character } from '@/domain/character';
@@ -95,6 +97,7 @@ export function Sidebar(): React.JSX.Element {
           <TemplatesKindBranch kind="ryude" label="Ryude" icon={Cog} />
           <TemplatesKindBranch kind="npc" label="NPCs" icon={UserPlus} />
         </ExpandableNode>
+        <CustomItemsBranch />
         <SidebarLink to="/reference" icon={BookOpen} label="Reference" />
         <SidebarLink to="/settings" icon={Settings} label="Settings" />
       </nav>
@@ -641,6 +644,60 @@ function TemplatesKindBranch({
           }}
         >
           <span className="truncate">{it.name}</span>
+        </Link>
+      ))}
+    </ExpandableNode>
+  );
+}
+
+function CustomItemsBranch(): React.JSX.Element {
+  const id = 'custom-items';
+  const expanded = useSidebarStore((s) => !!s.expanded[id]);
+  const items = useCustomItemStore((s) => s.items);
+  const load = useCustomItemStore((s) => s.load);
+
+  React.useEffect(() => {
+    if (expanded) void load();
+  }, [expanded, load]);
+
+  const trailing = items != null ? (
+    <span className="text-[10px] text-[var(--color-ink-faint)]">{items.length}</span>
+  ) : null;
+
+  return (
+    <ExpandableNode
+      id={id}
+      icon={Package}
+      label="Custom Items"
+      depth={0}
+      to="/items"
+      trailing={trailing}
+    >
+      {expanded && items?.length === 0 && (
+        <div
+          className="text-xs italic text-[var(--color-ink-faint)]"
+          style={{ paddingLeft: `${0.5 + 1 * 0.85}rem` }}
+        >
+          No custom items yet.
+        </div>
+      )}
+      {items?.map((item) => (
+        <Link
+          key={item.id}
+          to="/items/$iid"
+          params={{ iid: item.id }}
+          className={cn(
+            'group flex items-center gap-2 rounded-sm px-2 py-1 text-xs',
+            'text-[var(--color-ink-soft)] hover:bg-[var(--color-parchment-200)]/60 hover:text-[var(--color-ink)]',
+            'transition-colors',
+          )}
+          style={{ paddingLeft: `${0.5 + 1 * 0.85}rem` }}
+          activeProps={{
+            className:
+              'bg-[var(--color-parchment-200)] text-[var(--color-ink)] font-medium',
+          }}
+        >
+          <span className="truncate">{item.name}</span>
         </Link>
       ))}
     </ExpandableNode>

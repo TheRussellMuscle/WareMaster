@@ -162,6 +162,7 @@ function switchArchetype(
     completion_bonus: 0,
     luc_reserves: 0,
     initial_luc: 9,
+    custom_items: [],
     portrait_path: null,
     created_at: '',
     updated_at: '',

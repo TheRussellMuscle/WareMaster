@@ -1,5 +1,7 @@
 import { ParchmentCard } from '@/components/parchment/ParchmentCard';
 import type { Character } from '@/domain/character';
+import type { CustomItem } from '@/domain/custom-item';
+import { isCustomArmor, customArmorToArmor } from '@/domain/custom-item';
 import type { Armor } from '@/domain/item';
 import type { ReferenceCatalog } from '@/persistence/reference-loader';
 import type { DerivedCombatValues } from '@/engine/derive/combat-values';
@@ -8,6 +10,7 @@ interface AbsorptionPanelProps {
   character: Character;
   catalog: ReferenceCatalog | null;
   derived: DerivedCombatValues;
+  customItems?: CustomItem[];
 }
 
 /**
@@ -19,10 +22,11 @@ export function AbsorptionPanel({
   character,
   catalog,
   derived,
+  customItems,
 }: AbsorptionPanelProps): React.JSX.Element {
-  const body = lookup(catalog, character.equipment.body_armor);
-  const head = lookup(catalog, character.equipment.head_armor);
-  const shield = lookup(catalog, character.equipment.shield);
+  const body = lookup(catalog, character.equipment.body_armor, customItems);
+  const head = lookup(catalog, character.equipment.head_armor, customItems);
+  const shield = lookup(catalog, character.equipment.shield, customItems);
 
   return (
     <ParchmentCard>
@@ -106,9 +110,14 @@ function Slot({
 function lookup(
   catalog: ReferenceCatalog | null,
   id: string | null,
+  customItems?: CustomItem[],
 ): Armor | null {
   if (!catalog || !id) return null;
-  return catalog.armor.find((a) => a.id === id) ?? null;
+  const ca = catalog.armor.find((a) => a.id === id);
+  if (ca) return ca;
+  const ci = customItems?.find((c) => c.id === id);
+  if (ci && isCustomArmor(ci)) return customArmorToArmor(ci);
+  return null;
 }
 
 function signed(n: number): string {

@@ -50,6 +50,7 @@ function mkCharacter(classId: ClassId): Character {
       last_recovery_tick: 0,
       current_segment: null,
     },
+    custom_items: [],
     portrait_path: null,
     notes_path: null,
     created_at: '',

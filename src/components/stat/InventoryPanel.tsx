@@ -4,7 +4,8 @@ import {
   ParchmentCard,
 } from '@/components/parchment/ParchmentCard';
 import { UnitTooltip } from '@/components/parchment/UnitTooltip';
-import type { Character, CustomItem } from '@/domain/character';
+import type { Character } from '@/domain/character';
+import type { CustomItem } from '@/domain/custom-item';
 import type { ReferenceCatalog } from '@/persistence/reference-loader';
 import { itemRef } from '@/engine/equipment/apply';
 import { AddItemDialog } from './AddItemDialog';
@@ -12,6 +13,8 @@ import { AddItemDialog } from './AddItemDialog';
 interface InventoryPanelProps {
   character: Character;
   catalog: ReferenceCatalog | null;
+  /** Global custom items to use for name/kind/price resolution. */
+  customItems?: CustomItem[];
   /** Move an item from inventory into the appropriate equipped slot. */
   onEquip?: (itemId: string) => void | Promise<void>;
   /** Drop an item entirely (no golda change). */
@@ -33,6 +36,7 @@ interface InventoryPanelProps {
 export function InventoryPanel({
   character,
   catalog,
+  customItems = [],
   onEquip,
   onDrop,
   onSell,
@@ -40,7 +44,6 @@ export function InventoryPanel({
   onCreateItem,
 }: InventoryPanelProps): React.JSX.Element {
   const items = character.equipment.other;
-  const customItems = character.custom_items;
 
   return (
     <ParchmentCard className="flex flex-col gap-2">
@@ -48,8 +51,8 @@ export function InventoryPanel({
         <IlluminatedHeading level={2}>Inventory</IlluminatedHeading>
         {catalog && onAddItem && onCreateItem && (
           <AddItemDialog
-            character={character}
             catalog={catalog}
+            customItems={customItems}
             onAdd={onAddItem}
             onCreateItem={onCreateItem}
           />

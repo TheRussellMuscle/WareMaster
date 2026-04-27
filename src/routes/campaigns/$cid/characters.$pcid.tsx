@@ -82,7 +82,9 @@ import {
   setBastardGrip,
   type UnequipTarget,
 } from '@/engine/equipment/apply';
-import type { BastardSwordGrip, CustomItem } from '@/domain/character';
+import type { BastardSwordGrip } from '@/domain/character';
+import type { CustomItem } from '@/domain/custom-item';
+import { useCustomItemStore } from '@/stores/custom-item-store';
 
 export const Route = createFileRoute('/campaigns/$cid/characters/$pcid')({
   component: CharacterSheet,
@@ -180,6 +182,32 @@ function CharacterSheetInner(): React.JSX.Element {
     void updateCharacter(cid, updated);
   }, [character, catalog, cid]);
 
+  // Global custom items store
+  const customItems = useCustomItemStore((s) => s.items ?? []);
+  const loadCustomItems = useCustomItemStore((s) => s.load);
+  const createCustomItemGlobal = useCustomItemStore((s) => s.create);
+
+  React.useEffect(() => {
+    void loadCustomItems();
+  }, [loadCustomItems]);
+
+  // Silently migrate legacy per-character custom_items to global store
+  React.useEffect(() => {
+    if (!character || character.custom_items.length === 0) return;
+    void (async () => {
+      const existing = await loadCustomItems({ force: true });
+      const existingIds = new Set(existing.map((i) => i.id));
+      for (const item of character.custom_items) {
+        if (!existingIds.has(item.id)) {
+          await createCustomItemGlobal(item);
+        }
+      }
+      const migrated: Character = { ...character, custom_items: [] };
+      setCharacter(migrated);
+      await updateCharacter(cid, migrated);
+    })();
+  }, [character?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const dialogs = useSheetDialogs();
   // Don't `?? EMPTY_LOG` inside the selector: that returns a fresh array
   // every render when the campaign's log isn't yet cached, which Zustand
@@ -206,7 +234,7 @@ function CharacterSheetInner(): React.JSX.Element {
   }
 
   const derived = deriveCombatValues(character, catalog);
-  const weaponLines = buildWeaponLines(character, catalog, derived.baseBN);
+  const weaponLines = buildWeaponLines(character, catalog, derived.baseBN, customItems);
   const cls = catalog?.classes.classes.find((c) => c.id === character.class_id);
   const displayedStatus = effectiveStatus(character, derived);
   const onCharacterChange = async (next: Character) => {
@@ -504,6 +532,7 @@ function CharacterSheetInner(): React.JSX.Element {
           <EquippedGearPanel
             character={character}
             catalog={catalog}
+            customItems={customItems}
             onUnequip={async (target: UnequipTarget) => {
               const result = unequipItem(character, target);
               const updated = { ...character, equipment: result.equipment };
@@ -517,7 +546,7 @@ function CharacterSheetInner(): React.JSX.Element {
               await updateCharacter(cid, updated);
             }}
           />
-          <AbsorptionPanel character={character} catalog={catalog} derived={derived} />
+          <AbsorptionPanel character={character} catalog={catalog} derived={derived} customItems={customItems} />
           <WeaponsTable lines={weaponLines} />
         </>
       )}
@@ -562,7 +591,7 @@ function CharacterSheetInner(): React.JSX.Element {
             <GearShop
               character={character}
               catalog={catalog}
-              customItems={character.custom_items}
+              customItems={customItems}
               onPurchase={async ({ equipment, golda }) => {
                 const updated = { ...character, equipment, golda };
                 setCharacter(updated);
@@ -573,8 +602,9 @@ function CharacterSheetInner(): React.JSX.Element {
           <InventoryPanel
             character={character}
             catalog={catalog}
+            customItems={customItems}
             onEquip={async (itemId: string) => {
-              const result = equipItem(character, itemId, catalog);
+              const result = equipItem(character, itemId, catalog, customItems);
               const updated = { ...character, equipment: result.equipment };
               setCharacter(updated);
               await updateCharacter(cid, updated);
@@ -591,7 +621,7 @@ function CharacterSheetInner(): React.JSX.Element {
                 itemId,
                 catalog,
                 qty,
-                character.custom_items,
+                customItems,
               );
               const updated = {
                 ...character,
@@ -608,16 +638,13 @@ function CharacterSheetInner(): React.JSX.Element {
               await updateCharacter(cid, updated);
             }}
             onCreateItem={async (item: CustomItem, addToInventory: boolean) => {
-              let updated = {
-                ...character,
-                custom_items: [...character.custom_items, item],
-              };
+              await createCustomItemGlobal(item);
               if (addToInventory) {
-                const result = addInventoryItem(updated, item.id, 1);
-                updated = { ...updated, equipment: result.equipment };
+                const result = addInventoryItem(character, item.id, 1);
+                const updated = { ...character, equipment: result.equipment };
+                setCharacter(updated);
+                await updateCharacter(cid, updated);
               }
-              setCharacter(updated);
-              await updateCharacter(cid, updated);
             }}
           />
         </div>
@@ -688,6 +715,7 @@ function CharacterSheetInner(): React.JSX.Element {
       character={character}
       derived={derived}
       catalog={catalog}
+      customItems={customItems}
       campaignDir={cid}
       onChange={onCharacterChange}
     />

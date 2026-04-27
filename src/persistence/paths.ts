@@ -14,6 +14,7 @@ export type IdPrefix =
   | 'mon' // monster instance (Phase 4)
   | 'ryu' // Ryude instance (Phase 4)
   | 'tpl' // template (Phase 4)
+  | 'itm' // custom item (global vault)
   | 'evt' // event (Phase 6+)
   | 'combat'; // combat session (Phase 7)
 
@@ -42,6 +43,7 @@ export const VAULT_PATHS = {
   campaigns: 'campaigns',
   templates: 'templates',
   portraits: 'portraits',
+  items: 'items',
 };
 
 export interface CampaignPaths {
@@ -211,4 +213,9 @@ export function characterPortraitPath(characterId: string, ext: string): string 
  */
 export function defaultClassPortraitPath(classId: ClassId): string {
   return `placeholder-class:${classId}`;
+}
+
+/** Vault-relative path for a global custom item YAML. */
+export function customItemYamlPath(itemId: string): string {
+  return `${VAULT_PATHS.items}/${itemId}.yaml`;
 }

@@ -6,6 +6,8 @@ import { RollResultBadge } from '@/components/dice/RollResultBadge';
 import { DiceInputs } from '@/components/dice/DiceInputs';
 import type { DerivedCombatValues } from '@/engine/derive/combat-values';
 import type { Character } from '@/domain/character';
+import type { CustomItem } from '@/domain/custom-item';
+import { isCustomWeapon, customWeaponToWeapon } from '@/domain/custom-item';
 import type { ActionLogEntry } from '@/domain/action-log';
 import type { ReferenceCatalog } from '@/persistence/reference-loader';
 import { RollDialogShell } from './RollDialogShell';
@@ -17,6 +19,7 @@ interface AttackRollDialogProps {
   character: Character;
   derived: DerivedCombatValues;
   catalog: ReferenceCatalog | null;
+  customItems?: CustomItem[];
   /** Pre-select a weapon when opening from a per-weapon Attack button. */
   initialWeaponId?: string;
   availableLuc: number;
@@ -49,13 +52,14 @@ export function AttackRollDialog({
   character,
   derived,
   catalog,
+  customItems,
   initialWeaponId,
   availableLuc,
   onResolve,
 }: AttackRollDialogProps): React.JSX.Element {
   const lines = React.useMemo(
-    () => buildWeaponLines(character, catalog, derived.baseBN),
-    [character, catalog, derived.baseBN],
+    () => buildWeaponLines(character, catalog, derived.baseBN, customItems),
+    [character, catalog, derived.baseBN, customItems],
   );
   const defaultWeapon = initialWeaponId ?? lines[0]?.weapon_id ?? '';
   const [weaponId, setWeaponId] = React.useState(defaultWeapon);
@@ -86,7 +90,13 @@ export function AttackRollDialog({
     }
   }, [open, lines, initialWeaponId]);
 
-  const weapon = catalog?.weapons.weapons.find((w) => w.id === weaponId) ?? null;
+  const catalogWeapon = catalog?.weapons.weapons.find((w) => w.id === weaponId) ?? null;
+  const customWeapon = !catalogWeapon
+    ? (customItems?.find((c) => c.id === weaponId) ?? null)
+    : null;
+  const weapon =
+    catalogWeapon ??
+    (customWeapon && isCustomWeapon(customWeapon) ? customWeaponToWeapon(customWeapon) : null);
   const line = lines.find((l) => l.weapon_id === weaponId) ?? null;
 
   // Pick a default stance based on what the weapon supports.

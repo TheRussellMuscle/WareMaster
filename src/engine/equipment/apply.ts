@@ -10,8 +10,9 @@ import type {
   Character,
   Equipment,
   BastardSwordGrip,
-  CustomItem,
 } from '@/domain/character';
+import type { CustomItem } from '@/domain/custom-item';
+import { isCustomWeapon, isCustomArmor, customWeaponToWeapon, customArmorToArmor } from '@/domain/custom-item';
 import type { Weapon, Armor, GeneralGood } from '@/domain/item';
 import type { ReferenceCatalog } from '@/persistence/reference-loader';
 
@@ -113,12 +114,19 @@ export function itemRef(
   // Fall back to custom items
   const custom = customItems?.find((ci) => ci.id === itemId);
   if (custom) {
-    return {
-      itemId,
-      kind: 'good',
-      name: custom.name,
-      pricePerUnit: custom.price_golda,
-    };
+    if (isCustomWeapon(custom)) {
+      return { itemId, kind: 'weapon', name: custom.name, pricePerUnit: custom.price_golda };
+    }
+    if (isCustomArmor(custom)) {
+      const slot = custom.slot ?? 'body';
+      return {
+        itemId,
+        kind: slot === 'body' ? 'armor-body' : slot === 'head' ? 'armor-head' : 'armor-shield',
+        name: custom.name,
+        pricePerUnit: custom.price_golda,
+      };
+    }
+    return { itemId, kind: 'good', name: custom.name, pricePerUnit: custom.price_golda };
   }
   return null;
 }
@@ -170,12 +178,17 @@ function popInventory(
 function has2HWeaponEquipped(
   equipment: Equipment,
   catalog: ReferenceCatalog,
+  customItems?: CustomItem[],
 ): boolean {
   return equipment.weapons.some((id) => {
     const w = catalog.weapons.weapons.find((ww) => ww.id === id);
-    if (!w) return false;
-    if (w.hands === 2) return true;
-    if (w.id === 'bastard-sword' && equipment.bastard_sword_grip === '2H') return true;
+    if (w) {
+      if (w.hands === 2) return true;
+      if (w.id === 'bastard-sword' && equipment.bastard_sword_grip === '2H') return true;
+      return false;
+    }
+    const ci = customItems?.find((c) => c.id === id);
+    if (ci && isCustomWeapon(ci)) return (ci.hands ?? 1) === 2;
     return false;
   });
 }
@@ -189,13 +202,70 @@ export function equipItem(
   character: Character,
   itemId: string,
   catalog: ReferenceCatalog,
+  customItems?: CustomItem[],
 ): EquipResult {
   const found = findItem(catalog, itemId);
   if (!found) {
+    // Check custom items before giving up
+    const ci = customItems?.find((c) => c.id === itemId);
+    if (!ci) {
+      return {
+        equipment: character.equipment,
+        displaced: [],
+        conflicts: [`Unknown item id "${itemId}".`],
+      };
+    }
+    if (isCustomWeapon(ci)) {
+      const w = customWeaponToWeapon(ci);
+      const eq = character.equipment;
+      const conflicts: string[] = [];
+      const displaced: EquipResult['displaced'] = [];
+      let inventory = popInventory(eq.other, itemId);
+      const weapons = [...eq.weapons, w.id];
+      let shield = eq.shield;
+      if (w.hands === 2 && shield) {
+        inventory = pushInventory(inventory, shield);
+        displaced.push({ itemId: shield, from: 'shield' });
+        shield = null;
+        conflicts.push(
+          `Equipped a 2-handed weapon — moved shield to inventory (Rule §06 §2.1).`,
+        );
+      }
+      return { equipment: { ...eq, weapons, shield, other: inventory }, displaced, conflicts };
+    }
+    if (isCustomArmor(ci)) {
+      const armor = customArmorToArmor(ci);
+      const eq = character.equipment;
+      const conflicts: string[] = [];
+      const displaced: EquipResult['displaced'] = [];
+      const slotKey =
+        armor.slot === 'body' ? 'body_armor' : armor.slot === 'head' ? 'head_armor' : 'shield';
+      const currentlyEquipped = eq[slotKey];
+      let inventory = popInventory(eq.other, itemId);
+      if (currentlyEquipped) {
+        inventory = pushInventory(inventory, currentlyEquipped);
+        displaced.push({ itemId: currentlyEquipped, from: armor.slot });
+      }
+      if (armor.slot === 'shield' && has2HWeaponEquipped({ ...eq, shield: null }, catalog, customItems)) {
+        conflicts.push(
+          `Shield equipped while a 2-handed weapon is in hand — its absorption is suspended (Rule §06 §2.1).`,
+        );
+      }
+      const next: Equipment = {
+        ...eq,
+        body_armor: armor.slot === 'body' ? armor.id : eq.body_armor,
+        head_armor: armor.slot === 'head' ? armor.id : eq.head_armor,
+        shield: armor.slot === 'shield' ? armor.id : eq.shield,
+        weapons: eq.weapons,
+        other: inventory,
+      };
+      return { equipment: next, displaced, conflicts };
+    }
+    // Custom good — can't be equipped
     return {
       equipment: character.equipment,
       displaced: [],
-      conflicts: [`Unknown item id "${itemId}".`],
+      conflicts: ['General goods can\'t be equipped — keep them in inventory.'],
     };
   }
 
@@ -246,7 +316,7 @@ export function equipItem(
   }
   let shield = eq.shield;
   let weapons = eq.weapons;
-  if (armor.slot === 'shield' && has2HWeaponEquipped({ ...eq, shield: null }, catalog)) {
+  if (armor.slot === 'shield' && has2HWeaponEquipped({ ...eq, shield: null }, catalog, customItems)) {
     // Equipping a shield while 2H weapon equipped: keep weapon, but flag
     // that the shield's absorption is suspended until the weapon is gone.
     conflicts.push(

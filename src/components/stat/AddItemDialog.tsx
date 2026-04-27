@@ -2,14 +2,15 @@ import * as React from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Plus, X, Wand2 } from 'lucide-react';
 import { UnitTooltip } from '@/components/parchment/UnitTooltip';
-import type { Character, CustomItem } from '@/domain/character';
+import type { CustomItem } from '@/domain/custom-item';
 import type { ReferenceCatalog } from '@/persistence/reference-loader';
 import type { Weapon, Armor, GeneralGood } from '@/domain/item';
 import { ItemCreatorDialog } from './ItemCreatorDialog';
 
 interface AddItemDialogProps {
-  character: Character;
   catalog: ReferenceCatalog;
+  /** Global custom items to show in the Custom tab. */
+  customItems: CustomItem[];
   /** Called to add an item to inventory (no gold deduction). */
   onAdd: (itemId: string, qty: number) => void | Promise<void>;
   /** Called to save a newly created custom item (and optionally add it). */
@@ -79,8 +80,8 @@ function ItemGrid({
 }
 
 export function AddItemDialog({
-  character,
   catalog,
+  customItems,
   onAdd,
   onCreateItem,
 }: AddItemDialogProps): React.JSX.Element {
@@ -123,7 +124,7 @@ export function AddItemDialog({
       price: typeof g.price_golda === 'number' ? g.price_golda : null,
     }));
 
-  const customItems: CatalogRow[] = character.custom_items
+  const customRows: CatalogRow[] = customItems
     .filter((ci: CustomItem) => filter(ci.name))
     .map((ci: CustomItem) => ({
       id: ci.id,
@@ -136,7 +137,7 @@ export function AddItemDialog({
     { key: 'weapons', label: 'Weapons', count: weaponItems.length },
     { key: 'armor', label: 'Armor', count: armorItems.length },
     { key: 'goods', label: 'Goods', count: goodItems.length },
-    { key: 'custom', label: 'Custom', count: character.custom_items.length },
+    { key: 'custom', label: 'Custom', count: customItems.length },
   ];
 
   return (
@@ -217,7 +218,7 @@ export function AddItemDialog({
                 <ItemGrid items={goodItems} onAdd={(id) => void handleAdd(id)} />
               )}
               {tab === 'custom' && (
-                <ItemGrid items={customItems} onAdd={(id) => void handleAdd(id)} />
+                <ItemGrid items={customRows} onAdd={(id) => void handleAdd(id)} />
               )}
             </div>
 

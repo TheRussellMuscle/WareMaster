@@ -2,14 +2,14 @@ import { z } from 'zod';
 import { IdSchema } from './ids';
 
 /** A weapon's BN modifier varies by attack stance. null = stance unavailable. */
-const BnModifierSchema = z.object({
+export const BnModifierSchema = z.object({
   melee: z.number().nullable().optional(),
   charge: z.number().nullable().optional(),
   range: z.number().nullable().optional(),
 });
 
 /** Damage values are dice formulas as strings (e.g. "1D10+3", "2D5+5"). */
-const DamageValueSchema = z.object({
+export const DamageValueSchema = z.object({
   melee: z.string().nullable().optional(),
   ranged: z.string().nullable().optional(),
 });

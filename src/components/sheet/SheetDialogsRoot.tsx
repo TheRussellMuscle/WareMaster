@@ -19,11 +19,14 @@ import { TechniqueCastDialog } from './dialogs/TechniqueCastDialog';
 import { FirstImpressionRollDialog } from './dialogs/FirstImpressionRollDialog';
 import type { SheetDialogs } from './useSheetDialogs';
 
+import type { CustomItem } from '@/domain/custom-item';
+
 interface SheetDialogsRootProps {
   dialogs: SheetDialogs;
   character: Character;
   derived: DerivedCombatValues;
   catalog: ReferenceCatalog | null;
+  customItems?: CustomItem[];
   /** Campaign dir — needed to append entries to the campaign-wide action log. */
   campaignDir: string;
   /**
@@ -46,6 +49,7 @@ export function SheetDialogsRoot({
   character,
   derived,
   catalog,
+  customItems,
   campaignDir,
   onChange,
 }: SheetDialogsRootProps): React.JSX.Element {
@@ -177,6 +181,7 @@ export function SheetDialogsRoot({
         character={character}
         derived={derived}
         catalog={catalog}
+        customItems={customItems}
         initialWeaponId={
           open?.kind === 'attack' ? open.initialWeaponId : undefined
         }

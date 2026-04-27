@@ -13,6 +13,8 @@
 
 import type { Character } from '@/domain/character';
 import type { Weapon } from '@/domain/item';
+import type { CustomItem } from '@/domain/custom-item';
+import { isCustomWeapon } from '@/domain/custom-item';
 import type { ReferenceCatalog } from '@/persistence/reference-loader';
 
 export interface WeaponLine {
@@ -29,8 +31,8 @@ export interface WeaponLine {
   hands: number | string;
 }
 
-function weaponSkillLevelFor(character: Character, weapon: Weapon): number {
-  const match = character.skills.find((s) => s.skill_id === weapon.id);
+function weaponSkillLevelFor(character: Character, weaponId: string): number {
+  const match = character.skills.find((s) => s.skill_id === weaponId);
   return match?.level ?? 0;
 }
 
@@ -50,32 +52,54 @@ export function buildWeaponLines(
   character: Character,
   catalog: ReferenceCatalog | null,
   baseBN: number,
+  customItems?: CustomItem[],
 ): WeaponLine[] {
   if (!catalog) return [];
   const grip = character.equipment.bastard_sword_grip;
   const lines: WeaponLine[] = [];
   for (const weaponId of character.equipment.weapons) {
     const weapon = catalog.weapons.weapons.find((w) => w.id === weaponId);
-    if (!weapon) continue;
-    const skillLvl = weaponSkillLevelFor(character, weapon);
-    const isBastard = weapon.id === 'bastard-sword';
+    if (weapon) {
+      const skillLvl = weaponSkillLevelFor(character, weapon.id);
+      const isBastard = weapon.id === 'bastard-sword';
+      const addOrNull = (mod: number | null | undefined): number | null =>
+        mod == null ? null : baseBN + mod + skillLvl;
+      const rawMelee = weapon.damage_value.melee ?? null;
+      const damageMelee =
+        isBastard && rawMelee ? resolveBastardDamage(rawMelee, grip) : rawMelee;
+      lines.push({
+        weapon_id: weapon.id,
+        name: weapon.name,
+        category: weapon.category,
+        weaponSkillLevel: skillLvl,
+        meleeBN: addOrNull(weapon.bn_modifier.melee),
+        chargeBN: addOrNull(weapon.bn_modifier.charge),
+        rangedBN: addOrNull(weapon.bn_modifier.range),
+        damageMelee,
+        damageRanged: weapon.damage_value.ranged ?? null,
+        criticalValue: weapon.critical_value,
+        hands: isBastard ? grip : weapon.hands,
+      });
+      continue;
+    }
+    // Fall back to custom weapons
+    const ci = customItems?.find((c) => c.id === weaponId);
+    if (!ci || !isCustomWeapon(ci)) continue;
+    const skillLvl = weaponSkillLevelFor(character, ci.id);
     const addOrNull = (mod: number | null | undefined): number | null =>
       mod == null ? null : baseBN + mod + skillLvl;
-    const rawMelee = weapon.damage_value.melee ?? null;
-    const damageMelee =
-      isBastard && rawMelee ? resolveBastardDamage(rawMelee, grip) : rawMelee;
     lines.push({
-      weapon_id: weapon.id,
-      name: weapon.name,
-      category: weapon.category,
+      weapon_id: ci.id,
+      name: ci.name,
+      category: ci.category ?? 'swords',
       weaponSkillLevel: skillLvl,
-      meleeBN: addOrNull(weapon.bn_modifier.melee),
-      chargeBN: addOrNull(weapon.bn_modifier.charge),
-      rangedBN: addOrNull(weapon.bn_modifier.range),
-      damageMelee,
-      damageRanged: weapon.damage_value.ranged ?? null,
-      criticalValue: weapon.critical_value,
-      hands: isBastard ? grip : weapon.hands,
+      meleeBN: addOrNull(ci.bn_modifier?.melee),
+      chargeBN: addOrNull(ci.bn_modifier?.charge),
+      rangedBN: addOrNull(ci.bn_modifier?.range),
+      damageMelee: ci.damage_value?.melee ?? null,
+      damageRanged: ci.damage_value?.ranged ?? null,
+      criticalValue: ci.critical_value ?? 0,
+      hands: ci.hands ?? 1,
     });
   }
   return lines;

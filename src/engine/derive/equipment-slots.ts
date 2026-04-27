@@ -7,6 +7,8 @@
  */
 
 import type { Character } from '@/domain/character';
+import type { CustomItem } from '@/domain/custom-item';
+import { isCustomWeapon, isCustomArmor, customWeaponToWeapon, customArmorToArmor } from '@/domain/custom-item';
 import type { Weapon, Armor, GeneralGood } from '@/domain/item';
 import type { ReferenceCatalog } from '@/persistence/reference-loader';
 
@@ -51,6 +53,7 @@ function classifyHands(weapon: Weapon): WeaponHands {
 export function resolveEquippedSlots(
   character: Character,
   catalog: ReferenceCatalog | null,
+  customItems?: CustomItem[],
 ): EquipmentSlots {
   const empty: EquipmentSlots = {
     body: { armor: null },
@@ -62,8 +65,14 @@ export function resolveEquippedSlots(
   };
   if (!catalog) return empty;
 
-  const findArmor = (id: string | null): Armor | null =>
-    id ? catalog.armor.find((a) => a.id === id) ?? null : null;
+  const findArmor = (id: string | null): Armor | null => {
+    if (!id) return null;
+    const ca = catalog.armor.find((a) => a.id === id);
+    if (ca) return ca;
+    const ci = customItems?.find((c) => c.id === id);
+    if (ci && isCustomArmor(ci)) return customArmorToArmor(ci);
+    return null;
+  };
 
   const slots: EquipmentSlots = {
     body: { armor: findArmor(character.equipment.body_armor) },
@@ -76,8 +85,15 @@ export function resolveEquippedSlots(
 
   for (const weaponId of character.equipment.weapons) {
     const w = catalog.weapons.weapons.find((ww) => ww.id === weaponId);
-    if (!w) continue;
-    slots.weapons.push({ weapon: w, hands: classifyHands(w) });
+    if (w) {
+      slots.weapons.push({ weapon: w, hands: classifyHands(w) });
+      continue;
+    }
+    const ci = customItems?.find((c) => c.id === weaponId);
+    if (ci && isCustomWeapon(ci)) {
+      const synth = customWeaponToWeapon(ci);
+      slots.weapons.push({ weapon: synth, hands: classifyHands(synth) });
+    }
   }
 
   for (const item of character.equipment.other) {
@@ -86,11 +102,21 @@ export function resolveEquippedSlots(
     const armor = catalog.armor.find((a) => a.id === item.item_id) ?? null;
     const good =
       catalog.generalGoods.goods.find((g) => g.id === item.item_id) ?? null;
+
+    // Fall back to custom items for display
+    let resolvedWeapon = weapon;
+    let resolvedArmor = armor;
+    if (!weapon && !armor && !good) {
+      const ci = customItems?.find((c) => c.id === item.item_id);
+      if (ci && isCustomWeapon(ci)) resolvedWeapon = customWeaponToWeapon(ci);
+      else if (ci && isCustomArmor(ci)) resolvedArmor = customArmorToArmor(ci);
+    }
+
     slots.inventory.push({
       itemId: item.item_id,
       quantity: item.quantity,
-      weapon,
-      armor,
+      weapon: resolvedWeapon,
+      armor: resolvedArmor,
       good,
     });
   }
