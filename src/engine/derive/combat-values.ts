@@ -16,6 +16,11 @@
 import { baseValue } from '@/domain/attributes';
 import type { Character } from '@/domain/character';
 import type { ReferenceCatalog } from '@/persistence/reference-loader';
+import {
+  resolveEffectMods,
+  type ActiveEffectMods,
+} from './active-effect-modifiers';
+export type { ActiveEffectMods };
 
 export interface DerivedCombatValues {
   baseSEN: number;
@@ -37,9 +42,20 @@ export interface DerivedCombatValues {
    * multiplier (rule §06 §1 / §10 §1). 0 for non-Warrior classes.
    */
   warriorDamageBonus: number;
+  /** Pre-effect IN (baseSEN + armorModifier). */
+  rawIN: number;
+  /** Pre-effect BN (baseAGI + armorModifier). */
+  rawBN: number;
+  /** Pre-effect DN (baseAGI + armorModifier + defenseSkill). */
+  rawDN: number;
+  /** Post-effect IN (rawIN after activeEffectMods applied). */
   baseIN: number;
+  /** Post-effect BN (rawBN after activeEffectMods applied). */
   baseBN: number;
+  /** Post-effect DN (rawDN after activeEffectMods applied). */
   baseDN: number;
+  /** Resolved modifiers from active effects; drives formula annotations. */
+  activeEffectMods: ActiveEffectMods;
   absorptionPerfectSuccess: number;
   absorptionTotalFailure: number;
   heavyMentalRecoveryHoursPerPoint: number;
@@ -120,9 +136,16 @@ export function deriveCombatValues(
     'word-casting/earth',
   );
 
-  const baseIN = baseSEN + totalArmorModifier;
-  const baseBN = baseAGI + totalArmorModifier;
-  const baseDN = baseAGI + totalArmorModifier + defenseSkillLevel;
+  const rawIN = baseSEN + totalArmorModifier;
+  const rawBN = baseAGI + totalArmorModifier;
+  const rawDN = baseAGI + totalArmorModifier + defenseSkillLevel;
+
+  const activeEffectMods = resolveEffectMods(character.state.active_effects);
+  const { inBnDnMultiplier, dnBonus, bnBonus } = activeEffectMods;
+
+  const baseIN = Math.floor(rawIN * inBnDnMultiplier);
+  const baseBN = Math.floor((rawBN + bnBonus) * inBnDnMultiplier);
+  const baseDN = Math.floor((rawDN + dnBonus) * inBnDnMultiplier);
 
   return {
     baseSEN,
@@ -138,9 +161,13 @@ export function deriveCombatValues(
     totalAbsorption,
     warriorAbsorptionBonus,
     warriorDamageBonus,
+    rawIN,
+    rawBN,
+    rawDN,
     baseIN,
     baseBN,
     baseDN,
+    activeEffectMods,
     absorptionPerfectSuccess: totalAbsorption * 2,
     absorptionTotalFailure: Math.floor(totalAbsorption / 2),
     heavyMentalRecoveryHoursPerPoint: Math.max(1, 16 - character.abilities.WIL),

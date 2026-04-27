@@ -22,22 +22,52 @@ export function DerivedStatsBlock({
       ? `Base CHA ${v.baseCHA} + Appearance ${signed(v.firstImpressionValue - v.baseCHA)}`
       : `Base CHA ${v.baseCHA}`;
 
+  const m = v.activeEffectMods;
+  const halved = m.inBnDnMultiplier < 1;
+
+  const inFormula = buildFormula(
+    `SEN ${v.baseSEN} + arm ${signed(v.totalArmorModifier)}`,
+    0,
+    [],
+    halved,
+    m.multiplierSources,
+  );
+
+  const bnFormula = buildFormula(
+    `AGI ${v.baseAGI} + arm ${signed(v.totalArmorModifier)}`,
+    m.bnBonus,
+    m.bnBonusSources,
+    halved,
+    m.multiplierSources,
+  );
+
+  const dnFormula = buildFormula(
+    `AGI ${v.baseAGI} + arm ${signed(v.totalArmorModifier)} + Defense ${v.defenseSkillLevel}`,
+    m.dnBonus,
+    m.dnBonusSources,
+    halved,
+    m.multiplierSources,
+  );
+
   return (
     <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm md:grid-cols-3">
       <Tile
         label="Base IN"
-        formula={`SEN ${v.baseSEN} + arm ${signed(v.totalArmorModifier)}`}
+        formula={inFormula}
         value={v.baseIN}
+        modified={halved}
       />
       <Tile
         label="Base BN"
-        formula={`AGI ${v.baseAGI} + arm ${signed(v.totalArmorModifier)}`}
+        formula={bnFormula}
         value={v.baseBN}
+        modified={halved || m.bnBonus !== 0}
       />
       <Tile
         label="Base DN"
-        formula={`AGI ${v.baseAGI} + arm ${signed(v.totalArmorModifier)} + Defense ${v.defenseSkillLevel}`}
+        formula={dnFormula}
         value={v.baseDN}
+        modified={halved || m.dnBonus !== 0}
       />
 
       <Tile
@@ -91,14 +121,37 @@ export function DerivedStatsBlock({
   );
 }
 
+/**
+ * Builds a formula string with optional additive bonus and halving suffix.
+ * E.g.: "AGI 4 + arm +1 + Defense 0 +3 Airshield → ×½ Blinded"
+ */
+function buildFormula(
+  base: string,
+  bonus: number,
+  bonusSources: string[],
+  halved: boolean,
+  halveSources: string[],
+): string {
+  let formula = base;
+  if (bonus !== 0 && bonusSources.length > 0) {
+    formula += ` ${signed(bonus)} ${bonusSources.join('/')}`;
+  }
+  if (halved && halveSources.length > 0) {
+    formula += ` → ×½ ${halveSources.join('/')}`;
+  }
+  return formula;
+}
+
 function Tile({
   label,
   formula,
   value,
+  modified = false,
 }: {
   label: React.ReactNode;
   formula: string;
   value: React.ReactNode;
+  modified?: boolean;
 }): React.JSX.Element {
   return (
     <div className="rounded-sm border border-[var(--color-parchment-300)] bg-[var(--color-parchment-50)]/60 px-3 py-1.5">
@@ -108,7 +161,11 @@ function Tile({
       <div className="font-mono text-lg leading-tight text-[var(--color-ink)]">
         {value}
       </div>
-      <div className="text-[10px] text-[var(--color-ink-faint)]">{formula}</div>
+      <div
+        className={`text-[10px] ${modified ? 'text-[var(--color-rust)]/70' : 'text-[var(--color-ink-faint)]'}`}
+      >
+        {formula}
+      </div>
     </div>
   );
 }

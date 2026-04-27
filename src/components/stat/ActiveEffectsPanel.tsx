@@ -5,14 +5,9 @@ import {
   ParchmentCard,
 } from '@/components/parchment/ParchmentCard';
 import { UnitTooltip } from '@/components/parchment/UnitTooltip';
+import { KNOWN_EFFECT_KINDS } from '@/engine/derive/active-effect-modifiers';
+import type { ActiveEffect } from '@/domain/character';
 import type { Character } from '@/domain/character';
-
-interface ActiveEffect {
-  id: string;
-  label: string;
-  source?: string;
-  expires_at_segment: number | null;
-}
 
 interface ActiveEffectsPanelProps {
   character: Character;
@@ -22,11 +17,11 @@ interface ActiveEffectsPanelProps {
 /**
  * Manual WM-managed list of temporary effects on the character.
  *
- * Phase 3 ships a working add/remove form so WMs can jot down "Blessed for
- * 1 etch" or "Poisoned" without leaving the sheet. Phase 6 will swap the
- * manual entry for an engine-driven sweep that auto-expires on time
- * advance and emits events. The schema (CharacterState.active_effects[])
- * is stable, so the data persists across that change.
+ * Phase 3 ships a working add/remove form with preset picker so WMs can
+ * apply canonical status conditions (Blinded, Paralyzed, Airshield, etc.)
+ * in one click. Effects with computable stat modifiers update Base IN/BN/DN
+ * live on the sheet. Phase 6 will swap the manual entry for an engine-driven
+ * sweep that auto-expires on time advance and emits events.
  */
 export function ActiveEffectsPanel({
   character,
@@ -43,6 +38,7 @@ export function ActiveEffectsPanel({
     const next: ActiveEffect = {
       id: `eff_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
       label: eff.label,
+      kind: eff.kind || undefined,
       source: eff.source || undefined,
       expires_at_segment: eff.expires_at_segment,
     };
@@ -87,42 +83,53 @@ export function ActiveEffectsPanel({
 
       {effects.length > 0 && (
         <ul className="space-y-1 text-sm">
-          {effects.map((e) => (
-            <li
-              key={e.id}
-              className="flex items-baseline justify-between rounded-sm border border-[var(--color-parchment-300)] bg-[var(--color-parchment-50)]/60 px-3 py-1.5"
-            >
-              <div>
-                <span className="font-medium">{e.label}</span>
-                {e.source && (
-                  <span className="ml-2 text-xs italic text-[var(--color-ink-soft)]">
-                    from {e.source}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2 font-mono text-xs text-[var(--color-ink-soft)]">
-                {e.expires_at_segment != null ? (
-                  <span>
-                    expires{' '}
-                    <UnitTooltip
-                      unit="segment"
-                      amount={e.expires_at_segment}
-                    />
-                  </span>
-                ) : (
-                  <span className="italic">no expiry</span>
-                )}
-                <button
-                  type="button"
-                  onClick={() => remove(e.id)}
-                  title="Remove effect"
-                  className="rounded-sm p-0.5 text-[var(--color-ink-faint)] hover:bg-[var(--color-rust)]/10 hover:text-[var(--color-rust)]"
-                >
-                  <X className="h-3 w-3" aria-hidden />
-                </button>
-              </div>
-            </li>
-          ))}
+          {effects.map((e) => {
+            const known = e.kind
+              ? KNOWN_EFFECT_KINDS.find((k) => k.kind === e.kind)
+              : undefined;
+            const hasMod = !!known?.statMods;
+            return (
+              <li
+                key={e.id}
+                className="flex items-baseline justify-between rounded-sm border border-[var(--color-parchment-300)] bg-[var(--color-parchment-50)]/60 px-3 py-1.5"
+              >
+                <div>
+                  <span className="font-medium">{e.label}</span>
+                  {e.source && (
+                    <span className="ml-2 text-xs italic text-[var(--color-ink-soft)]">
+                      from {e.source}
+                    </span>
+                  )}
+                  {hasMod && known?.description && (
+                    <span className="ml-2 text-[10px] text-[var(--color-rust)]/70">
+                      {known.description}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 font-mono text-xs text-[var(--color-ink-soft)]">
+                  {e.expires_at_segment != null ? (
+                    <span>
+                      expires{' '}
+                      <UnitTooltip
+                        unit="segment"
+                        amount={e.expires_at_segment}
+                      />
+                    </span>
+                  ) : (
+                    <span className="italic">no expiry</span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => remove(e.id)}
+                    title="Remove effect"
+                    className="rounded-sm p-0.5 text-[var(--color-ink-faint)] hover:bg-[var(--color-rust)]/10 hover:text-[var(--color-rust)]"
+                  >
+                    <X className="h-3 w-3" aria-hidden />
+                  </button>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
 
@@ -132,7 +139,8 @@ export function ActiveEffectsPanel({
 
       {effects.length > 0 && (
         <p className="text-[10px] italic text-[var(--color-ink-faint)]">
-          WM-managed in Phase 3 — auto-expiry on time advance comes in Phase 6.
+          Effects with stat modifiers update Base IN/BN/DN live. Auto-expiry
+          on time advance comes in Phase 6.
         </p>
       )}
     </ParchmentCard>
@@ -146,9 +154,18 @@ function AddEffectForm({
   onAdd: (eff: Omit<ActiveEffect, 'id'>) => void;
   onCancel: () => void;
 }): React.JSX.Element {
+  const [kind, setKind] = React.useState('');
   const [label, setLabel] = React.useState('');
   const [source, setSource] = React.useState('');
   const [expires, setExpires] = React.useState<string>('');
+
+  const handlePreset = (selectedKind: string) => {
+    setKind(selectedKind);
+    if (selectedKind) {
+      const known = KNOWN_EFFECT_KINDS.find((k) => k.kind === selectedKind);
+      if (known) setLabel(known.label);
+    }
+  };
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,19 +173,51 @@ function AddEffectForm({
     const expSeg = expires.trim() === '' ? null : parseInt(expires, 10);
     onAdd({
       label: label.trim(),
+      kind: kind || undefined,
       source: source.trim(),
       expires_at_segment: Number.isFinite(expSeg) ? expSeg : null,
     });
+    setKind('');
     setLabel('');
     setSource('');
     setExpires('');
   };
+
+  const selectedKnown = kind
+    ? KNOWN_EFFECT_KINDS.find((k) => k.kind === kind)
+    : undefined;
 
   return (
     <form
       onSubmit={submit}
       className="flex flex-col gap-2 rounded-sm border border-[var(--color-parchment-300)] bg-[var(--color-parchment-100)]/40 p-3 text-sm"
     >
+      {/* Preset picker */}
+      <label className="flex flex-col gap-0.5 text-xs">
+        <span className="font-display uppercase tracking-wider text-[var(--color-ink-faint)]">
+          Preset
+        </span>
+        <select
+          value={kind}
+          onChange={(e) => handlePreset(e.target.value)}
+          className="rounded-sm border border-[var(--color-parchment-400)] bg-[var(--color-parchment-50)] px-2 py-1"
+        >
+          <option value="">— or pick a preset —</option>
+          {KNOWN_EFFECT_KINDS.map((k) => (
+            <option key={k.kind} value={k.kind}>
+              {k.label} — {k.description}
+            </option>
+          ))}
+        </select>
+        {selectedKnown?.statMods && (
+          <span className="text-[10px] text-[var(--color-rust)]/70">
+            Modifies derived stats on the sheet
+          </span>
+        )}
+      </label>
+
+      <div className="border-t border-[var(--color-parchment-300)]" />
+
       <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
         <label className="flex flex-col gap-0.5 text-xs">
           <span className="font-display uppercase tracking-wider text-[var(--color-ink-faint)]">

@@ -46,12 +46,15 @@ const EquipmentSchema = z.object({
 });
 export type Equipment = z.infer<typeof EquipmentSchema>;
 
-const ActiveEffectSchema = z.object({
+export const ActiveEffectSchema = z.object({
   id: z.string(),
   label: z.string(),
+  /** Canonical effect kind from KNOWN_EFFECT_KINDS; drives solver modifiers. */
+  kind: z.string().optional(),
   source: z.string().optional(),
   expires_at_segment: z.number().int().nullable(),
 });
+export type ActiveEffect = z.infer<typeof ActiveEffectSchema>;
 
 export const CharacterStatusSchema = z.enum([
   'fine',
