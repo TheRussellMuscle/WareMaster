@@ -5,6 +5,9 @@ import { InstanceList } from '@/components/instance/InstanceList';
 import { useCampaignStore } from '@/stores/campaign-store';
 
 export const Route = createFileRoute('/campaigns/$cid/ryude')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    open: typeof search.open === 'string' ? search.open : undefined,
+  }),
   component: RyudeTab,
 });
 
@@ -18,6 +21,7 @@ function RyudeTab(): React.JSX.Element {
 
 function RyudeTabInner(): React.JSX.Element {
   const { cid } = useParams({ from: '/campaigns/$cid/ryude' });
+  const { open } = Route.useSearch();
   const navigate = useNavigate();
   const current = useCampaignStore((s) => s.current);
   const loadByDir = useCampaignStore((s) => s.loadByDir);
@@ -39,6 +43,7 @@ function RyudeTabInner(): React.JSX.Element {
       kind="ryude"
       title="Ryudes"
       description="Wares-powered Ryude — Footmen, Coursers, and Maledictors. Each instance tracks Durability, attunement state, and operator assignment."
+      openId={open}
     />
   );
 }

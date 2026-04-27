@@ -14,6 +14,7 @@ import { useCampaignStore } from '@/stores/campaign-store';
 import { useReferenceStore } from '@/stores/reference-store';
 import { useTemplateStore } from '@/stores/template-store';
 import { useActionLogStore } from '@/stores/action-log-store';
+import { useCustomItemStore } from '@/stores/custom-item-store';
 import { ActionLog } from '@/components/sheet/ActionLog';
 import type { ActionLogEntry } from '@/domain/action-log';
 import {
@@ -79,6 +80,7 @@ export function InstanceDetail({
   const characters = charactersRaw ?? EMPTY_CHARACTERS;
   const loadCharactersFor = useCampaignStore((s) => s.loadCharactersFor);
   const invalidate = useCampaignStore((s) => s.invalidateInstancesFor);
+  const customItems = useCustomItemStore((s) => s.items ?? []);
 
   const cachedEntries = useActionLogStore((s) => s.entriesByCampaign[campaignDir]);
   const logEntries = cachedEntries ?? EMPTY_LOG;
@@ -225,6 +227,7 @@ export function InstanceDetail({
         <Link
           to={backTo}
           params={{ cid: campaignDir }}
+          search={{ open: undefined }}
           className="inline-flex items-center gap-1 text-xs text-[var(--color-ink-faint)] hover:text-[var(--color-rust)]"
         >
           <ArrowLeft className="h-3 w-3" /> Back
@@ -250,6 +253,7 @@ export function InstanceDetail({
           <Link
             to={backTo}
             params={{ cid: campaignDir }}
+            search={{ open: undefined }}
             className="inline-flex items-center gap-1 text-xs text-[var(--color-ink-faint)] hover:text-[var(--color-rust)]"
           >
             <ArrowLeft className="h-3 w-3" /> Back
@@ -333,7 +337,9 @@ export function InstanceDetail({
               instance={instance}
               template={resolvedTemplate}
               characters={characters}
+              npcTemplates={[...vaultNpcs.values(), ...campaignNpcs.values()]}
               catalog={catalog}
+              customItems={customItems}
               onPersist={async (next) => {
                 setInstance(next);
                 await persist(next);

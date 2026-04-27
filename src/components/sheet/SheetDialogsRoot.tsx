@@ -6,10 +6,14 @@ import {
   applyPpGain,
 } from '@/engine/skill-check';
 import { useActionLogStore } from '@/stores/action-log-store';
+import { useCampaignStore } from '@/stores/campaign-store';
+import { useTemplateStore } from '@/stores/template-store';
+import { updateInstance } from '@/persistence/instance-repo';
 import type { Character } from '@/domain/character';
 import type { ActionLogEntry } from '@/domain/action-log';
 import type { ReferenceCatalog } from '@/persistence/reference-loader';
 import type { DerivedCombatValues } from '@/engine/derive/combat-values';
+import type { RyudeInstance } from '@/domain/ryude-instance';
 import { SetInDnDialog } from './dialogs/SetInDnDialog';
 import { AbilityRollDialog } from './dialogs/AbilityRollDialog';
 import { AttackRollDialog } from './dialogs/AttackRollDialog';
@@ -55,6 +59,44 @@ export function SheetDialogsRoot({
 }: SheetDialogsRootProps): React.JSX.Element {
   const availableLuc = character.state.available_luc;
   const appendLog = useActionLogStore((s) => s.append);
+  const invalidateInstances = useCampaignStore((s) => s.invalidateInstancesFor);
+  const ryudeInstances = useCampaignStore(
+    (s) => s.instancesByCampaign[campaignDir]?.ryude ?? [],
+  );
+  const globalRyudeTemplates = useTemplateStore(
+    (s) => s.globalTemplates.ryude ?? [],
+  );
+  const campaignRyudeTemplates = useTemplateStore(
+    (s) => s.campaignTemplates[campaignDir]?.ryude ?? [],
+  );
+
+  // Find the Ryude this character is currently operating (if any).
+  const activeRyudeInstance: RyudeInstance | null = React.useMemo(
+    () =>
+      ryudeInstances.find(
+        (r) =>
+          r.equipped_operator?.kind === 'character' &&
+          r.equipped_operator.id === character.id,
+      ) ?? null,
+    [ryudeInstances, character.id],
+  );
+  const activeRyudeTemplate = React.useMemo(
+    () =>
+      activeRyudeInstance
+        ? ([...globalRyudeTemplates, ...campaignRyudeTemplates].find(
+            (t) => t.id === activeRyudeInstance.template_id,
+          ) ?? null)
+        : null,
+    [activeRyudeInstance, globalRyudeTemplates, campaignRyudeTemplates],
+  );
+  // current_ryude_mind_durability is only set for Maledictor instances at spawn.
+  const activeMaledictorRyude =
+    activeRyudeInstance?.state.current_ryude_mind_durability != null
+      ? activeRyudeInstance
+      : null;
+  // Ryude bonuses to casting skill levels (Rules §14:226-227).
+  const ryudeNumenismBonus = activeRyudeTemplate?.numetic_modifier ?? 0;
+  const ryudeWordCastingBonus = activeRyudeTemplate?.binding_modifier ?? 0;
 
   const newEntry = (
     raw: Omit<ActionLogEntry, 'id' | 'timestamp_real' | 'character_id' | 'character_name'>,
@@ -67,7 +109,7 @@ export function SheetDialogsRoot({
   });
 
   const persist = async (
-    raw: Omit<ActionLogEntry, 'id' | 'timestamp_real' | 'character_id' | 'character_name'>,
+    rawEntry: Omit<ActionLogEntry, 'id' | 'timestamp_real' | 'character_id' | 'character_name'>,
     overrides: {
       lucSpent?: number;
       lucRestored?: number;
@@ -77,6 +119,7 @@ export function SheetDialogsRoot({
       attackTotalFailure?: boolean;
     } = {},
   ) => {
+    let raw = rawEntry;
     let nextChar: Character = character;
 
     // Order matters: spend LUC first (rule §07 multiplier was already
@@ -106,14 +149,35 @@ export function SheetDialogsRoot({
       };
     }
     if (overrides.mentalDamageCost && overrides.mentalDamageCost > 0) {
-      nextChar = {
-        ...nextChar,
-        state: {
-          ...nextChar.state,
-          mental_damage:
-            nextChar.state.mental_damage + overrides.mentalDamageCost,
-        },
-      };
+      if (activeMaledictorRyude) {
+        // Route mental damage to the Maledictor Ryude's mind pool (Rule §14:229).
+        const prev = activeMaledictorRyude.state.current_ryude_mind_durability ?? 0;
+        const next = prev - overrides.mentalDamageCost;
+        const updatedRyude: RyudeInstance = {
+          ...activeMaledictorRyude,
+          state: {
+            ...activeMaledictorRyude.state,
+            current_ryude_mind_durability: Math.max(0, next),
+          },
+        };
+        await updateInstance(campaignDir, 'ryude', updatedRyude);
+        invalidateInstances(campaignDir, 'ryude');
+        if (next <= 0) {
+          raw = {
+            ...raw,
+            notes: (raw.notes ? raw.notes + ' ' : '') + 'Ryude Persona Destroyed — mind pool reached 0.',
+          };
+        }
+      } else {
+        nextChar = {
+          ...nextChar,
+          state: {
+            ...nextChar.state,
+            mental_damage:
+              nextChar.state.mental_damage + overrides.mentalDamageCost,
+          },
+        };
+      }
     }
     if (overrides.segment !== undefined) {
       nextChar = {
@@ -231,6 +295,8 @@ export function SheetDialogsRoot({
         discipline={open?.kind === 'technique-cast' ? open.discipline : null}
         gate={open?.kind === 'technique-cast' ? open.gate : undefined}
         availableLuc={availableLuc}
+        ryudeNumenismBonus={ryudeNumenismBonus}
+        ryudeWordCastingBonus={ryudeWordCastingBonus}
         onResolve={async (entry, applied, lucSpent) => {
           await persist(entry, {
             lucSpent,

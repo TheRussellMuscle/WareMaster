@@ -24,6 +24,10 @@ interface TechniqueCastDialogProps {
   discipline: Discipline | null;
   gate: Gate | undefined;
   availableLuc: number;
+  /** Added to numenism skill level when discipline is numetic-arts (Rule §14:226). */
+  ryudeNumenismBonus?: number;
+  /** Added to word-casting skill level when discipline is word-casting (Rule §14:227). */
+  ryudeWordCastingBonus?: number;
   /**
    * Caller applies skill PP, LUC spend/restore, and Mental damage cost.
    */
@@ -60,6 +64,8 @@ export function TechniqueCastDialog({
   discipline,
   gate,
   availableLuc,
+  ryudeNumenismBonus = 0,
+  ryudeWordCastingBonus = 0,
   onResolve,
 }: TechniqueCastDialogProps): React.JSX.Element {
   const skillId = disciplineToSkillId(discipline);
@@ -68,6 +74,12 @@ export function TechniqueCastDialog({
       ? catalog.skills.skills.find((s) => s.id === skillId) ?? null
       : null;
   const skillEntry = character.skills.find((s) => s.skill_id === skillId);
+  const ryudeBonus =
+    discipline === 'numetic-arts'
+      ? ryudeNumenismBonus
+      : discipline === 'word-casting'
+        ? ryudeWordCastingBonus
+        : 0;
 
   const [difficulty, setDifficulty] = React.useState(8);
   const [abilityOverride, setAbilityOverride] = React.useState<AbilityCode>('WIL');
@@ -102,6 +114,7 @@ export function TechniqueCastDialog({
       skillEntry,
       abilityOverride,
       difficulty,
+      modifier: ryudeBonus || undefined,
       lucDice,
       manual: manualMode ? manualValues.slice(0, diceCount) : undefined,
     });
@@ -113,6 +126,8 @@ export function TechniqueCastDialog({
     const notes: string[] = [`Cast ${technique.name}.`];
     if (mentalCost > 0)
       notes.push(`Mental damage cost: +${mentalCost} (caster).`);
+    if (ryudeBonus > 0)
+      notes.push(`Ryude bonus +${ryudeBonus} to ${skill.name} level.`);
     if (result.ppGain > 0) notes.push(`+${result.ppGain} PP to ${skill.name}.`);
     if (result.lucRestored > 0)
       notes.push(`+${result.lucRestored} Available LUC.`);
@@ -245,6 +260,9 @@ export function TechniqueCastDialog({
             <div className="text-xs text-[var(--color-ink-soft)]">
               Casting via <strong>{skill.name}</strong> Lv{' '}
               {skillEntry?.level ?? 0}
+              {ryudeBonus > 0 && (
+                <> +{ryudeBonus} <span className="text-[var(--color-ink-faint)]">(Ryude)</span></>
+              )}
               {gate && discipline === 'word-casting' && (
                 <> · Gate: {gate}</>
               )}.

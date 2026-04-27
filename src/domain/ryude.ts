@@ -31,6 +31,10 @@ export const RyudeTemplateSchema = z.object({
   equipment: z.array(z.string()),
   description: z.string(),
   courser_perks: z.array(z.string()).optional(),
+  /** Typed flag: Courser grants operator immunity to WC Techniques Lv≤3 (Rule §14:233). */
+  courser_wc_immunity: z.boolean().optional(),
+  /** Ryude absorbs this many liets of fall damage for its operator (Rule §14:23). */
+  fall_endurance: z.number().int().optional(),
   notes: z.array(z.string()).optional(),
 });
 export type RyudeTemplate = z.infer<typeof RyudeTemplateSchema>;

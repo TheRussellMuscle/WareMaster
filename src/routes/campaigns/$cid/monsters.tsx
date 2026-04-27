@@ -5,6 +5,9 @@ import { InstanceList } from '@/components/instance/InstanceList';
 import { useCampaignStore } from '@/stores/campaign-store';
 
 export const Route = createFileRoute('/campaigns/$cid/monsters')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    open: typeof search.open === 'string' ? search.open : undefined,
+  }),
   component: MonstersTab,
 });
 
@@ -18,6 +21,7 @@ function MonstersTab(): React.JSX.Element {
 
 function MonstersTabInner(): React.JSX.Element {
   const { cid } = useParams({ from: '/campaigns/$cid/monsters' });
+  const { open } = Route.useSearch();
   const navigate = useNavigate();
   const current = useCampaignStore((s) => s.current);
   const loadByDir = useCampaignStore((s) => s.loadByDir);
@@ -39,6 +43,7 @@ function MonstersTabInner(): React.JSX.Element {
       kind="monster"
       title="Monsters"
       description="Named monster instances spawned into this campaign — bestiary creatures with this campaign's history and damage state."
+      openId={open}
     />
   );
 }

@@ -46,6 +46,7 @@ interface TemplateListRouteProps {
   kind: TemplateKind;
   title: string;
   description: string;
+  openId?: string;
 }
 
 interface Row {
@@ -59,6 +60,7 @@ export function TemplateListRoute({
   kind,
   title,
   description,
+  openId,
 }: TemplateListRouteProps): React.JSX.Element {
   const { catalog } = useReferenceData();
   const globalTemplates = useTemplateStore((s) => s.globalTemplates);
@@ -71,7 +73,11 @@ export function TemplateListRoute({
   const [editing, setEditing] = React.useState<TemplateOf<TemplateKind> | null>(null);
   const [creating, setCreating] = React.useState(false);
   const [deleting, setDeleting] = React.useState<TemplateOf<TemplateKind> | null>(null);
-  const [expandedId, setExpandedId] = React.useState<string | null>(null);
+  const [expandedId, setExpandedId] = React.useState<string | null>(openId ?? null);
+
+  React.useEffect(() => {
+    if (openId) setExpandedId(openId);
+  }, [openId]);
 
   // Spawn flow state
   const [spawnTemplate, setSpawnTemplate] = React.useState<{
@@ -169,16 +175,19 @@ export function TemplateListRoute({
       void navigate({
         to: '/campaigns/$cid/monsters',
         params: { cid: spawnCampaign.dir_name },
+        search: { open: undefined },
       });
     } else if (kind === 'ryude') {
       void navigate({
         to: '/campaigns/$cid/ryude',
         params: { cid: spawnCampaign.dir_name },
+        search: { open: undefined },
       });
     } else {
       void navigate({
         to: '/campaigns/$cid/npcs',
         params: { cid: spawnCampaign.dir_name },
+        search: { open: undefined },
       });
     }
     setSpawnTemplate(null);

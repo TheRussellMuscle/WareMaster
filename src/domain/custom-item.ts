@@ -5,8 +5,11 @@ import {
   WeaponCategorySchema,
   ArmorSlotSchema,
   ArmorClassSchema,
+  RyudeArmorClassSchema,
   type Weapon,
   type Armor,
+  type RyudeWeapon,
+  type RyudeArmor,
 } from './item';
 
 const CustomItemBaseSchema = z.object({
@@ -43,10 +46,30 @@ const CustomGoodSchema = CustomItemBaseSchema.extend({
   kind: z.literal('good'),
 });
 
+const CustomRyudeWeaponSchema = CustomItemBaseSchema.extend({
+  kind: z.literal('ryude-weapon'),
+  category: z.enum(['swords', 'bludgeons', 'spears']).optional(),
+  hands: z.union([z.number().int(), z.string()]).optional(),
+  critical_value: z.number().int().optional(),
+  bn_modifier: BnModifierSchema.optional(),
+  damage_value: DamageValueSchema.optional(),
+});
+export type CustomRyudeWeapon = z.infer<typeof CustomRyudeWeaponSchema>;
+
+const CustomRyudeArmorSchema = CustomItemBaseSchema.extend({
+  kind: z.literal('ryude-armor'),
+  armor_class: RyudeArmorClassSchema.optional(),
+  arm_modifier: z.number().int().optional(),
+  spe_modifier: z.number().int().optional(),
+});
+export type CustomRyudeArmor = z.infer<typeof CustomRyudeArmorSchema>;
+
 export const CustomItemSchema = z.discriminatedUnion('kind', [
   CustomWeaponSchema,
   CustomArmorSchema,
   CustomGoodSchema,
+  CustomRyudeWeaponSchema,
+  CustomRyudeArmorSchema,
 ]);
 export type CustomItem = z.infer<typeof CustomItemSchema>;
 
@@ -86,6 +109,41 @@ export function customArmorToArmor(ci: CustomArmor): Armor {
     armor_class: ci.armor_class,
     absorption: ci.absorption ?? 0,
     armor_modifier: ci.armor_modifier ?? 0,
+    price_golda: ci.price_golda ?? 0,
+    notes: ci.notes || undefined,
+  };
+}
+
+export function isCustomRyudeWeapon(item: CustomItem): item is CustomRyudeWeapon {
+  return item.kind === 'ryude-weapon';
+}
+
+export function isCustomRyudeArmor(item: CustomItem): item is CustomRyudeArmor {
+  return item.kind === 'ryude-armor';
+}
+
+export function customRyudeWeaponToRyudeWeapon(ci: CustomRyudeWeapon): RyudeWeapon {
+  return {
+    id: ci.id,
+    name: ci.name,
+    source: 'custom',
+    category: ci.category ?? 'swords',
+    hands: ci.hands ?? 1,
+    critical_value: ci.critical_value ?? 0,
+    bn_modifier: ci.bn_modifier ?? {},
+    damage_value: ci.damage_value ?? {},
+    price_golda: ci.price_golda ?? 0,
+  };
+}
+
+export function customRyudeArmorToRyudeArmor(ci: CustomRyudeArmor): RyudeArmor {
+  return {
+    id: ci.id,
+    name: ci.name,
+    source: 'custom',
+    armor_class: ci.armor_class ?? 'partial',
+    arm_modifier: ci.arm_modifier ?? 0,
+    spe_modifier: ci.spe_modifier ?? 0,
     price_golda: ci.price_golda ?? 0,
     notes: ci.notes || undefined,
   };

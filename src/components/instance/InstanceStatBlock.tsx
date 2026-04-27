@@ -7,8 +7,22 @@ import {
   ryudeOperationalStatus,
   type RyudeOperationalStatus,
 } from '@/engine/derive/instance-bookkeeping';
-import { ryudeOperatorRoll } from '@/engine/derive/instance-rolls';
+import {
+  ryudeOperatorRoll,
+  ryudeInContext,
+  ryudeEgoValue,
+  resolveOperatorStats,
+  type OperatorStats,
+} from '@/engine/derive/instance-rolls';
+import {
+  resolveRyudeItem,
+  equippedRyudeArmors,
+  normalizeRyudeItemId,
+} from '@/engine/derive/ryude-equipment';
 import { useActionLogStore } from '@/stores/action-log-store';
+import { useCustomItemStore } from '@/stores/custom-item-store';
+import type { CustomItem } from '@/domain/custom-item';
+import { ItemCreatorDialog } from '@/components/stat/ItemCreatorDialog';
 import type { ActionLogEntry, CurrentSegment } from '@/domain/action-log';
 import type { MonsterTemplate, MonsterRank } from '@/domain/monster';
 import type {
@@ -46,7 +60,10 @@ interface Props {
   instance: Instance;
   template: Template | null;
   characters: Character[];
+  /** Full-character NPC templates available as Ryude operators. */
+  npcTemplates?: NpcTemplate[];
   catalog: ReferenceCatalog | null;
+  customItems?: CustomItem[];
   onPersist: (next: Instance) => Promise<void>;
 }
 
@@ -87,7 +104,9 @@ export function InstanceStatBlock({
   instance,
   template,
   characters,
+  npcTemplates = [],
   catalog,
+  customItems = [],
   onPersist,
 }: Props): React.JSX.Element {
   const [dialog, setDialog] = React.useState<DialogState>(null);
@@ -179,7 +198,9 @@ export function InstanceStatBlock({
           instance={instance as RyudeInstance}
           template={template as RyudeTemplate}
           characters={characters}
+          npcTemplates={npcTemplates}
           catalog={catalog}
+          customItems={customItems}
           onPersist={onPersist}
           openDialog={setDialog}
           onEndSegment={onEndSegment}
@@ -302,7 +323,9 @@ export function InstanceStatBlock({
           template={template as RyudeTemplate}
           instance={instance as RyudeInstance}
           characters={characters}
+          npcTemplates={npcTemplates}
           catalog={catalog}
+          customItems={customItems}
           logResolve={logResolve}
           onPersist={onPersist}
         />
@@ -807,7 +830,9 @@ interface RyudeSectionsProps {
   instance: RyudeInstance;
   template: RyudeTemplate;
   characters: Character[];
+  npcTemplates: NpcTemplate[];
   catalog: ReferenceCatalog | null;
+  customItems: CustomItem[];
   onPersist: (next: Instance) => Promise<void>;
   openDialog: (d: DialogState) => void;
   onEndSegment: () => void;
@@ -817,15 +842,18 @@ function RyudeSections({
   instance,
   template,
   characters,
+  npcTemplates,
   catalog,
+  customItems,
   onPersist,
   openDialog,
   onEndSegment,
 }: RyudeSectionsProps): React.JSX.Element {
+  const [creatorOpen, setCreatorOpen] = React.useState(false);
+  const [addPickerOpen, setAddPickerOpen] = React.useState(false);
+  const createCustomItem = useCustomItemStore((s) => s.create);
   const state = instance.state;
-  const operator = instance.equipped_operator
-    ? characters.find((c) => c.id === instance.equipped_operator!.id) ?? null
-    : null;
+  const operator = resolveOperatorStats(instance.equipped_operator, characters, npcTemplates);
   const unmanned = !operator;
   const opStatus = ryudeOperationalStatus(
     state.current_unit_durability,
@@ -855,6 +883,54 @@ function RyudeSections({
       },
     });
   };
+
+  // Normalize legacy human-readable names to catalog IDs on first mutation.
+  const equippedIds = state.equipped_item_ids.map(normalizeRyudeItemId);
+  const templateIds = template.equipment.map(normalizeRyudeItemId);
+  const stowedIds = templateIds.filter((id) => !equippedIds.includes(id));
+
+  const equipItem = (id: string) => {
+    const nid = normalizeRyudeItemId(id);
+    if (equippedIds.includes(nid)) return;
+    void onPersist({
+      ...instance,
+      state: { ...state, equipped_item_ids: [...equippedIds, nid] },
+    });
+  };
+  const unequipItem = (id: string) => {
+    const nid = normalizeRyudeItemId(id);
+    void onPersist({
+      ...instance,
+      state: { ...state, equipped_item_ids: equippedIds.filter((x) => x !== nid) },
+    });
+  };
+  // Drop permanently removes from the equipped list (for items not on the template).
+  const dropItem = (id: string) => {
+    const nid = normalizeRyudeItemId(id);
+    void onPersist({
+      ...instance,
+      state: { ...state, equipped_item_ids: equippedIds.filter((x) => x !== nid) },
+    });
+  };
+
+  // All catalog ryude items available to add (not already equipped).
+  const catalogAddable: Array<{ id: string; label: string }> = React.useMemo(() => {
+    if (!catalog) return [];
+    const items: Array<{ id: string; label: string }> = [];
+    for (const w of catalog.ryudeEquipment.ryude_weapons) {
+      if (!equippedIds.includes(w.id)) items.push({ id: w.id, label: `${w.name} (weapon)` });
+    }
+    for (const a of catalog.ryudeEquipment.ryude_armor) {
+      if (!equippedIds.includes(a.id)) items.push({ id: a.id, label: `${a.name} (armor)` });
+    }
+    for (const ci of customItems) {
+      if ((ci.kind === 'ryude-weapon' || ci.kind === 'ryude-armor') && !equippedIds.includes(ci.id)) {
+        items.push({ id: ci.id, label: `${ci.name} (custom ${ci.kind})` });
+      }
+    }
+    return items;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [catalog, equippedIds, customItems]);
 
   return (
     <>
@@ -932,7 +1008,7 @@ function RyudeSections({
             <RollButton
               onClick={() => openDialog({ kind: 'ryude-attack' })}
               label="Attack"
-              disabled={unmanned || template.equipment.length === 0}
+              disabled={unmanned || equippedIds.length === 0}
               title={unmanned ? 'Equip an operator to roll' : undefined}
             />
             <RollButton onClick={onEndSegment} label="End Segment" />
@@ -975,27 +1051,49 @@ function RyudeSections({
                 Operator
               </span>
               <select
-                value={instance.equipped_operator?.id ?? ''}
+                value={
+                  instance.equipped_operator
+                    ? `${instance.equipped_operator.kind}:${instance.equipped_operator.id}`
+                    : ''
+                }
                 onChange={(e) => {
-                  const id = e.target.value;
-                  void onPersist({
-                    ...instance,
-                    equipped_operator: id ? { kind: 'character', id } : null,
-                  });
+                  const val = e.target.value;
+                  if (!val) {
+                    void onPersist({ ...instance, equipped_operator: null });
+                    return;
+                  }
+                  const [kind, id] = val.split(':') as ['character' | 'npc', string];
+                  void onPersist({ ...instance, equipped_operator: { kind, id } });
                 }}
                 className="h-7 rounded-sm border border-[var(--color-parchment-400)] bg-[var(--color-parchment-50)] px-2 text-xs"
               >
                 <option value="">— Unmanned —</option>
-                {characters.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
+                {characters.length > 0 && (
+                  <optgroup label="Characters">
+                    {characters.map((c) => (
+                      <option key={c.id} value={`character:${c.id}`}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+                {npcTemplates.filter((n) => n.archetype === 'full-character').length > 0 && (
+                  <optgroup label="NPCs">
+                    {npcTemplates
+                      .filter((n) => n.archetype === 'full-character')
+                      .map((n) => (
+                        <option key={n.id} value={`npc:${n.id}`}>
+                          {n.name}
+                        </option>
+                      ))}
+                  </optgroup>
+                )}
               </select>
               {instance.equipped_operator && !operator && (
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] text-[var(--color-rust)]">
-                    ⚠ operator id "{instance.equipped_operator.id}" no longer resolves
+                    ⚠ operator "{instance.equipped_operator.id}" no longer resolves
+                    {instance.equipped_operator.kind === 'npc' ? ' (NPC template not loaded)' : ''}
                   </span>
                   <button
                     type="button"
@@ -1018,6 +1116,65 @@ function RyudeSections({
                 className="h-7 flex-1 rounded-sm border border-[var(--color-parchment-400)] bg-[var(--color-parchment-50)] px-2 text-xs"
               />
             </label>
+          </div>
+          {/* Maledictor mind durability pool (Rule §14:229) */}
+          {template.type === 'Maledictor' && template.ryude_mind_durability != null && (
+            <div className="col-span-2 flex items-center justify-between gap-2 text-xs">
+              <span className="text-[10px] uppercase tracking-wider text-[var(--color-ink-faint)]">
+                Mind Durability
+              </span>
+              <div className="flex items-center gap-1">
+                <NumberCell
+                  value={state.current_ryude_mind_durability ?? template.ryude_mind_durability}
+                  onChange={(v) => setStateField('current_ryude_mind_durability', Math.max(0, v))}
+                  width="w-12"
+                />
+                <span className="text-[var(--color-ink-faint)]">/ {template.ryude_mind_durability}</span>
+                {(state.current_ryude_mind_durability ?? template.ryude_mind_durability) <= 0 && (
+                  <span className="ml-1 font-medium text-[var(--color-rust)]">Persona Destroyed</span>
+                )}
+              </div>
+            </div>
+          )}
+          {/* Drive reduction from attunement penalties (Rule §14:50-57) */}
+          {(state.drive_reduction ?? 0) > 0 && (
+            <div className="col-span-2 flex items-center justify-between gap-2 text-xs">
+              <span className="text-[10px] uppercase tracking-wider text-[var(--color-rust)]">
+                Drive Reduction
+              </span>
+              <div className="flex items-center gap-1">
+                <NumberCell
+                  value={state.drive_reduction ?? 0}
+                  onChange={(v) => setStateField('drive_reduction', Math.max(0, v))}
+                  width="w-12"
+                />
+                <span className="text-[var(--color-ink-faint)]">(attunement penalty)</span>
+              </div>
+            </div>
+          )}
+          {/* Dashing sustainability counter (Rule §14:22) */}
+          <div className="col-span-2 flex items-center justify-between gap-2 text-xs">
+            <span className="text-[10px] uppercase tracking-wider text-[var(--color-ink-faint)]">
+              Dashing Segs Left
+            </span>
+            <div className="flex items-center gap-1">
+              <NumberCell
+                value={state.dashing_segments_remaining ?? 5}
+                onChange={(v) => setStateField('dashing_segments_remaining', Math.max(0, Math.min(5, v)))}
+                width="w-12"
+              />
+              <button
+                type="button"
+                onClick={() => setStateField('dashing_segments_remaining', 5)}
+                className="text-[10px] underline text-[var(--color-ink-faint)] hover:text-[var(--color-ink)]"
+                title="Reset to 5"
+              >
+                reset
+              </button>
+              {(state.dashing_segments_remaining ?? 5) === 0 && (
+                <span className="ml-1 text-[var(--color-rust)]">must rest</span>
+              )}
+            </div>
           </div>
           {operator && (
             <RyudeBreakdownPreview
@@ -1052,35 +1209,146 @@ function RyudeSections({
         </div>
       </StatSection>
 
-      <StatSection title="Equipment">
-        {template.equipment.length === 0 ? (
-          <p className="text-xs italic text-[var(--color-ink-faint)]">No equipment.</p>
-        ) : (
-          <ul className="flex flex-col gap-1 text-xs">
-            {template.equipment.map((id) => {
-              const w = catalog?.ryudeEquipment.ryude_weapons.find((x) => x.id === id);
-              return (
-                <li
-                  key={id}
-                  className="flex items-center justify-between rounded-sm border border-[var(--color-parchment-300)] bg-[var(--color-parchment-50)]/60 px-2 py-1"
-                >
-                  <span>{w?.name ?? id}</span>
-                  {w && (
+      <StatSection
+        title="Equipment"
+        rightSlot={
+          <div className="flex gap-2">
+            {catalogAddable.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setAddPickerOpen((o) => !o)}
+                className="text-[10px] text-[var(--color-ink-faint)] underline hover:text-[var(--color-ink)]"
+              >
+                + Add item
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setCreatorOpen(true)}
+              className="text-[10px] text-[var(--color-ink-faint)] underline hover:text-[var(--color-ink)]"
+            >
+              + Create item
+            </button>
+          </div>
+        }
+      >
+        <div className="flex flex-col gap-1">
+          {addPickerOpen && (
+            <div className="mb-1 flex gap-1.5">
+              <select
+                id="ryude-add-picker"
+                defaultValue=""
+                onChange={(e) => {
+                  if (e.target.value) {
+                    equipItem(e.target.value);
+                    setAddPickerOpen(false);
+                  }
+                }}
+                className="flex-1 h-7 rounded-sm border border-[var(--color-parchment-400)] bg-[var(--color-parchment-50)] px-1.5 text-xs"
+              >
+                <option value="" disabled>Pick an item…</option>
+                {catalogAddable.map((opt) => (
+                  <option key={opt.id} value={opt.id}>{opt.label}</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => setAddPickerOpen(false)}
+                className="text-[10px] text-[var(--color-ink-faint)] underline hover:text-[var(--color-rust)]"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+
+          {equippedIds.length === 0 && stowedIds.length === 0 && (
+            <p className="text-xs italic text-[var(--color-ink-faint)]">No equipment.</p>
+          )}
+
+          {equippedIds.map((id) => {
+            const resolved = resolveRyudeItem(id, catalog, customItems);
+            const isTemplateItem = templateIds.includes(id);
+            return (
+              <div
+                key={id}
+                className="flex items-start justify-between gap-2 rounded-sm border border-[var(--color-parchment-300)] bg-[var(--color-parchment-50)]/60 px-2 py-1 text-xs"
+              >
+                <div className="flex min-w-0 flex-col">
+                  <span className="font-medium">{resolved?.item.name ?? id}</span>
+                  {resolved?.kind === 'weapon' && (
                     <span className="font-mono text-[10px] text-[var(--color-ink-faint)]">
-                      melee {w.bn_modifier.melee ?? '—'} · dmg {w.damage_value.melee ?? '—'} · crit ≥{w.critical_value}
+                      melee {resolved.item.bn_modifier.melee ?? '—'} · dmg {resolved.item.damage_value.melee ?? '—'} · crit ≥{resolved.item.critical_value}
                     </span>
                   )}
-                </li>
-              );
-            })}
-          </ul>
-        )}
+                  {resolved?.kind === 'armor' && (
+                    <span className="font-mono text-[10px] text-[var(--color-ink-faint)]">
+                      ARM {resolved.item.arm_modifier >= 0 ? '+' : ''}{resolved.item.arm_modifier} · SPE {resolved.item.spe_modifier >= 0 ? '+' : ''}{resolved.item.spe_modifier}
+                      {resolved.item.notes ? ` · ${resolved.item.notes}` : ''}
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => isTemplateItem ? unequipItem(id) : dropItem(id)}
+                  className="shrink-0 text-[10px] text-[var(--color-ink-faint)] underline hover:text-[var(--color-rust)]"
+                >
+                  {isTemplateItem ? 'Unequip' : 'Drop'}
+                </button>
+              </div>
+            );
+          })}
+
+          {stowedIds.length > 0 && (
+            <>
+              <p className="mt-1 text-[10px] uppercase tracking-wider text-[var(--color-ink-faint)]">
+                Stowed
+              </p>
+              {stowedIds.map((id) => {
+                const resolved = resolveRyudeItem(id, catalog, customItems);
+                return (
+                  <div
+                    key={id}
+                    className="flex items-center justify-between gap-2 rounded-sm border border-[var(--color-parchment-300)]/60 bg-[var(--color-parchment-50)]/40 px-2 py-0.5 text-xs opacity-70"
+                  >
+                    <span>{resolved?.item.name ?? id}</span>
+                    <button
+                      type="button"
+                      onClick={() => equipItem(id)}
+                      className="text-[10px] text-[var(--color-ink-faint)] underline hover:text-[var(--color-ink)]"
+                    >
+                      Equip
+                    </button>
+                  </div>
+                );
+              })}
+            </>
+          )}
+        </div>
       </StatSection>
 
-      {template.courser_perks && template.courser_perks.length > 0 && (
+      <ItemCreatorDialog
+        open={creatorOpen}
+        onOpenChange={setCreatorOpen}
+        defaultKind="ryude-weapon"
+        hideAddNow
+        onCreate={async (item) => {
+          await createCustomItem(item);
+          equipItem(item.id);
+        }}
+      />
+
+      {(template.type === 'Courser') && (
+        (template.courser_perks && template.courser_perks.length > 0) || template.courser_wc_immunity
+      ) && (
         <StatSection title="Courser perks">
           <ul className="list-disc pl-4 text-xs text-[var(--color-ink-soft)]">
-            {template.courser_perks.map((p) => (
+            {template.courser_wc_immunity && (
+              <li>
+                <strong>Word-Casting Immunity:</strong> operator is immune to WC
+                Techniques Lv≤3 (unless physical objects/projectiles) — Rule §14:233.
+              </li>
+            )}
+            {template.courser_perks?.map((p) => (
               <li key={p}>{p}</li>
             ))}
           </ul>
@@ -1138,20 +1406,40 @@ function RyudeBreakdownPreview({
 }: {
   template: RyudeTemplate;
   instance: RyudeInstance;
-  operator: Character;
+  operator: OperatorStats;
 }) {
-  const ctx = ryudeOperatorRoll(template, instance, operator);
+  const dnCtx = ryudeOperatorRoll(template, instance, operator);
+  const inCtx = ryudeInContext(template, instance, operator);
   return (
     <div className="rounded-sm border border-[var(--color-parchment-300)] bg-[var(--color-parchment-50)]/60 p-2 text-[10px] text-[var(--color-ink-soft)]">
       <div className="font-medium uppercase tracking-wider text-[var(--color-ink-faint)]">
-        Operator-Roll preview
+        Roll preview — IN (SEN) / DN+BN (AGI)
       </div>
-      {ctx.breakdown.map((line) => (
-        <div key={line.label} className="flex justify-between font-mono">
-          <span>{line.label}</span>
-          <span>{line.value >= 0 ? '+' : ''}{line.value}</span>
+      <div className="mt-1 grid grid-cols-2 gap-x-4">
+        <div>
+          <div className="italic text-[var(--color-ink-faint)]">Base IN</div>
+          {inCtx.breakdown.filter((l) => !l.label.startsWith('Ryude Ego')).map((line) => (
+            <div key={line.label} className="flex justify-between font-mono">
+              <span className="truncate">{line.label}</span>
+              <span>{line.value >= 0 ? '+' : ''}{line.value}</span>
+            </div>
+          ))}
         </div>
-      ))}
+        <div>
+          <div className="italic text-[var(--color-ink-faint)]">Base DN / BN</div>
+          {dnCtx.breakdown.filter((l) => !l.label.startsWith('Ryude Ego')).map((line) => (
+            <div key={line.label} className="flex justify-between font-mono">
+              <span className="truncate">{line.label}</span>
+              <span>{line.value >= 0 ? '+' : ''}{line.value}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      {ryudeEgoValue(template) !== null && (
+        <div className="mt-1 italic text-[var(--color-ink-faint)]">
+          Ego: {ryudeEgoValue(template)} (not yet applied)
+        </div>
+      )}
     </div>
   );
 }
@@ -1515,7 +1803,9 @@ interface RyudeDialogsProps {
   template: RyudeTemplate;
   instance: RyudeInstance;
   characters: Character[];
+  npcTemplates: NpcTemplate[];
   catalog: ReferenceCatalog | null;
+  customItems: CustomItem[];
   logResolve: (
     entry: Omit<ActionLogEntry, 'id' | 'timestamp_real' | 'character_id' | 'character_name'>,
   ) => Promise<void>;
@@ -1528,22 +1818,26 @@ function RyudeDialogs({
   template,
   instance,
   characters,
+  npcTemplates,
   catalog,
+  customItems,
   logResolve,
   onPersist,
 }: RyudeDialogsProps): React.JSX.Element | null {
   const operator = instance.equipped_operator
-    ? characters.find((c) => c.id === instance.equipped_operator!.id) ?? null
+    ? resolveOperatorStats(instance.equipped_operator, characters, npcTemplates)
     : null;
 
   if (!operator) return null;
 
-  // For Set IN/DN, compute base IN/DN per Rule §14:124-160:
-  // Base IN = operator AGI base + Ryude SPE + Drive Modifier
-  const opCtx = ryudeOperatorRoll(template, instance, operator);
-  const opAgiBase = opCtx.base; // already floor(AGI/3)
-  const baseIN = opAgiBase + opCtx.modifier; // SPE + DriveMod fold into "modifier"
-  const baseDN = baseIN; // Same composite for Ryude (Rule §14 doesn't differentiate)
+  const armors = equippedRyudeArmors(instance.state.equipped_item_ids, catalog, customItems);
+
+  // Base IN = operator SEN base + Ryude SPE + Drive Modifier (Rule §14:149)
+  const inCtx = ryudeInContext(template, instance, operator, armors);
+  const baseIN = inCtx.base + inCtx.modifier;
+  // Base DN/BN = operator AGI base + Ryude SPE + Drive Modifier (Rule §14:124-160)
+  const dnCtx = ryudeOperatorRoll(template, instance, operator, armors);
+  const baseDN = dnCtx.base + dnCtx.modifier;
 
   return (
     <>
@@ -1561,12 +1855,15 @@ function RyudeDialogs({
         template={template}
         instance={instance}
         operator={operator}
-        onResolve={async (entry, suggestedNextState) => {
+        onResolve={async (entry, suggestedNextState, penaltyDelta) => {
           await logResolve(entry);
-          if (suggestedNextState) {
+          const stateUpdates: Partial<typeof instance.state> = {};
+          if (suggestedNextState) stateUpdates.attunement_state = suggestedNextState;
+          if (penaltyDelta) Object.assign(stateUpdates, penaltyDelta);
+          if (Object.keys(stateUpdates).length > 0) {
             await onPersist({
               ...instance,
-              state: { ...instance.state, attunement_state: suggestedNextState },
+              state: { ...instance.state, ...stateUpdates },
             });
           }
         }}
@@ -1578,6 +1875,7 @@ function RyudeDialogs({
         instance={instance}
         operator={operator}
         catalog={catalog}
+        customItems={customItems}
         onResolve={logResolve}
       />
       <InstanceSetInDnDialog
@@ -1588,7 +1886,8 @@ function RyudeDialogs({
         baseDN={baseDN}
         ruleSuffix={
           <>
-            (operator AGI Base + Ryude SPE + Drive Modifier per Rule §14:124-160)
+            IN: operator SEN Base + Ryude SPE + Drive Modifier (Rule §14:149). DN/BN:
+            operator AGI Base + Ryude SPE + Drive Modifier (Rule §14:124-160).
           </>
         }
         onResolve={async (entry, segment) => {

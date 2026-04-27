@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
-import type { CustomItem, CustomWeapon, CustomArmor } from '@/domain/custom-item';
+import type { CustomItem, CustomWeapon, CustomArmor, CustomRyudeWeapon, CustomRyudeArmor } from '@/domain/custom-item';
 import { newCustomItemId } from '@/persistence/custom-item-repo';
 import type { WeaponCategory } from '@/domain/item';
 import type { ArmorSlot } from '@/domain/item';
@@ -13,6 +13,8 @@ interface ItemCreatorDialogProps {
   onCreate: (item: CustomItem, addToInventory: boolean) => void | Promise<void>;
   /** When true, hides the "Add to inventory now" checkbox (used on the global items page). */
   hideAddNow?: boolean;
+  /** Pre-select a kind when opening (e.g. 'ryude-weapon' from a Ryude stat block). */
+  defaultKind?: CustomItem['kind'];
 }
 
 const WEAPON_CATEGORIES: WeaponCategory[] = [
@@ -42,14 +44,17 @@ const inputCls =
   'h-8 rounded-sm border border-[var(--color-parchment-400)] bg-[var(--color-parchment-50)] px-2 text-sm';
 const numCls = inputCls + ' font-mono';
 
+const RYUDE_WEAPON_CATEGORIES = ['swords', 'bludgeons', 'spears'] as const;
+
 export function ItemCreatorDialog({
   open,
   onOpenChange,
   onCreate,
   hideAddNow = false,
+  defaultKind = 'good',
 }: ItemCreatorDialogProps): React.JSX.Element {
   const [name, setName] = React.useState('');
-  const [kind, setKind] = React.useState<CustomItem['kind']>('good');
+  const [kind, setKind] = React.useState<CustomItem['kind']>(defaultKind);
   const [price, setPrice] = React.useState('');
   const [inShop, setInShop] = React.useState(true);
   const [isUnique, setIsUnique] = React.useState(false);
@@ -75,13 +80,32 @@ export function ItemCreatorDialog({
   const [aAbsorption, setAAbsorption] = React.useState('');
   const [aModifier, setAModifier] = React.useState('');
 
+  // Ryude weapon stats
+  const [rwCategory, setRwCategory] = React.useState<typeof RYUDE_WEAPON_CATEGORIES[number]>('swords');
+  const [rwHands, setRwHands] = React.useState('1');
+  const [rwCritical, setRwCritical] = React.useState('');
+  const [rwBnMelee, setRwBnMelee] = React.useState('');
+  const [rwBnCharge, setRwBnCharge] = React.useState('');
+  const [rwBnRange, setRwBnRange] = React.useState('');
+  const [rwDmgMelee, setRwDmgMelee] = React.useState('');
+  const [rwDmgRanged, setRwDmgRanged] = React.useState('');
+
+  // Ryude armor stats
+  const [raClass, setRaClass] = React.useState<'partial' | 'shield' | ''>('partial');
+  const [raArmMod, setRaArmMod] = React.useState('');
+  const [raSpeMod, setRaSpeMod] = React.useState('');
+
   const reset = () => {
-    setName(''); setKind('good'); setPrice(''); setInShop(true); setIsUnique(false);
+    setName(''); setKind(defaultKind); setPrice(''); setInShop(true); setIsUnique(false);
     setNotes(''); setAddNow(true); setError('');
     setWCategory('swords'); setWHands('1'); setWCritical(''); setWBnMelee('');
     setWBnCharge(''); setWBnRange(''); setWDmgMelee(''); setWDmgRanged('');
     setWRangeLiets(''); setWReload('');
     setASlot('body'); setAClass(''); setAAbsorption(''); setAModifier('');
+    setRwCategory('swords'); setRwHands('1'); setRwCritical('');
+    setRwBnMelee(''); setRwBnCharge(''); setRwBnRange('');
+    setRwDmgMelee(''); setRwDmgRanged('');
+    setRaClass('partial'); setRaArmMod(''); setRaSpeMod('');
   };
 
   const parseBn = (v: string): number | undefined =>
@@ -136,6 +160,32 @@ export function ItemCreatorDialog({
         absorption: aAbsorption.trim() !== '' ? parseInt(aAbsorption.trim(), 10) : undefined,
         armor_modifier: aModifier.trim() !== '' ? parseInt(aModifier.trim(), 10) : undefined,
       } satisfies CustomArmor;
+    } else if (kind === 'ryude-weapon') {
+      const rwHandsParsed = rwHands === '1 or 2' ? '1 or 2' : parseInt(rwHands, 10) || 1;
+      item = {
+        ...base,
+        kind: 'ryude-weapon' as const,
+        category: rwCategory,
+        hands: rwHandsParsed,
+        critical_value: parseNum(rwCritical) !== undefined ? Math.round(parseNum(rwCritical)!) : undefined,
+        bn_modifier: {
+          melee: parseBn(rwBnMelee),
+          charge: parseBn(rwBnCharge),
+          range: parseBn(rwBnRange),
+        },
+        damage_value: {
+          melee: rwDmgMelee.trim() || undefined,
+          ranged: rwDmgRanged.trim() || undefined,
+        },
+      } satisfies CustomRyudeWeapon;
+    } else if (kind === 'ryude-armor') {
+      item = {
+        ...base,
+        kind: 'ryude-armor' as const,
+        armor_class: raClass === 'partial' || raClass === 'shield' ? raClass : undefined,
+        arm_modifier: raArmMod.trim() !== '' ? parseInt(raArmMod.trim(), 10) : undefined,
+        spe_modifier: raSpeMod.trim() !== '' ? parseInt(raSpeMod.trim(), 10) : undefined,
+      } satisfies CustomRyudeArmor;
     } else {
       item = { ...base, kind: 'good' as const };
     }
@@ -195,8 +245,10 @@ export function ItemCreatorDialog({
                   className={inputCls}
                 >
                   <option value="good">Good</option>
-                  <option value="weapon">Weapon</option>
-                  <option value="armor">Armor</option>
+                  <option value="weapon">Weapon (character)</option>
+                  <option value="armor">Armor (character)</option>
+                  <option value="ryude-weapon">Ryude Weapon</option>
+                  <option value="ryude-armor">Ryude Armor</option>
                 </select>
               </LabeledField>
 
@@ -315,6 +367,86 @@ export function ItemCreatorDialog({
                   </LabeledField>
                   <LabeledField label="Armor Modifier">
                     <input type="number" value={aModifier} onChange={(e) => setAModifier(e.target.value)} placeholder="e.g. -1" className={numCls} />
+                  </LabeledField>
+                </div>
+              </div>
+            )}
+
+            {/* Ryude weapon stat fields */}
+            {kind === 'ryude-weapon' && (
+              <div className="flex flex-col gap-2 rounded-sm border border-[var(--color-parchment-300)] bg-[var(--color-parchment-100)]/40 px-3 py-2.5">
+                <span className="text-[10px] uppercase tracking-wider text-[var(--color-ink-faint)]">
+                  Ryude Weapon Stats
+                </span>
+                <div className="grid grid-cols-2 gap-2">
+                  <LabeledField label="Category">
+                    <select
+                      value={rwCategory}
+                      onChange={(e) => setRwCategory(e.target.value as typeof RYUDE_WEAPON_CATEGORIES[number])}
+                      className={inputCls}
+                    >
+                      {RYUDE_WEAPON_CATEGORIES.map((c) => (
+                        <option key={c} value={c}>
+                          {c.charAt(0).toUpperCase() + c.slice(1)}
+                        </option>
+                      ))}
+                    </select>
+                  </LabeledField>
+                  <LabeledField label="Hands">
+                    <select value={rwHands} onChange={(e) => setRwHands(e.target.value)} className={inputCls}>
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="1 or 2">1 or 2 (bastard)</option>
+                    </select>
+                  </LabeledField>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <LabeledField label="BN Melee">
+                    <input type="number" value={rwBnMelee} onChange={(e) => setRwBnMelee(e.target.value)} placeholder="blank=N/A" className={numCls} />
+                  </LabeledField>
+                  <LabeledField label="BN Charge">
+                    <input type="number" value={rwBnCharge} onChange={(e) => setRwBnCharge(e.target.value)} placeholder="blank=N/A" className={numCls} />
+                  </LabeledField>
+                  <LabeledField label="BN Range">
+                    <input type="number" value={rwBnRange} onChange={(e) => setRwBnRange(e.target.value)} placeholder="blank=N/A" className={numCls} />
+                  </LabeledField>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <LabeledField label="Dmg Melee">
+                    <input type="text" value={rwDmgMelee} onChange={(e) => setRwDmgMelee(e.target.value)} placeholder="e.g. 1D10+3" className={inputCls} />
+                  </LabeledField>
+                  <LabeledField label="Dmg Ranged">
+                    <input type="text" value={rwDmgRanged} onChange={(e) => setRwDmgRanged(e.target.value)} placeholder="e.g. 1D6" className={inputCls} />
+                  </LabeledField>
+                </div>
+                <LabeledField label="Critical Value">
+                  <input type="number" min={1} value={rwCritical} onChange={(e) => setRwCritical(e.target.value)} placeholder="e.g. 8" className={numCls} />
+                </LabeledField>
+              </div>
+            )}
+
+            {/* Ryude armor stat fields */}
+            {kind === 'ryude-armor' && (
+              <div className="flex flex-col gap-2 rounded-sm border border-[var(--color-parchment-300)] bg-[var(--color-parchment-100)]/40 px-3 py-2.5">
+                <span className="text-[10px] uppercase tracking-wider text-[var(--color-ink-faint)]">
+                  Ryude Armor Stats
+                </span>
+                <div className="grid grid-cols-3 gap-2">
+                  <LabeledField label="Armor Class">
+                    <select
+                      value={raClass}
+                      onChange={(e) => setRaClass(e.target.value as 'partial' | 'shield' | '')}
+                      className={inputCls}
+                    >
+                      <option value="partial">Partial</option>
+                      <option value="shield">Shield</option>
+                    </select>
+                  </LabeledField>
+                  <LabeledField label="ARM modifier">
+                    <input type="number" value={raArmMod} onChange={(e) => setRaArmMod(e.target.value)} placeholder="e.g. +1" className={numCls} />
+                  </LabeledField>
+                  <LabeledField label="SPE modifier">
+                    <input type="number" value={raSpeMod} onChange={(e) => setRaSpeMod(e.target.value)} placeholder="e.g. −1" className={numCls} />
                   </LabeledField>
                 </div>
               </div>

@@ -3,11 +3,16 @@ import { resolveAttack } from '@/engine/combat/attack';
 import {
   ryudeAttackContext,
   type AttackTarget,
+  type OperatorStats,
 } from '@/engine/derive/instance-rolls';
+import {
+  resolveRyudeItem,
+  equippedRyudeArmors,
+} from '@/engine/derive/ryude-equipment';
+import type { CustomItem } from '@/domain/custom-item';
 import type { ActionLogEntry } from '@/domain/action-log';
 import type { RyudeTemplate } from '@/domain/ryude';
 import type { RyudeInstance } from '@/domain/ryude-instance';
-import type { Character } from '@/domain/character';
 import type { ReferenceCatalog } from '@/persistence/reference-loader';
 import { RollDialogShell } from '@/components/sheet/dialogs/RollDialogShell';
 import { DialogActions } from '@/components/sheet/dialogs/DialogActions';
@@ -18,8 +23,9 @@ interface Props {
   onClose: () => void;
   template: RyudeTemplate;
   instance: RyudeInstance;
-  operator: Character;
+  operator: OperatorStats;
   catalog: ReferenceCatalog | null;
+  customItems?: CustomItem[];
   onResolve: (
     entry: Omit<
       ActionLogEntry,
@@ -35,14 +41,16 @@ export function RyudeAttackDialog({
   instance,
   operator,
   catalog,
+  customItems = [],
   onResolve,
 }: Props): React.JSX.Element {
-  const weapons = React.useMemo(() => {
-    if (!catalog) return [];
-    return template.equipment
-      .map((id) => catalog.ryudeEquipment.ryude_weapons.find((w) => w.id === id))
-      .filter(<T,>(w: T | undefined): w is T => w !== undefined);
-  }, [catalog, template.equipment]);
+  const weapons = React.useMemo(
+    () =>
+      instance.state.equipped_item_ids
+        .map((id) => resolveRyudeItem(id, catalog, customItems))
+        .flatMap((r) => (r?.kind === 'weapon' ? [r.item] : [])),
+    [instance.state.equipped_item_ids, catalog, customItems],
+  );
 
   const [weaponId, setWeaponId] = React.useState(weapons[0]?.id ?? '');
   const [stance, setStance] = React.useState<'melee' | 'charge' | 'range'>(
@@ -67,8 +75,12 @@ export function RyudeAttackDialog({
   }, [open, weapons]);
 
   const weapon = weapons.find((w) => w.id === weaponId) ?? null;
+  const armors = React.useMemo(
+    () => equippedRyudeArmors(instance.state.equipped_item_ids, catalog, customItems),
+    [instance.state.equipped_item_ids, catalog, customItems],
+  );
   const ctx = weapon
-    ? ryudeAttackContext(template, instance, operator, weapon, target, stance)
+    ? ryudeAttackContext(template, instance, operator, weapon, target, stance, armors)
     : null;
 
   const onRoll = () => {
@@ -128,7 +140,7 @@ export function RyudeAttackDialog({
     >
       {weapons.length === 0 ? (
         <div className="rounded-sm border border-[var(--color-rust)]/40 bg-[var(--color-rust)]/5 p-2 text-xs text-[var(--color-rust)]">
-          This Ryude has no equipment. Add weapons on the template page.
+          No weapons equipped. Equip weapons from the Equipment panel on this instance&apos;s stat block.
         </div>
       ) : (
         <>

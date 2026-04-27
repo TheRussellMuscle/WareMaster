@@ -46,6 +46,12 @@ const RyudeAttributeDamageSchema = z.object({
 
 const RyudeInstanceStateSchema = z.object({
   current_unit_durability: z.number().int(),
+  /** Maledictor only — separate mental HP pool (Rule §14:229). */
+  current_ryude_mind_durability: z.number().int().optional(),
+  /** Accumulated Base Drive reduction from attunement penalties (Rule §14:50-57). */
+  drive_reduction: z.number().int().default(0),
+  /** Consecutive dashing segments used this sprint; resets to 5 on rest (Rule §14:22). */
+  dashing_segments_remaining: z.number().int().default(5),
   attribute_damage: RyudeAttributeDamageSchema.default({
     spe: 0,
     pow: 0,
@@ -53,6 +59,8 @@ const RyudeInstanceStateSchema = z.object({
     bal: 0,
   }),
   attunement_state: RyudeAttunementStateSchema.default('unattuned'),
+  /** IDs of catalog weapons/armor + custom Ryude items currently equipped on this instance. */
+  equipped_item_ids: z.array(z.string()).default([]),
   repair_queue: z.array(RepairTicketSchema).default([]),
   active_effects: z.array(ActiveEffectSchema).default([]),
   last_recovery_tick: z.number().int().default(0),
@@ -62,14 +70,10 @@ const RyudeInstanceStateSchema = z.object({
 });
 export type RyudeInstanceState = z.infer<typeof RyudeInstanceStateSchema>;
 
-/**
- * v1: operator must be a campaign character. NPC operators land in Phase 6
- * (combat) when the Combatant union widens.
- */
-const RyudeOperatorSchema = z.object({
-  kind: z.literal('character'),
-  id: IdSchema,
-});
+const RyudeOperatorSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('character'), id: IdSchema }),
+  z.object({ kind: z.literal('npc'), id: IdSchema }),
+]);
 export type RyudeOperator = z.infer<typeof RyudeOperatorSchema>;
 
 export const RyudeInstanceSchema = z.object({

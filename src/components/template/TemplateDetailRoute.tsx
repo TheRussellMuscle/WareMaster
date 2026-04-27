@@ -111,7 +111,7 @@ export function TemplateDetailRoute({
     await deleteTemplate({ kind: 'global' }, kind, templateId);
     invalidateGlobal(kind);
     setDeleting(false);
-    void navigate({ to: backTo });
+    void navigate({ to: backTo, search: { open: undefined } });
   };
 
   const onClickSpawn = async () => {
@@ -139,16 +139,19 @@ export function TemplateDetailRoute({
       void navigate({
         to: '/campaigns/$cid/monsters',
         params: { cid: spawnCampaign.dir_name },
+        search: { open: undefined },
       });
     } else if (kind === 'ryude') {
       void navigate({
         to: '/campaigns/$cid/ryude',
         params: { cid: spawnCampaign.dir_name },
+        search: { open: undefined },
       });
     } else {
       void navigate({
         to: '/campaigns/$cid/npcs',
         params: { cid: spawnCampaign.dir_name },
+        search: { open: undefined },
       });
     }
     setSpawnOpen(false);
@@ -183,6 +186,7 @@ export function TemplateDetailRoute({
       <ParchmentCard>
         <Link
           to={backTo}
+          search={{ open: undefined }}
           className="inline-flex items-center gap-1 text-xs text-[var(--color-ink-faint)] hover:text-[var(--color-rust)]"
         >
           <ArrowLeft className="h-3 w-3" /> Back
@@ -200,6 +204,7 @@ export function TemplateDetailRoute({
     <ParchmentCard>
       <Link
         to={backTo}
+        search={{ open: undefined }}
         className="inline-flex items-center gap-1 text-xs text-[var(--color-ink-faint)] hover:text-[var(--color-rust)]"
       >
         <ArrowLeft className="h-3 w-3" /> Back
@@ -298,11 +303,11 @@ export function TemplateDetailRoute({
           // Navigate to the new template's detail page
           const id = (saved as { id: string }).id;
           if (kind === 'monster') {
-            void navigate({ to: '/templates/monsters/$tid', params: { tid: id } });
+            void navigate({ to: '/templates/monsters/$tid', params: { tid: id }, search: { open: undefined } });
           } else if (kind === 'ryude') {
-            void navigate({ to: '/templates/ryude/$tid', params: { tid: id } });
+            void navigate({ to: '/templates/ryude/$tid', params: { tid: id }, search: { open: undefined } });
           } else {
-            void navigate({ to: '/templates/npcs/$tid', params: { tid: id } });
+            void navigate({ to: '/templates/npcs/$tid', params: { tid: id }, search: { open: undefined } });
           }
         }}
       />

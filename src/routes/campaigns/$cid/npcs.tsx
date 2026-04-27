@@ -5,6 +5,9 @@ import { InstanceList } from '@/components/instance/InstanceList';
 import { useCampaignStore } from '@/stores/campaign-store';
 
 export const Route = createFileRoute('/campaigns/$cid/npcs')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    open: typeof search.open === 'string' ? search.open : undefined,
+  }),
   component: NpcsTab,
 });
 
@@ -18,6 +21,7 @@ function NpcsTab(): React.JSX.Element {
 
 function NpcsTabInner(): React.JSX.Element {
   const { cid } = useParams({ from: '/campaigns/$cid/npcs' });
+  const { open } = Route.useSearch();
   const navigate = useNavigate();
   const current = useCampaignStore((s) => s.current);
   const loadByDir = useCampaignStore((s) => s.loadByDir);
@@ -39,6 +43,7 @@ function NpcsTabInner(): React.JSX.Element {
       kind="npc"
       title="NPCs"
       description="Named NPCs from templates — beasts, simple stat blocks, or full character sheets."
+      openId={open}
     />
   );
 }

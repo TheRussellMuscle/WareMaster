@@ -84,6 +84,7 @@ export function FullCharacterNpcSheet({
             <Link
               to="/templates/npcs/$tid"
               params={{ tid: template.id }}
+              search={{ open: undefined }}
               className="underline hover:text-[var(--color-rust)]"
             >
               template page

@@ -16,9 +16,9 @@ import type { MonsterInstance } from '@/domain/monster-instance';
 import type { RyudeTemplate } from '@/domain/ryude';
 import type { RyudeInstance } from '@/domain/ryude-instance';
 import type { Character } from '@/domain/character';
-import type { SimpleNpc } from '@/domain/npc';
+import type { SimpleNpc, NpcTemplate } from '@/domain/npc';
 import type { ReferenceCatalog } from '@/persistence/reference-loader';
-import type { RyudeWeapon } from '@/domain/item';
+import type { RyudeWeapon, RyudeArmor } from '@/domain/item';
 
 export type AttackTarget = 'character' | 'ryude';
 export type MonsterAbility = 'sen' | 'agi' | 'wil' | 'con' | 'cha';
@@ -37,6 +37,48 @@ export interface RollContext {
   breakdown: BreakdownLine[];
   /** Human-readable label, e.g. "Tusktooth · AGI vs Character". */
   label: string;
+}
+
+/** Minimal operator shape needed by all Ryude roll helpers. */
+export interface OperatorStats {
+  name: string;
+  abilities: { AGI: number; SEN: number };
+  skills: { skill_id: string; level: number }[];
+}
+
+/**
+ * Resolves a `RyudeOperator` reference to an `OperatorStats` shape.
+ * Returns `null` when:
+ *   - `operator` is null (unmanned)
+ *   - `kind === 'character'` but the character is not in `characters`
+ *   - `kind === 'npc'` but the NPC is not found or is not a `full-character`
+ *     archetype (SimpleNpc / BeastNpc lack a full ability spread)
+ */
+export function resolveOperatorStats(
+  operator: { kind: string; id: string } | null,
+  characters: Character[],
+  npcTemplates: NpcTemplate[],
+): OperatorStats | null {
+  if (!operator) return null;
+  if (operator.kind === 'character') {
+    const c = characters.find((x) => x.id === operator.id);
+    if (!c) return null;
+    return {
+      name: c.name,
+      abilities: { AGI: c.abilities.AGI, SEN: c.abilities.SEN },
+      skills: c.skills,
+    };
+  }
+  if (operator.kind === 'npc') {
+    const n = npcTemplates.find((x) => x.id === operator.id);
+    if (!n || n.archetype !== 'full-character') return null;
+    return {
+      name: n.name,
+      abilities: { AGI: n.abilities.AGI, SEN: n.abilities.SEN },
+      skills: n.skills,
+    };
+  }
+  return null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -153,17 +195,22 @@ export function abilityBaseValue(score: number): number {
 }
 
 /** Returns the operator's drive-skill level (default 0 if untrained). */
-export function operatorDriveSkillLevel(operator: Character): number {
+export function operatorDriveSkillLevel(operator: OperatorStats): number {
   const drive = operator.skills.find((s) => s.skill_id === 'drive');
   return drive?.level ?? 0;
 }
 
 /**
- * Drive Modifier = DriveSkillLevel - RequiredDrive (Rule §14:124-160).
- * Negative when undertrained, positive when overqualified.
+ * Drive Modifier = DriveSkillLevel − RequiredDrive − drive_reduction (Rule §14:124-160).
+ * Negative when undertrained or penalised, positive when overqualified.
+ * `inst` is optional so callers that only have template + operator can still use this.
  */
-export function ryudeDriveModifier(tpl: RyudeTemplate, operator: Character): number {
-  return operatorDriveSkillLevel(operator) - tpl.required_drive;
+export function ryudeDriveModifier(
+  tpl: RyudeTemplate,
+  operator: OperatorStats,
+  inst?: RyudeInstance,
+): number {
+  return operatorDriveSkillLevel(operator) - tpl.required_drive - (inst?.state.drive_reduction ?? 0);
 }
 
 /** Effective Ryude attribute after subtracting recorded attribute damage. */
@@ -178,28 +225,88 @@ export function effectiveRyudeAttribute(
 }
 
 /**
- * Operator maneuver roll (Rule §14:124-160).
+ * Returns the template's ego value, or null if not set.
+ * Displayed as a reference note in roll breakdowns until the full ego system is built.
+ */
+export function ryudeEgoValue(tpl: RyudeTemplate): number | null {
+  return tpl.ego ?? null;
+}
+
+/**
+ * Operator maneuver / DN roll context (Rule §14:149).
  *
- *   1D10 + Operator AGI Base + Ryude SPE + Drive Modifier + WM difficulty modifier
+ *   DN = 1D10 + Operator AGI Base + Ryude SPE + Drive Modifier
+ *
+ * AGI drives DN/BN. For IN use `ryudeInContext` (SEN-based).
  */
 export function ryudeOperatorRoll(
   tpl: RyudeTemplate,
   inst: RyudeInstance,
-  operator: Character,
+  operator: OperatorStats,
+  equippedArmors: RyudeArmor[] = [],
 ): RollContext {
   const opAgi = abilityBaseValue(operator.abilities.AGI);
-  const ryudeSpe = effectiveRyudeAttribute(tpl, inst, 'spe');
-  const driveMod = ryudeDriveModifier(tpl, operator);
+  const ryudeSpeBase = effectiveRyudeAttribute(tpl, inst, 'spe');
+  const armorSpeSum = equippedArmors.reduce((s, a) => s + a.spe_modifier, 0);
+  const ryudeSpe = ryudeSpeBase + armorSpeSum;
+  const driveMod = ryudeDriveModifier(tpl, operator, inst);
   const breakdown: BreakdownLine[] = [
     { label: `Operator AGI Base (${operator.name})`, value: opAgi },
-    { label: 'Ryude SPE', value: ryudeSpe },
-    { label: 'Drive Modifier', value: driveMod },
+    { label: 'Ryude SPE', value: ryudeSpeBase },
   ];
+  if (armorSpeSum !== 0) {
+    breakdown.push({ label: 'Armor SPE modifier', value: armorSpeSum });
+  }
+  breakdown.push({ label: 'Drive Modifier', value: driveMod });
+  if ((inst.state.drive_reduction ?? 0) > 0) {
+    breakdown.push({ label: 'Drive Reduction (penalty)', value: -(inst.state.drive_reduction) });
+  }
+  const ego = ryudeEgoValue(tpl);
+  if (ego !== null) {
+    breakdown.push({ label: `Ryude Ego: ${ego} (not yet applied)`, value: 0 });
+  }
   return {
     base: opAgi,
     modifier: ryudeSpe + driveMod,
     breakdown,
     label: `${inst.name} · Operator Roll`,
+  };
+}
+
+/**
+ * IN roll context (Rule §14:149).
+ *
+ *   Base IN = Operator SEN Base + Ryude SPE + Drive Modifier
+ *
+ * SEN drives IN; AGI drives DN. These differ when SEN ≠ AGI.
+ */
+export function ryudeInContext(
+  tpl: RyudeTemplate,
+  inst: RyudeInstance,
+  operator: OperatorStats,
+  equippedArmors: RyudeArmor[] = [],
+): RollContext {
+  const opSen = abilityBaseValue(operator.abilities.SEN);
+  const ryudeSpeBase = effectiveRyudeAttribute(tpl, inst, 'spe');
+  const armorSpeSum = equippedArmors.reduce((s, a) => s + a.spe_modifier, 0);
+  const ryudeSpe = ryudeSpeBase + armorSpeSum;
+  const driveMod = ryudeDriveModifier(tpl, operator, inst);
+  const breakdown: BreakdownLine[] = [
+    { label: `Operator SEN Base (${operator.name})`, value: opSen },
+    { label: 'Ryude SPE', value: ryudeSpeBase },
+  ];
+  if (armorSpeSum !== 0) {
+    breakdown.push({ label: 'Armor SPE modifier', value: armorSpeSum });
+  }
+  breakdown.push({ label: 'Drive Modifier', value: driveMod });
+  if ((inst.state.drive_reduction ?? 0) > 0) {
+    breakdown.push({ label: 'Drive Reduction (penalty)', value: -(inst.state.drive_reduction) });
+  }
+  return {
+    base: opSen,
+    modifier: ryudeSpe + driveMod,
+    breakdown,
+    label: `${inst.name} · IN`,
   };
 }
 
@@ -218,14 +325,17 @@ export interface AttunementContext {
  */
 export function ryudeAttunementContext(
   tpl: RyudeTemplate,
-  _inst: RyudeInstance,
-  operator: Character,
+  inst: RyudeInstance,
+  operator: OperatorStats,
 ): AttunementContext {
-  const driveModifier = ryudeDriveModifier(tpl, operator);
+  const driveModifier = ryudeDriveModifier(tpl, operator, inst);
   return {
     attunementValue: tpl.attunement_value,
     driveModifier,
-    successCondition: `1D10 − ${driveModifier} ≤ ${tpl.attunement_value}`,
+    successCondition:
+      driveModifier >= 0
+        ? `1D10 − ${driveModifier} ≤ ${tpl.attunement_value}`
+        : `1D10 + ${Math.abs(driveModifier)} ≤ ${tpl.attunement_value}`,
   };
 }
 
@@ -257,14 +367,17 @@ export interface RyudeAttackContext {
 export function ryudeAttackContext(
   tpl: RyudeTemplate,
   inst: RyudeInstance,
-  operator: Character,
+  operator: OperatorStats,
   weapon: RyudeWeapon,
   target: AttackTarget,
   stance: 'melee' | 'charge' | 'range' = 'melee',
+  equippedArmors: RyudeArmor[] = [],
 ): RyudeAttackContext {
   const opAgi = abilityBaseValue(operator.abilities.AGI);
-  const ryudeSpe = effectiveRyudeAttribute(tpl, inst, 'spe');
-  const driveMod = ryudeDriveModifier(tpl, operator);
+  const ryudeSpeBase = effectiveRyudeAttribute(tpl, inst, 'spe');
+  const armorSpeSum = equippedArmors.reduce((s, a) => s + a.spe_modifier, 0);
+  const ryudeSpe = ryudeSpeBase + armorSpeSum;
+  const driveMod = ryudeDriveModifier(tpl, operator, inst);
   const weaponSkillLevel =
     operator.skills.find((s) => s.skill_id === weapon.id)?.level ?? 0;
   const bnMod = weapon.bn_modifier[stance] ?? 0;
@@ -275,11 +388,16 @@ export function ryudeAttackContext(
 
   const breakdown: BreakdownLine[] = [
     { label: `Operator AGI Base (${operator.name})`, value: opAgi },
-    { label: 'Ryude SPE', value: ryudeSpe },
+    { label: 'Ryude SPE', value: ryudeSpeBase },
+  ];
+  if (armorSpeSum !== 0) {
+    breakdown.push({ label: 'Armor SPE modifier', value: armorSpeSum });
+  }
+  breakdown.push(
     { label: `Weapon BN (${stance})`, value: bnMod },
     { label: `${weapon.name} Skill`, value: weaponSkillLevel },
     { label: 'Drive Modifier', value: driveMod },
-  ];
+  );
 
   return {
     baseBN: opAgi,

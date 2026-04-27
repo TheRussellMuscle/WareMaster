@@ -94,6 +94,7 @@ function TemplatesIndex(): React.JSX.Element {
             <Link
               key={section.to}
               to={section.to}
+              search={{ open: undefined }}
               className="block rounded-sm transition-colors hover:bg-[var(--color-parchment-200)]/50"
             >
               <ParchmentCard className="flex h-full flex-col gap-2 p-4">

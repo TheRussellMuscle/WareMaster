@@ -12,6 +12,7 @@ import { FullCharacterNpcSheet } from './FullCharacterNpcSheet';
 import { useCampaignStore } from '@/stores/campaign-store';
 import { useReferenceStore } from '@/stores/reference-store';
 import { useTemplateStore } from '@/stores/template-store';
+import { useCustomItemStore } from '@/stores/custom-item-store';
 import {
   indexTemplates,
   resolveMonsterTemplate,
@@ -44,6 +45,7 @@ interface InstanceListProps {
   kind: TemplateKind;
   title: string;
   description: string;
+  openId?: string;
 }
 
 // Stable empty array — Zustand selectors must return the same reference
@@ -56,6 +58,7 @@ export function InstanceList({
   kind,
   title,
   description,
+  openId,
 }: InstanceListProps): React.JSX.Element {
   const campaignDir = campaign.dir_name;
   const instances = useCampaignStore(
@@ -73,6 +76,7 @@ export function InstanceList({
   const loadGlobal = useTemplateStore((s) => s.loadGlobal);
   const loadCampaignTemplates = useTemplateStore((s) => s.loadCampaign);
   const invalidate = useCampaignStore((s) => s.invalidateInstancesFor);
+  const customItems = useCustomItemStore((s) => s.items ?? []);
 
   const cachedEntries = useActionLogStore((s) => s.entriesByCampaign[campaignDir]);
   const logEntries = cachedEntries ?? EMPTY_LOG;
@@ -82,7 +86,12 @@ export function InstanceList({
 
   const [spawnOpen, setSpawnOpen] = React.useState(false);
   const [deleting, setDeleting] = React.useState<string | null>(null);
-  const [expandedId, setExpandedId] = React.useState<string | null>(null);
+  const [expandedId, setExpandedId] = React.useState<string | null>(openId ?? null);
+
+  // Sync when the sidebar navigates to a different instance.
+  React.useEffect(() => {
+    if (openId) setExpandedId(openId);
+  }, [openId]);
 
   React.useEffect(() => {
     void loadCharactersFor(campaignDir);
@@ -184,6 +193,7 @@ export function InstanceList({
                 campaignMonsters={campaignMonsters}
                 campaignRyude={campaignRyude}
                 campaignNpcs={campaignNpcs}
+                customItems={customItems}
                 expanded={expandedId === instance.id}
                 onToggle={() =>
                   setExpandedId((cur) =>
@@ -191,7 +201,6 @@ export function InstanceList({
                   )
                 }
                 onDelete={() => setDeleting(instance.id)}
-                onPersisted={() => invalidate(campaignDir, kind)}
               />
             ))}
           </ul>
@@ -241,11 +250,10 @@ interface InstanceRowProps {
   campaignMonsters: ReadonlyMap<string, MonsterTemplate>;
   campaignRyude: ReadonlyMap<string, RyudeTemplate>;
   campaignNpcs: ReadonlyMap<string, NpcTemplate>;
+  customItems: import('@/domain/custom-item').CustomItem[];
   expanded: boolean;
   onToggle: () => void;
   onDelete: () => void;
-  /** Called after a state mutation persists, so the parent can refresh the cache. */
-  onPersisted: () => void;
 }
 
 function InstanceRow({
@@ -260,10 +268,10 @@ function InstanceRow({
   campaignMonsters,
   campaignRyude,
   campaignNpcs,
+  customItems,
   expanded,
   onToggle,
   onDelete,
-  onPersisted,
 }: InstanceRowProps): React.JSX.Element {
   // Local copy of the instance so the inline stat block can mutate state
   // optimistically without waiting for the parent's cache invalidation
@@ -337,7 +345,6 @@ function InstanceRow({
   ) => {
     setLocalInstance(next);
     await updateInstance(campaign.dir_name, kind, next as never);
-    onPersisted();
   };
 
   const isFullCharNpc =
@@ -421,7 +428,9 @@ function InstanceRow({
               instance={localInstance}
               template={resolvedTemplate}
               characters={characters}
+              npcTemplates={[...vaultNpcs.values(), ...campaignNpcs.values()]}
               catalog={catalog}
+              customItems={customItems}
               onPersist={persist}
             />
           )}

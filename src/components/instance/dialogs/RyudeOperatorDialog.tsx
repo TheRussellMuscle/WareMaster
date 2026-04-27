@@ -1,10 +1,9 @@
 import * as React from 'react';
 import { actionRoll } from '@/engine/dice/action-roll';
-import { ryudeOperatorRoll } from '@/engine/derive/instance-rolls';
+import { ryudeOperatorRoll, effectiveRyudeAttribute, type OperatorStats } from '@/engine/derive/instance-rolls';
 import type { ActionLogEntry } from '@/domain/action-log';
 import type { RyudeTemplate } from '@/domain/ryude';
 import type { RyudeInstance } from '@/domain/ryude-instance';
-import type { Character } from '@/domain/character';
 import { RollDialogShell } from '@/components/sheet/dialogs/RollDialogShell';
 import { DialogActions } from '@/components/sheet/dialogs/DialogActions';
 import { ResultDisplay } from '@/components/sheet/dialogs/ResultDisplay';
@@ -14,7 +13,7 @@ interface Props {
   onClose: () => void;
   template: RyudeTemplate;
   instance: RyudeInstance;
-  operator: Character;
+  operator: OperatorStats;
   onResolve: (
     entry: Omit<
       ActionLogEntry,
@@ -86,22 +85,28 @@ export function RyudeOperatorDialog({
       title="Operator Roll"
       ruleNote={
         <>
-          1D10 + Operator AGI Base + Ryude SPE + Drive Modifier (Skill − Required) +
-          situational modifier vs DC. Total Failure consults Operator Error Tables
-          (Rule §14:124-160).
+          DN/BN: 1D10 + Operator AGI Base + Ryude SPE + Drive Modifier vs DC.
+          IN uses SEN Base instead of AGI (Rule §14:149). Total Failure consults
+          Operator Error Tables (Rule §14:124-160).
         </>
       }
     >
       <div className="rounded-sm border border-[var(--color-parchment-300)] bg-[var(--color-parchment-50)]/60 p-3 text-xs text-[var(--color-ink-soft)]">
-        {ctx.breakdown.map((line) => (
-          <div key={line.label} className="flex justify-between">
-            <span>{line.label}</span>
-            <span className="font-mono">
-              {line.value >= 0 ? '+' : ''}
-              {line.value}
-            </span>
-          </div>
-        ))}
+        {ctx.breakdown.map((line) =>
+          line.value === 0 && line.label.startsWith('Ryude Ego') ? (
+            <div key={line.label} className="italic text-[var(--color-ink-faint)]">
+              {line.label}
+            </div>
+          ) : (
+            <div key={line.label} className="flex justify-between">
+              <span>{line.label}</span>
+              <span className="font-mono">
+                {line.value >= 0 ? '+' : ''}
+                {line.value}
+              </span>
+            </div>
+          ),
+        )}
         <div className="mt-1 flex justify-between border-t border-[var(--color-parchment-300)] pt-1 font-medium text-[var(--color-ink)]">
           <span>Total modifier</span>
           <span className="font-mono">
@@ -109,6 +114,16 @@ export function RyudeOperatorDialog({
             {extraModifier !== 0 ? extraModifier : ''}
           </span>
         </div>
+        {/* Jump distance reference values — Rule §14:22 */}
+        {(() => {
+          const pow = effectiveRyudeAttribute(template, instance, 'pow');
+          return (
+            <div className="mt-2 border-t border-[var(--color-parchment-300)] pt-2 text-[10px] italic text-[var(--color-ink-faint)]">
+              Jump capacity (POW {pow}): vertical {pow * 6} liets ·
+              dash-jump {pow * 50} long / {pow * 6} high
+            </div>
+          );
+        })()}
       </div>
       <div className="grid grid-cols-2 gap-2 text-sm">
         <label className="flex flex-col gap-0.5">

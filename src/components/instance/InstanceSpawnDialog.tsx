@@ -140,6 +140,12 @@ export function InstanceSpawnDialog({
           current_unit_durability: tpl.durability,
           attribute_damage: { spe: 0, pow: 0, arm: 0, bal: 0 },
           attunement_state: 'unattuned',
+          equipped_item_ids: tpl.equipment,
+          drive_reduction: 0,
+          dashing_segments_remaining: 5,
+          ...(tpl.type === 'Maledictor' && tpl.ryude_mind_durability != null
+            ? { current_ryude_mind_durability: tpl.ryude_mind_durability }
+            : {}),
           repair_queue: [],
           active_effects: [],
           last_recovery_tick: 0,

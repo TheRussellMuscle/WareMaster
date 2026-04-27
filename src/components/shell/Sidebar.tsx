@@ -310,8 +310,6 @@ function NpcsBranch({
       icon={UserPlus}
       label="NPCs"
       to="/campaigns/$cid/npcs"
-      detailRoute="/campaigns/$cid/npcs/$nid"
-      detailParamKey="nid"
     />
   );
 }
@@ -331,8 +329,6 @@ function MonstersBranch({
       icon={PawPrint}
       label="Monsters"
       to="/campaigns/$cid/monsters"
-      detailRoute="/campaigns/$cid/monsters/$mid"
-      detailParamKey="mid"
     />
   );
 }
@@ -352,8 +348,6 @@ function RyudeBranch({
       icon={Cog}
       label="Ryudes"
       to="/campaigns/$cid/ryude"
-      detailRoute="/campaigns/$cid/ryude/$rid"
-      detailParamKey="rid"
     />
   );
 }
@@ -364,12 +358,7 @@ interface InstancesBranchProps {
   kind: 'npc' | 'monster' | 'ryude';
   icon: React.ComponentType<{ className?: string }>;
   label: string;
-  to: string;
-  detailRoute:
-    | '/campaigns/$cid/npcs/$nid'
-    | '/campaigns/$cid/monsters/$mid'
-    | '/campaigns/$cid/ryude/$rid';
-  detailParamKey: 'nid' | 'mid' | 'rid';
+  to: '/campaigns/$cid/monsters' | '/campaigns/$cid/ryude' | '/campaigns/$cid/npcs';
 }
 
 function InstancesBranch({
@@ -378,8 +367,7 @@ function InstancesBranch({
   kind,
   icon,
   label,
-  detailRoute,
-  detailParamKey,
+  to,
 }: InstancesBranchProps): React.JSX.Element {
   const id = `campaign:${campaignId}:${kind}s`;
   const expanded = useSidebarStore((s) => !!s.expanded[id]);
@@ -432,8 +420,9 @@ function InstancesBranch({
       {filtered.map((inst) => (
         <Link
           key={(inst as { id: string }).id}
-          to={detailRoute}
-          params={{ cid: campaignId, [detailParamKey]: (inst as { id: string }).id } as never}
+          to={to}
+          params={{ cid: campaignId } as never}
+          search={{ open: (inst as { id: string }).id }}
           className={cn(
             'group flex items-center gap-2 rounded-sm px-2 py-1 text-xs',
             'text-[var(--color-ink-soft)] hover:bg-[var(--color-parchment-200)]/60 hover:text-[var(--color-ink)]',
@@ -444,6 +433,7 @@ function InstancesBranch({
             className:
               'bg-[var(--color-parchment-200)] text-[var(--color-ink)] font-medium',
           }}
+          activeOptions={{ exact: true, includeSearch: true }}
         >
           <span className="truncate">{(inst as { name: string }).name}</span>
         </Link>
@@ -595,12 +585,6 @@ function TemplatesKindBranch({
     </span>
   );
 
-  const detailRoute =
-    kind === 'monster'
-      ? '/templates/monsters/$tid'
-      : kind === 'ryude'
-        ? '/templates/ryude/$tid'
-        : '/templates/npcs/$tid';
   const listRoute =
     kind === 'monster'
       ? '/templates/monsters'
@@ -630,8 +614,8 @@ function TemplatesKindBranch({
       {items.map((it) => (
         <Link
           key={`${it.source}:${it.id}`}
-          to={detailRoute}
-          params={{ tid: it.id }}
+          to={listRoute}
+          search={{ open: `${it.source}:${it.id}` }}
           className={cn(
             'group flex items-center gap-2 rounded-sm px-2 py-1 text-xs',
             'text-[var(--color-ink-soft)] hover:bg-[var(--color-parchment-200)]/60 hover:text-[var(--color-ink)]',
@@ -642,6 +626,7 @@ function TemplatesKindBranch({
             className:
               'bg-[var(--color-parchment-200)] text-[var(--color-ink)] font-medium',
           }}
+          activeOptions={{ exact: true, includeSearch: true }}
         >
           <span className="truncate">{it.name}</span>
         </Link>

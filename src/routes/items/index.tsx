@@ -15,9 +15,11 @@ export const Route = createFileRoute('/items/')({
 
 function kindBadge(kind: CustomItem['kind']): React.JSX.Element {
   const styles: Record<CustomItem['kind'], string> = {
-    weapon: 'border-[var(--color-rust)]/40 bg-[var(--color-rust)]/10 text-[var(--color-rust)]',
-    armor:  'border-[var(--color-verdigris)]/40 bg-[var(--color-verdigris)]/10 text-[var(--color-verdigris)]',
-    good:   'border-[var(--color-parchment-400)] bg-[var(--color-parchment-200)] text-[var(--color-ink-soft)]',
+    weapon:        'border-[var(--color-rust)]/40 bg-[var(--color-rust)]/10 text-[var(--color-rust)]',
+    armor:         'border-[var(--color-verdigris)]/40 bg-[var(--color-verdigris)]/10 text-[var(--color-verdigris)]',
+    good:          'border-[var(--color-parchment-400)] bg-[var(--color-parchment-200)] text-[var(--color-ink-soft)]',
+    'ryude-weapon': 'border-[var(--color-rust)]/40 bg-[var(--color-rust)]/10 text-[var(--color-rust)]',
+    'ryude-armor':  'border-[var(--color-verdigris)]/40 bg-[var(--color-verdigris)]/10 text-[var(--color-verdigris)]',
   };
   return (
     <span className={`rounded-sm border px-1.5 py-0.5 text-[10px] uppercase tracking-wider ${styles[kind]}`}>
