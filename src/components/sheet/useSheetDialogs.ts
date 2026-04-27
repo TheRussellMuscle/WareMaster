@@ -5,10 +5,11 @@ import type { SaveKind } from '@/engine/combat/save-roll';
 
 export type SheetDialogState =
   | { kind: 'in-dn' }
-  | { kind: 'ability'; initialAbility?: AbilityCode }
+  | { kind: 'ability'; initialAbility?: AbilityCode; initialDifficulty?: number; initialSkillBonus?: number }
   | { kind: 'attack'; initialWeaponId?: string }
-  | { kind: 'save'; initialKind?: SaveKind }
+  | { kind: 'save'; initialKind?: SaveKind; initialDifficulty?: number }
   | { kind: 'skill'; initialSkillId?: string }
+  | { kind: 'first-impression' }
   | {
       kind: 'technique-cast';
       technique: Technique;
@@ -21,10 +22,11 @@ export interface SheetDialogs {
   open: SheetDialogState;
   close: () => void;
   openInDn: () => void;
-  openAbility: (initialAbility?: AbilityCode) => void;
+  openAbility: (initialAbility?: AbilityCode, initialDifficulty?: number, initialSkillBonus?: number) => void;
   openAttack: (initialWeaponId?: string) => void;
-  openSave: (initialKind?: SaveKind) => void;
+  openSave: (initialKind?: SaveKind, initialDifficulty?: number) => void;
   openSkill: (initialSkillId?: string) => void;
+  openFirstImpression: () => void;
   openTechniqueCast: (
     technique: Technique,
     discipline: Discipline,
@@ -45,10 +47,12 @@ export function useSheetDialogs(): SheetDialogs {
     open,
     close: () => setOpen(null),
     openInDn: () => setOpen({ kind: 'in-dn' }),
-    openAbility: (initialAbility) => setOpen({ kind: 'ability', initialAbility }),
+    openAbility: (initialAbility, initialDifficulty, initialSkillBonus) =>
+      setOpen({ kind: 'ability', initialAbility, initialDifficulty, initialSkillBonus }),
     openAttack: (initialWeaponId) => setOpen({ kind: 'attack', initialWeaponId }),
-    openSave: (initialKind) => setOpen({ kind: 'save', initialKind }),
+    openSave: (initialKind, initialDifficulty) => setOpen({ kind: 'save', initialKind, initialDifficulty }),
     openSkill: (initialSkillId) => setOpen({ kind: 'skill', initialSkillId }),
+    openFirstImpression: () => setOpen({ kind: 'first-impression' }),
     openTechniqueCast: (technique, discipline, gate) =>
       setOpen({ kind: 'technique-cast', technique, discipline, gate }),
   };

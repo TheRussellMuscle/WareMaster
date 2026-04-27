@@ -1,6 +1,8 @@
+import { Dices } from 'lucide-react';
 import { AcronymTooltip } from '@/components/parchment/AcronymTooltip';
 import { UnitTooltip } from '@/components/parchment/UnitTooltip';
 import type { DerivedCombatValues } from '@/engine/derive/combat-values';
+import { useOptionalSheetActions } from '@/components/sheet/SheetActionsContext';
 
 interface DerivedStatsBlockProps {
   values: DerivedCombatValues;
@@ -14,6 +16,12 @@ interface DerivedStatsBlockProps {
 export function DerivedStatsBlock({
   values: v,
 }: DerivedStatsBlockProps): React.JSX.Element {
+  const actions = useOptionalSheetActions();
+  const firstImpressionFormula =
+    v.firstImpressionValue !== v.baseCHA
+      ? `Base CHA ${v.baseCHA} + Appearance ${signed(v.firstImpressionValue - v.baseCHA)}`
+      : `Base CHA ${v.baseCHA}`;
+
   return (
     <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm md:grid-cols-3">
       <Tile
@@ -52,17 +60,33 @@ export function DerivedStatsBlock({
           </>
         }
       />
-      <Tile
-        label="First Impression"
-        formula={
-          v.firstImpressionValue !== v.baseCHA
-            ? `Base CHA ${v.baseCHA} + Appearance ${signed(
-                v.firstImpressionValue - v.baseCHA,
-              )}`
-            : `Base CHA ${v.baseCHA}`
-        }
-        value={v.firstImpressionValue}
-      />
+
+      {actions ? (
+        <button
+          type="button"
+          onClick={() => actions.openFirstImpression()}
+          title="Roll First Impression"
+          className="group relative flex flex-col rounded-sm border border-[var(--color-parchment-300)] bg-[var(--color-parchment-50)]/60 px-3 py-1.5 text-left transition-colors hover:bg-[var(--color-gilt)]/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-gilt)]/40"
+        >
+          <Dices
+            className="absolute right-1 top-1 h-3 w-3 text-[var(--color-ink-faint)] opacity-0 transition-opacity group-hover:opacity-100"
+            aria-hidden
+          />
+          <div className="text-[10px] uppercase tracking-wider text-[var(--color-ink-faint)]">
+            First Impression
+          </div>
+          <div className="font-mono text-lg leading-tight text-[var(--color-ink)]">
+            {v.firstImpressionValue}
+          </div>
+          <div className="text-[10px] text-[var(--color-ink-faint)]">{firstImpressionFormula}</div>
+        </button>
+      ) : (
+        <Tile
+          label="First Impression"
+          formula={firstImpressionFormula}
+          value={v.firstImpressionValue}
+        />
+      )}
     </div>
   );
 }

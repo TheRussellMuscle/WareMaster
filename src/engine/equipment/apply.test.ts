@@ -43,6 +43,7 @@ function mkCharacter(over: Partial<Character> = {}): Character {
       other: [],
       bastard_sword_grip: '1H',
     },
+    custom_items: [],
     golda: 100,
     completion_bonus: 0,
     luc_reserves: 0,

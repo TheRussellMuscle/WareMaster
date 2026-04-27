@@ -23,6 +23,8 @@ interface SaveRollDialogProps {
    * `luc-roll`. Otherwise the dialog auto-suggests based on damage state.
    */
   initialKind?: SaveKind;
+  /** Pre-fill the difficulty field (e.g. when a perk provides a computed difficulty). */
+  initialDifficulty?: number;
   availableLuc: number;
   onResolve: (
     entry: Omit<
@@ -48,6 +50,7 @@ export function SaveRollDialog({
   character,
   derived,
   initialKind,
+  initialDifficulty,
   availableLuc,
   onResolve,
 }: SaveRollDialogProps): React.JSX.Element {
@@ -65,9 +68,10 @@ export function SaveRollDialog({
   const defaultKind: SaveKind =
     initialKind ?? suggested?.kind ?? 'heavy-state-action';
   const defaultDifficulty =
-    initialKind === 'heavy-state-action' && suggested
+    initialDifficulty ??
+    (initialKind === 'heavy-state-action' && suggested
       ? suggested.difficulty
-      : (suggested?.difficulty ?? 5);
+      : (suggested?.difficulty ?? 5));
 
   const [kind, setKind] = React.useState<SaveKind>(defaultKind);
   const [difficulty, setDifficulty] = React.useState(defaultDifficulty);
@@ -88,12 +92,13 @@ export function SaveRollDialog({
       setResult(null);
     } else if (initialKind) {
       setKind(initialKind);
+      if (initialDifficulty != null) setDifficulty(initialDifficulty);
       if (initialKind === 'luc-roll' && lucDice === 0) {
         setLucDice(Math.min(1, availableLuc));
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, initialKind]);
+  }, [open, initialKind, initialDifficulty]);
 
   const isLuc = kind === 'luc-roll';
   const diceCount = isLuc ? Math.max(1, lucDice) : 1 + lucDice;

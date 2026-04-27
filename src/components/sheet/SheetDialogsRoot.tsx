@@ -16,6 +16,7 @@ import { AttackRollDialog } from './dialogs/AttackRollDialog';
 import { SaveRollDialog } from './dialogs/SaveRollDialog';
 import { SkillRollDialog } from './dialogs/SkillRollDialog';
 import { TechniqueCastDialog } from './dialogs/TechniqueCastDialog';
+import { FirstImpressionRollDialog } from './dialogs/FirstImpressionRollDialog';
 import type { SheetDialogs } from './useSheetDialogs';
 
 interface SheetDialogsRootProps {
@@ -163,6 +164,8 @@ export function SheetDialogsRoot({
         onClose={dialogs.close}
         character={character}
         initialAbility={open?.kind === 'ability' ? open.initialAbility : undefined}
+        initialDifficulty={open?.kind === 'ability' ? open.initialDifficulty : undefined}
+        initialSkillBonus={open?.kind === 'ability' ? open.initialSkillBonus : undefined}
         availableLuc={availableLuc}
         onResolve={async (entry, lucSpent) => {
           await persist(entry, { lucSpent });
@@ -191,6 +194,7 @@ export function SheetDialogsRoot({
         character={character}
         derived={derived}
         initialKind={open?.kind === 'save' ? open.initialKind : undefined}
+        initialDifficulty={open?.kind === 'save' ? open.initialDifficulty : undefined}
         availableLuc={availableLuc}
         onResolve={async (entry, lucSpent) => {
           await persist(entry, { lucSpent });
@@ -229,6 +233,16 @@ export function SheetDialogsRoot({
             ppGain: { skillId: applied.skillId, amount: applied.ppGain },
             mentalDamageCost: applied.mentalDamageCost,
           });
+        }}
+      />
+      <FirstImpressionRollDialog
+        open={open?.kind === 'first-impression'}
+        onClose={dialogs.close}
+        character={character}
+        firstImpressionValue={derived.firstImpressionValue}
+        availableLuc={availableLuc}
+        onResolve={async (entry, lucSpent) => {
+          await persist(entry, { lucSpent });
         }}
       />
     </>

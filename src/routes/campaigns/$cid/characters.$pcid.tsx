@@ -27,6 +27,7 @@ import { SpiritualistPanel } from '@/components/stat/SpiritualistPanel';
 import { EquippedGearPanel } from '@/components/stat/EquippedGearPanel';
 import { InventoryPanel } from '@/components/stat/InventoryPanel';
 import { GearShop } from '@/components/stat/GearShop';
+import { ClassBenefitsSection } from '@/components/stat/ClassBenefitsSection';
 import { ActiveEffectsPanel } from '@/components/stat/ActiveEffectsPanel';
 import { RecoveryPreview } from '@/components/stat/RecoveryPreview';
 import { StatusBanner } from '@/components/stat/StatusBanner';
@@ -77,10 +78,11 @@ import {
   unequipItem,
   dropInventoryItem,
   sellInventoryItem,
+  addInventoryItem,
   setBastardGrip,
   type UnequipTarget,
 } from '@/engine/equipment/apply';
-import type { BastardSwordGrip } from '@/domain/character';
+import type { BastardSwordGrip, CustomItem } from '@/domain/character';
 
 export const Route = createFileRoute('/campaigns/$cid/characters/$pcid')({
   component: CharacterSheet,
@@ -423,23 +425,12 @@ function CharacterSheetInner(): React.JSX.Element {
               )}
             </section>
 
-            {cls && cls.perks.length > 0 && (
-              <section>
-                <h2 className="mb-2 font-display text-sm uppercase tracking-wider text-[var(--color-ink-faint)]">
-                  Class Benefits
-                </h2>
-                <ul className="space-y-1 text-sm">
-                  {cls.perks.map((p) => (
-                    <li key={p.id}>
-                      <span className="font-medium">{p.name}.</span>{' '}
-                      <span className="text-[var(--color-ink-soft)]">
-                        {p.description}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
+            <ClassBenefitsSection
+              character={character}
+              derived={derived}
+              classEntry={cls ?? null}
+              actions={dialogs}
+            />
           </>
         )}
       </ParchmentCard>
@@ -571,6 +562,7 @@ function CharacterSheetInner(): React.JSX.Element {
             <GearShop
               character={character}
               catalog={catalog}
+              customItems={character.custom_items}
               onPurchase={async ({ equipment, golda }) => {
                 const updated = { ...character, equipment, golda };
                 setCharacter(updated);
@@ -594,12 +586,36 @@ function CharacterSheetInner(): React.JSX.Element {
               await updateCharacter(cid, updated);
             }}
             onSell={async (itemId: string, qty?: number) => {
-              const result = sellInventoryItem(character, itemId, catalog, qty);
+              const result = sellInventoryItem(
+                character,
+                itemId,
+                catalog,
+                qty,
+                character.custom_items,
+              );
               const updated = {
                 ...character,
                 equipment: result.equipment,
                 golda: result.golda,
               };
+              setCharacter(updated);
+              await updateCharacter(cid, updated);
+            }}
+            onAddItem={async (itemId: string, qty: number) => {
+              const result = addInventoryItem(character, itemId, qty);
+              const updated = { ...character, equipment: result.equipment };
+              setCharacter(updated);
+              await updateCharacter(cid, updated);
+            }}
+            onCreateItem={async (item: CustomItem, addToInventory: boolean) => {
+              let updated = {
+                ...character,
+                custom_items: [...character.custom_items, item],
+              };
+              if (addToInventory) {
+                const result = addInventoryItem(updated, item.id, 1);
+                updated = { ...updated, equipment: result.equipment };
+              }
               setCharacter(updated);
               await updateCharacter(cid, updated);
             }}

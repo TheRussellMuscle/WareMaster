@@ -36,6 +36,7 @@ function mkCharacter(overrides: Partial<Character['state']> = {}): Character {
       other: [],
       bastard_sword_grip: '1H',
     },
+    custom_items: [],
     golda: 0,
     completion_bonus: 0,
     luc_reserves: 0,

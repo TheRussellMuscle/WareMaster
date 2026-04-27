@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { ShoppingCart, X, Plus } from 'lucide-react';
 import { UnitTooltip } from '@/components/parchment/UnitTooltip';
-import type { Character } from '@/domain/character';
+import type { Character, CustomItem } from '@/domain/character';
 import type { ReferenceCatalog } from '@/persistence/reference-loader';
 import type { Weapon, Armor, GeneralGood } from '@/domain/item';
 import { purchaseItem } from '@/engine/equipment/apply';
@@ -10,13 +10,15 @@ import { purchaseItem } from '@/engine/equipment/apply';
 interface GearShopProps {
   character: Character;
   catalog: ReferenceCatalog;
+  /** Custom items with in_shop=true are shown in a Custom tab. */
+  customItems?: CustomItem[];
   /** Called after a successful purchase so the parent can persist + reload. */
   onPurchase: (
     next: { equipment: Character['equipment']; golda: number },
   ) => void | Promise<void>;
 }
 
-type Tab = 'weapons' | 'armor' | 'goods';
+type Tab = 'weapons' | 'armor' | 'goods' | 'custom';
 
 /**
  * Modal "gear shop" — opens from a button on the character sheet, lets the
@@ -29,15 +31,18 @@ type Tab = 'weapons' | 'armor' | 'goods';
 export function GearShop({
   character,
   catalog,
+  customItems,
   onPurchase,
 }: GearShopProps): React.JSX.Element {
   const [open, setOpen] = React.useState(false);
   const [tab, setTab] = React.useState<Tab>('weapons');
   const [error, setError] = React.useState<string | null>(null);
 
+  const shopCustomItems = (customItems ?? []).filter((ci) => ci.in_shop);
+
   const buy = async (itemId: string) => {
     setError(null);
-    const result = purchaseItem(character, itemId, 1, catalog);
+    const result = purchaseItem(character, itemId, 1, catalog, customItems);
     if (result.error) {
       setError(result.error);
       return;
@@ -96,6 +101,19 @@ export function GearShop({
                 {t}
               </button>
             ))}
+            {shopCustomItems.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setTab('custom')}
+                className={`rounded-sm border px-3 py-1 ${
+                  tab === 'custom'
+                    ? 'border-[var(--color-gilt)] bg-[var(--color-gilt)]/10'
+                    : 'border-[var(--color-parchment-300)] bg-[var(--color-parchment-50)] hover:bg-[var(--color-parchment-200)]/40'
+                }`}
+              >
+                Custom
+              </button>
+            )}
           </div>
 
           {error && (
@@ -136,6 +154,18 @@ export function GearShop({
                   name: g.name,
                   meta: g.category,
                   price: typeof g.price_golda === 'number' ? g.price_golda : null,
+                }))}
+                budget={character.golda}
+                onBuy={buy}
+              />
+            )}
+            {tab === 'custom' && (
+              <ItemGrid
+                items={shopCustomItems.map((ci) => ({
+                  id: ci.id,
+                  name: ci.name,
+                  meta: `${ci.kind}${ci.is_unique ? ' · unique' : ''}`,
+                  price: ci.price_golda,
                 }))}
                 budget={character.golda}
                 onBuy={buy}

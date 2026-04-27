@@ -4,9 +4,10 @@ import {
   ParchmentCard,
 } from '@/components/parchment/ParchmentCard';
 import { UnitTooltip } from '@/components/parchment/UnitTooltip';
-import type { Character } from '@/domain/character';
+import type { Character, CustomItem } from '@/domain/character';
 import type { ReferenceCatalog } from '@/persistence/reference-loader';
 import { itemRef } from '@/engine/equipment/apply';
+import { AddItemDialog } from './AddItemDialog';
 
 interface InventoryPanelProps {
   character: Character;
@@ -17,6 +18,10 @@ interface InventoryPanelProps {
   onDrop?: (itemId: string, qty?: number) => void | Promise<void>;
   /** Sell an item back at 50% of catalog price. */
   onSell?: (itemId: string, qty?: number) => void | Promise<void>;
+  /** Add an item directly to inventory (no gold deduction). */
+  onAddItem?: (itemId: string, qty: number) => void | Promise<void>;
+  /** Create and optionally add a custom item. */
+  onCreateItem?: (item: CustomItem, addToInventory: boolean) => void | Promise<void>;
 }
 
 /**
@@ -31,12 +36,25 @@ export function InventoryPanel({
   onEquip,
   onDrop,
   onSell,
+  onAddItem,
+  onCreateItem,
 }: InventoryPanelProps): React.JSX.Element {
   const items = character.equipment.other;
+  const customItems = character.custom_items;
 
   return (
     <ParchmentCard className="flex flex-col gap-2">
-      <IlluminatedHeading level={2}>Inventory</IlluminatedHeading>
+      <div className="flex items-center justify-between">
+        <IlluminatedHeading level={2}>Inventory</IlluminatedHeading>
+        {catalog && onAddItem && onCreateItem && (
+          <AddItemDialog
+            character={character}
+            catalog={catalog}
+            onAdd={onAddItem}
+            onCreateItem={onCreateItem}
+          />
+        )}
+      </div>
       {items.length === 0 ? (
         <p className="text-sm italic text-[var(--color-ink-faint)]">
           No items in inventory.
@@ -44,8 +62,11 @@ export function InventoryPanel({
       ) : (
         <ul className="space-y-1 text-sm">
           {items.map((entry, i) => {
-            const ref = catalog ? itemRef(catalog, entry.item_id) : null;
+            const ref = catalog
+              ? itemRef(catalog, entry.item_id, customItems)
+              : null;
             const name = ref?.name ?? entry.item_id;
+            const customItem = customItems.find((ci) => ci.id === entry.item_id);
             const equippable =
               ref != null && ref.kind !== 'good' && onEquip != null;
             const sellable =
@@ -63,6 +84,11 @@ export function InventoryPanel({
                   {entry.quantity > 1 && (
                     <span className="text-xs text-[var(--color-ink-faint)]">
                       ×{entry.quantity}
+                    </span>
+                  )}
+                  {customItem?.is_unique && (
+                    <span className="rounded-sm border border-[var(--color-gilt)]/60 px-1 text-[9px] uppercase tracking-wider text-[var(--color-gilt)]">
+                      unique
                     </span>
                   )}
                   {ref?.pricePerUnit != null && (

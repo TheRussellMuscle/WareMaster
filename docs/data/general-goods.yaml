@@ -60,14 +60,14 @@ goods:
     name: Candle
     source: "Playkit p. 20"
     category: light
-    price_golda: "2 for 5"
-    notes: "Lasts for 6 Turns."
+    price_golda: 3
+    notes: "Lasts for 6 Turns. (Playkit price: 2 for 5 golda.)"
   - id: torch
     name: Torch
     source: "Playkit p. 20"
     category: light
-    price_golda: "1 for 5"
-    notes: "Lasts for 1 hour."
+    price_golda: 5
+    notes: "Lasts for 1 hour. (Playkit price: 1 for 5 golda.)"
   - id: oil-lantern
     name: "Oil Lantern"
     source: "Playkit p. 20"
@@ -77,8 +77,8 @@ goods:
     name: "Lamp-Oil"
     source: "Playkit p. 20"
     category: light
-    price_golda: "2 for 5"
-    notes: "Fuels an oil lantern for 8 hours."
+    price_golda: 3
+    notes: "Fuels an oil lantern for 8 hours. (Playkit price: 2 for 5 golda.)"
   - id: flint-set
     name: "Flint Set"
     source: "Playkit p. 20"
@@ -90,23 +90,26 @@ goods:
     name: "Hemp Rope"
     source: "Playkit p. 20"
     category: climbing
-    price_golda: "1 per liet"
+    price_golda: 5
+    notes: "Standard 3-liet (~12 m) coil. (Playkit price: 1 golda per liet.)"
   - id: climbing-hook
     name: "Climbing Hook"
     source: "Playkit p. 20"
     category: climbing
-    price_golda: "4 for 5"
-    notes: "Supports one person."
+    price_golda: 2
+    notes: "Supports one person. (Playkit price: 4 for 5 golda.)"
   - id: iron-peg
     name: "Iron Peg"
     source: "Playkit p. 20"
     category: climbing
-    price_golda: "10 for 6"
+    price_golda: 1
+    notes: "(Playkit price: 10 for 6 golda.)"
   - id: hook
     name: Hook
     source: "Playkit p. 20"
     category: climbing
-    price_golda: "2 for 2"
+    price_golda: 1
+    notes: "(Playkit price: 2 for 2 golda.)"
 
   # CAMPING GEAR
   - id: camping-tent
@@ -141,8 +144,8 @@ goods:
     name: "Fair Clothing"
     source: "Playkit p. 20"
     category: other
-    price_golda: "20-100"
-    notes: "+1 to First Impression Rolls when worn."
+    price_golda: 60
+    notes: "+1 to First Impression Rolls when worn. (Playkit price: 20-100 golda depending on quality.)"
   - id: thiefs-toolkit
     name: "Thief's Toolkit"
     source: "Playkit p. 20"
@@ -153,5 +156,5 @@ goods:
     name: "Stringed Instruments"
     source: "Playkit p. 20"
     category: other
-    price_golda: "6-12"
-    notes: "Price varies by type and size."
+    price_golda: 9
+    notes: "Price varies by type and size. (Playkit price: 6-12 golda.)"

@@ -707,6 +707,7 @@ function buildDraft(
       other: inventory,
       bastard_sword_grip: '1H',
     },
+    custom_items: [],
     golda: startingGolda,
     completion_bonus: 0,
     luc_reserves: 0,

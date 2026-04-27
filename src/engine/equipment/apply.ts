@@ -10,6 +10,7 @@ import type {
   Character,
   Equipment,
   BastardSwordGrip,
+  CustomItem,
 } from '@/domain/character';
 import type { Weapon, Armor, GeneralGood } from '@/domain/item';
 import type { ReferenceCatalog } from '@/persistence/reference-loader';
@@ -74,35 +75,65 @@ export function findItem(
   return null;
 }
 
-export function itemRef(catalog: ReferenceCatalog, itemId: string): ItemRef | null {
+export function itemRef(
+  catalog: ReferenceCatalog,
+  itemId: string,
+  customItems?: CustomItem[],
+): ItemRef | null {
   const found = findItem(catalog, itemId);
-  if (!found) return null;
-  if (found.kind === 'weapon') {
+  if (found) {
+    if (found.kind === 'weapon') {
+      return {
+        itemId,
+        kind: 'weapon',
+        name: found.weapon.name,
+        pricePerUnit: priceAsNumber(found.weapon.price_golda),
+      };
+    }
+    if (found.kind === 'armor') {
+      return {
+        itemId,
+        kind:
+          found.armor.slot === 'body'
+            ? 'armor-body'
+            : found.armor.slot === 'head'
+              ? 'armor-head'
+              : 'armor-shield',
+        name: found.armor.name,
+        pricePerUnit: found.armor.price_golda,
+      };
+    }
     return {
       itemId,
-      kind: 'weapon',
-      name: found.weapon.name,
-      pricePerUnit: priceAsNumber(found.weapon.price_golda),
+      kind: 'good',
+      name: found.good.name,
+      pricePerUnit: priceAsNumber(found.good.price_golda),
     };
   }
-  if (found.kind === 'armor') {
+  // Fall back to custom items
+  const custom = customItems?.find((ci) => ci.id === itemId);
+  if (custom) {
     return {
       itemId,
-      kind:
-        found.armor.slot === 'body'
-          ? 'armor-body'
-          : found.armor.slot === 'head'
-            ? 'armor-head'
-            : 'armor-shield',
-      name: found.armor.name,
-      pricePerUnit: found.armor.price_golda,
+      kind: 'good',
+      name: custom.name,
+      pricePerUnit: custom.price_golda,
     };
   }
+  return null;
+}
+
+/** Add an item to inventory without deducting gold (loot / GM grant). */
+export function addInventoryItem(
+  character: Character,
+  itemId: string,
+  qty = 1,
+): { equipment: Equipment } {
   return {
-    itemId,
-    kind: 'good',
-    name: found.good.name,
-    pricePerUnit: priceAsNumber(found.good.price_golda),
+    equipment: {
+      ...character.equipment,
+      other: pushInventory(character.equipment.other, itemId, qty),
+    },
   };
 }
 
@@ -291,8 +322,9 @@ export function sellInventoryItem(
   itemId: string,
   catalog: ReferenceCatalog,
   qty = 1,
+  customItems?: CustomItem[],
 ): SellResult {
-  const ref = itemRef(catalog, itemId);
+  const ref = itemRef(catalog, itemId, customItems);
   if (!ref || ref.pricePerUnit == null) {
     return {
       equipment: character.equipment,
@@ -316,6 +348,7 @@ export function purchaseItem(
   itemId: string,
   qty: number,
   catalog: ReferenceCatalog,
+  customItems?: CustomItem[],
 ): BuyResult {
   if (qty <= 0) {
     return {
@@ -325,7 +358,7 @@ export function purchaseItem(
       error: 'Quantity must be positive.',
     };
   }
-  const ref = itemRef(catalog, itemId);
+  const ref = itemRef(catalog, itemId, customItems);
   if (!ref) {
     return {
       equipment: character.equipment,

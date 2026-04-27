@@ -84,6 +84,17 @@ const CharacterStateSchema = z.object({
 });
 export type CharacterState = z.infer<typeof CharacterStateSchema>;
 
+const CustomItemSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  kind: z.enum(['weapon', 'armor', 'good']),
+  price_golda: z.number().int().nonnegative().nullable().default(null),
+  in_shop: z.boolean().default(true),
+  is_unique: z.boolean().default(false),
+  notes: z.string().default(''),
+});
+export type CustomItem = z.infer<typeof CustomItemSchema>;
+
 export const SpiritualistOrderSchema = z.enum([
   'monk-votarist',
   'monk-militant',
@@ -138,6 +149,8 @@ export const CharacterSchema = z.object({
   skills: z.array(SkillEntrySchema).default([]),
   techniques: z.array(z.string()).default([]),
   equipment: EquipmentSchema,
+
+  custom_items: z.array(CustomItemSchema).default([]),
 
   golda: z.number().int().default(0),
   completion_bonus: z.number().int().default(0),
